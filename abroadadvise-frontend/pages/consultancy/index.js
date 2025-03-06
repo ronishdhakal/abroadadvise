@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import HeroSection from "./HeroSection";
+import ConsultancyFilters from "./ConsultancyFilters";
+import ConsultancyCard from "./ConsultancyCard";
+import Pagination from "./Pagination";
+import { Search, Filter } from "lucide-react";
 
 const ConsultancyList = () => {
   const [consultancies, setConsultancies] = useState([]);
   const [exams, setExams] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [destinations, setDestinations] = useState([]);
   const [search, setSearch] = useState("");
   const [district, setDistrict] = useState("");
   const [destination, setDestination] = useState("");
@@ -15,182 +18,116 @@ const ConsultancyList = () => {
   const [moeCertified, setMoeCertified] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // ✅ Fetch exams from the backend
+  // ✅ Fetch exams
   useEffect(() => {
-    const fetchExams = async () => {
-      try {
-        let query = `${process.env.NEXT_PUBLIC_API_URL}/exam/all/`; // ✅ Ensure this matches backend
-
-        console.log("Fetching exams from:", query);
-
-        const response = await fetch(query);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Fetched exams:", data); // ✅ Debug response
-        setExams(data || []);
-      } catch (err) {
-        console.error("Error fetching exams:", err);
-      }
-    };
-    fetchExams();
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/exam/all/`)
+      .then((res) => res.json())
+      .then(setExams);
   }, []);
 
-  // ✅ Fetch consultancies with filters
+  // ✅ Fetch destinations
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/all/`)
+      .then((res) => res.json())
+      .then(setDestinations);
+  }, []);
+
+  // ✅ Fetch consultancies with applied filters
   useEffect(() => {
     const fetchConsultancies = async () => {
-      setLoading(true);
+      let query = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=${currentPage}`;
+  
+      if (search) query += `&name=${search}`;
+      if (district) query += `&district=${district}`;
+      if (destination) query += `&destination=${destination}`;
+      if (exam) query += `&exam=${exam}`;
+      if (moeCertified !== "") query += `&moe_certified=${moeCertified}`;
+  
       try {
-        let query = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=${currentPage}`;
-
-        if (search) query += `&search=${search}`;
-        if (district) query += `&district=${district}`;
-        if (destination) query += `&destination=${destination}`;
-        if (exam) query += `&exam=${exam}`; // ✅ Ensure correct filtering field
-        if (moeCertified !== "") query += `&moe_certified=${moeCertified}`;
-
-        console.log("Fetching consultancies from:", query);
-
         const response = await fetch(query);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
         const data = await response.json();
-        console.log("Fetched consultancies:", data); // ✅ Debug response
+        
+        console.log("API Response:", data); // ✅ Debugging API response
+  
         setConsultancies(data.results || []);
-        setTotalPages(data.total_pages || 1);
-      } catch (err) {
-        console.error("Error fetching consultancies:", err);
-        setError("Failed to load consultancies.");
-      } finally {
-        setLoading(false);
+        setTotalPages(data.total_pages || 1); // ✅ Ensuring `totalPages` is properly set
+      } catch (error) {
+        console.error("Error fetching consultancies:", error);
       }
     };
-
+  
     fetchConsultancies();
   }, [search, district, destination, exam, moeCertified, currentPage]);
-
+  
   return (
     <>
       <Header />
+      <HeroSection />
 
-      <main className="max-w-7xl mx-auto p-6">
-        <h1 className="text-4xl font-bold mb-6 text-center text-blue-700">
-          Explore Top Consultancies
-        </h1>
-
-        {/* 🔍 Search and Filters */}
-        <div className="bg-gray-100 p-6 shadow-md rounded-xl mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {/* Search Bar */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {/* 🔍 Search & Filter Bar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          {/* 🔍 Search Bar */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="🔍 Search consultancies..."
+              placeholder="Search consultancies..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 text-sm"
             />
-
-            {/* District Filter */}
-            <input
-              type="text"
-              placeholder="🏢 Filter by district..."
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-
-            {/* Destination Filter */}
-            <select
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="border p-3 w-full rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">🌍 All Destinations</option>
-              <option value="Australia">🇦🇺 Australia</option>
-              <option value="Canada">🇨🇦 Canada</option>
-              <option value="USA">🇺🇸 USA</option>
-              <option value="UK">🇬🇧 UK</option>
-            </select>
-
-            {/* Exam Filter (Dynamic) */}
-            <select
-              value={exam}
-              onChange={(e) => setExam(e.target.value)}
-              className="border p-3 w-full rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">📝 All Exams</option>
-              {exams.length > 0 ? (
-                exams.map((examItem) => (
-                  <option key={examItem.id} value={examItem.slug}>
-                    {examItem.name}
-                  </option>
-                ))
-              ) : (
-                <option disabled>Loading exams...</option>
-              )}
-            </select>
-
-            {/* MOE Certification Filter */}
-            <select
-              value={moeCertified}
-              onChange={(e) => setMoeCertified(e.target.value)}
-              className="border p-3 w-full rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
-              <option value="">🏆 MOE Certified?</option>
-              <option value="true">✅ Yes</option>
-              <option value="false">❌ No</option>
-            </select>
           </div>
-        </div>
 
-        {loading && <p className="text-center text-gray-500">Loading...</p>}
-        {error && <p className="text-center text-red-500">{error}</p>}
-
-        {/* 📌 Consultancy Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {consultancies.map((consultancy) => (
-            <Link key={consultancy.slug} href={`/consultancy/${consultancy.slug}`} passHref>
-              <div className="border rounded-xl shadow-lg p-6 cursor-pointer hover:shadow-2xl transition duration-300 bg-white hover:bg-gray-100">
-                {consultancy.logo && (
-                  <img 
-                    src={consultancy.logo} 
-                    alt={consultancy.name} 
-                    className="w-36 h-36 mx-auto rounded-lg"
-                  />
-                )}
-                <h2 className="text-xl font-semibold mt-3 text-center">{consultancy.name}</h2>
-                <p className="text-gray-600 text-center">{consultancy.address}</p>
-                {consultancy.moe_certified && <p className="text-green-500 text-center">✅ MOE Certified</p>}
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Pagination Controls */}
-        <div className="flex justify-center mt-8 space-x-4">
+          {/* Filter Button */}
           <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 border rounded-lg transition hover:bg-gray-200 disabled:opacity-50"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="flex items-center px-5 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all shadow-md"
           >
-            Previous
-          </button>
-
-          <span className="px-4 py-2">Page {currentPage} of {totalPages}</span>
-
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 border rounded-lg transition hover:bg-gray-200 disabled:opacity-50"
-          >
-            Next
+            <Filter className="h-5 w-5 mr-2" />
+            {isFilterOpen ? "Hide Filters" : "Filters"}
           </button>
         </div>
+
+        {/* 📌 Show Filters Only When Clicked */}
+        {isFilterOpen && (
+          <ConsultancyFilters
+            search={search}
+            setSearch={setSearch}
+            district={district}
+            setDistrict={setDistrict}
+            destination={destination}
+            setDestination={setDestination}
+            exam={exam}
+            setExam={setExam}
+            moeCertified={moeCertified}
+            setMoeCertified={setMoeCertified}
+            exams={exams}
+            destinations={destinations}
+          />
+        )}
+
+        {/* Consultancy Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+          {consultancies.length > 0 ? (
+            consultancies.map((consultancy) => (
+              <ConsultancyCard key={consultancy.slug} consultancy={consultancy} />
+            ))
+          ) : (
+            <p className="text-center col-span-full text-gray-500">No consultancies found.</p>
+          )}
+        </div>
+
+        {/* Pagination (Fully Working) */}
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </main>
 
       <Footer />

@@ -3,6 +3,17 @@ import { useEffect, useState } from "react";
 import Head from "next/head";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import {
+  MapPin,
+  Globe,
+  Phone,
+  Mail,
+  Calendar,
+  FileText,
+  Award,
+  ExternalLink,
+  MapIcon,
+} from "lucide-react";
 
 const ConsultancyPage = () => {
   const router = useRouter();
@@ -16,17 +27,14 @@ const ConsultancyPage = () => {
     if (!slug) return console.error("Slug is undefined!");
 
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/${slug}/`;
-    console.log("Fetching from:", apiUrl);
 
     fetch(apiUrl)
       .then((res) => res.json())
       .then((data) => {
-        console.log("Fetched data:", data);
         setConsultancy(data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Fetch error:", err);
         setError("Failed to load consultancy details.");
         setLoading(false);
       });
@@ -40,98 +48,147 @@ const ConsultancyPage = () => {
     <>
       <Head>
         <title>{consultancy.name} - Consultancy</title>
-        <meta name="description" content={consultancy.about || "Study abroad consultancy details"} />
+        <meta
+          name="description"
+          content={consultancy.about || "Study abroad consultancy details"}
+        />
       </Head>
 
       <Header />
 
-      <main className="max-w-4xl mx-auto p-6 bg-white text-black shadow-lg rounded-md">
-        {/* Cover Photo */}
-        {consultancy.cover_photo && (
-          <img src={consultancy.cover_photo} alt="Cover" className="w-full h-60 object-cover rounded-md mb-4" />
-        )}
+      {/* Hero Section */}
+      <div className="relative h-48 md:h-64 w-full">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${consultancy.cover_photo})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-900/70 to-blue-900/90"></div>
+        </div>
 
-        {/* Consultancy Details */}
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Logo */}
-          {consultancy.logo && (
-            <img src={consultancy.logo} alt="Logo" className="w-36 h-36 object-contain border rounded-md shadow" />
-          )}
-
-          {/* Main Info */}
-          <div>
-            <h1 className="text-2xl font-bold">{consultancy.name}</h1>
-            <p><strong>Address:</strong> {consultancy.address || "Not Available"}</p>
-            <p><strong>Website:</strong> {consultancy.website ? <a href={consultancy.website} target="_blank" className="text-blue-500 underline">{consultancy.website}</a> : "Not Available"}</p>
-            <p><strong>Email:</strong> {consultancy.email || "Not Available"}</p>
-            <p><strong>Phone:</strong> {consultancy.phone || "Not Available"}</p>
-            <p><strong>MOE Certified:</strong> {consultancy.moe_certified ? "✅ Yes" : "❌ No"}</p>
-            <p><strong>Establishment Date:</strong> {consultancy.establishment_date || "Not Available"}</p>
-            {consultancy.latitude && consultancy.longitude && (
-              <p><strong>Location:</strong> 📍 {consultancy.latitude}, {consultancy.longitude}</p>
+        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl md:text-3xl font-bold">{consultancy.name}</h1>
+            <div className="flex items-center mt-2">
+              <MapPin className="h-4 w-4 mr-1" />
+              <p className="text-sm md:text-base text-gray-100">{consultancy.address}</p>
+            </div>
+            {consultancy.moe_certified && (
+              <div className="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <Award className="h-3 w-3 mr-1" />
+                MOE Certified
+              </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* About Section */}
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">About</h2>
-          <div dangerouslySetInnerHTML={{ __html: consultancy.about || "<p>No description available.</p>" }} className="prose max-w-none" />
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 md:-mt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Main Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Main Info Card */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                {consultancy.logo && (
+                  <img
+                    src={consultancy.logo}
+                    alt="Logo"
+                    className="w-24 h-24 object-contain border rounded-md shadow"
+                  />
+                )}
+                <div className="flex-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {consultancy.website && (
+                      <a
+                        href={consultancy.website}
+                        target="_blank"
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <Globe className="h-4 w-4 mr-2" />
+                        {consultancy.website}
+                      </a>
+                    )}
+                    {consultancy.phone && (
+                      <a
+                        href={`tel:${consultancy.phone}`}
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <Phone className="h-4 w-4 mr-2" />
+                        {consultancy.phone}
+                      </a>
+                    )}
+                    {consultancy.email && (
+                      <a
+                        href={`mailto:${consultancy.email}`}
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        {consultancy.email}
+                      </a>
+                    )}
+                    {consultancy.establishment_date && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Est. {new Date(consultancy.establishment_date).getFullYear()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* About Section */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="p-6">
+                <h2 className="text-xl font-semibold mb-4">About</h2>
+                <div
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: consultancy.about || "<p>No description available.</p>",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Quick Contact Card */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden sticky top-6">
+              <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                <h2 className="text-lg font-semibold">Contact Us</h2>
+                <p className="text-sm text-blue-100">Get in touch for personalized guidance</p>
+              </div>
+              <div className="p-5">
+                <form className="space-y-4">
+                  <input type="text" placeholder="Your name" className="input-style" />
+                  <input type="email" placeholder="Your email" className="input-style" />
+                  <input type="tel" placeholder="Your phone number" className="input-style" />
+                  <textarea placeholder="How can we help you?" className="input-style" rows="3"></textarea>
+                  <button className="w-full btn-primary">Send Message</button>
+                </form>
+              </div>
+            </div>
+
+            {/* Map Location */}
+            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="p-5">
+                <h2 className="text-lg font-semibold">Our Location</h2>
+                <p className="text-sm text-gray-600">{consultancy.address}</p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${consultancy.latitude},${consultancy.longitude}`}
+                  target="_blank"
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  Get Directions
+                  <ExternalLink className="h-4 w-4 ml-1" />
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* Brochure Download */}
-        {consultancy.brochure && (
-          <div className="mt-6">
-            <a href={consultancy.brochure} target="_blank" className="px-4 py-2 bg-blue-600 text-white rounded-md">
-              📄 Download Brochure
-            </a>
-          </div>
-        )}
-
-        {/* Study Abroad Destinations */}
-        {consultancy.study_abroad_destinations.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Study Abroad Destinations</h2>
-            <ul className="list-disc pl-5">
-              {consultancy.study_abroad_destinations.map((dest) => (
-                <li key={dest.id}>{dest.title}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Test Preparation */}
-        {consultancy.test_preparation.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Test Preparation</h2>
-            <ul className="list-disc pl-5">
-              {consultancy.test_preparation.map((exam) => (
-                <li key={exam.id}>{exam.name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Partner Universities */}
-        {consultancy.partner_universities.length > 0 && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Partner Universities</h2>
-            <ul className="list-disc pl-5">
-              {consultancy.partner_universities.map((uni) => (
-                <li key={uni.id}>{uni.name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Branches (JSON Field) */}
-        {consultancy.branches && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">Branches</h2>
-            <pre className="bg-gray-100 p-3 rounded-md">{JSON.stringify(consultancy.branches, null, 2)}</pre>
-          </div>
-        )}
-      </main>
+      </div>
 
       <Footer />
     </>
