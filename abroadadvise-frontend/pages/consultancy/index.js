@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import HeroSection from "./HeroSection";
@@ -7,45 +7,34 @@ import ConsultancyCard from "./ConsultancyCard";
 import Pagination from "./Pagination";
 import { Search, Filter } from "lucide-react";
 
-const ConsultancyList = () => {
-  const [consultancies, setConsultancies] = useState([]);
-  const [exams, setExams] = useState([]);
-  const [destinations, setDestinations] = useState([]);
+const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, exams, destinations }) => {
+  const [consultancies, setConsultancies] = useState(initialConsultancies);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [search, setSearch] = useState("");
-  const [district, setDistrict] = useState("");
+  const [selectedDistricts, setSelectedDistricts] = useState([]);
   const [destination, setDestination] = useState("");
   const [exam, setExam] = useState("");
   const [moeCertified, setMoeCertified] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/exam/`)
-      .then((res) => res.json())
-      .then((data) => setExams(data.results || data || []));
-  }, []);
-
-  useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/`)
-      .then((res) => res.json())
-      .then((data) => setDestinations(data.results || data || []));
-  }, []);
-
+  // Fetch consultancies on filter change
   useEffect(() => {
     const fetchConsultancies = async () => {
       let query = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=${currentPage}`;
 
       if (search) query += `&name=${search}`;
-      if (district) query += `&district=${district}`;
+      if (selectedDistricts.length > 0)
+        query += `&districts=${selectedDistricts.map(d => d.value).join(",")}`; // ✅ Fix here      
       if (destination) query += `&destination=${destination}`;
       if (exam) query += `&exam=${exam}`;
       if (moeCertified !== "") query += `&moe_certified=${moeCertified}`;
 
       try {
         const response = await fetch(query);
-        const data = await response.json();
+        if (!response.ok) throw new Error(`Failed to fetch consultancies: ${response.status}`);
 
+        const data = await response.json();
         setConsultancies(data.results || []);
         setTotalPages(data.total_pages || 1);
       } catch (error) {
@@ -54,7 +43,7 @@ const ConsultancyList = () => {
     };
 
     fetchConsultancies();
-  }, [search, district, destination, exam, moeCertified, currentPage]);
+  }, [search, selectedDistricts, destination, exam, moeCertified, currentPage]);
 
   return (
     <>
@@ -87,8 +76,8 @@ const ConsultancyList = () => {
           <ConsultancyFilters
             search={search}
             setSearch={setSearch}
-            district={district}
-            setDistrict={setDistrict}
+            selectedDistricts={selectedDistricts}
+            setSelectedDistricts={setSelectedDistricts}
             destination={destination}
             setDestination={setDestination}
             exam={exam}
@@ -97,6 +86,7 @@ const ConsultancyList = () => {
             setMoeCertified={setMoeCertified}
             exams={exams}
             destinations={destinations}
+            districts={districts}
           />
         )}
 
@@ -123,5 +113,51 @@ const ConsultancyList = () => {
     </>
   );
 };
+
+// ✅ Fetch data from server (SSR)
+export async function getServerSideProps() {
+  try {
+    const [consultancyRes, districtRes, examRes, destinationRes] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=1`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/districts/`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/exam/`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/`)
+    ]);
+
+    if (!consultancyRes.ok) throw new Error(`Consultancy API failed: ${consultancyRes.status}`);
+    if (!districtRes.ok) throw new Error(`District API failed: ${districtRes.status}`);
+    if (!examRes.ok) throw new Error(`Exam API failed: ${examRes.status}`);
+    if (!destinationRes.ok) throw new Error(`Destination API failed: ${destinationRes.status}`);
+
+    const [consultancyData, districtData, examData, destinationData] = await Promise.all([
+      consultancyRes.json(),
+      districtRes.json(),
+      examRes.json(),
+      destinationRes.json()
+    ]);
+
+    return {
+      props: {
+        initialConsultancies: consultancyData.results || [],
+        initialTotalPages: consultancyData.total_pages || 1,
+        districts: districtData.results || [],
+        exams: examData.results || [],
+        destinations: destinationData.results || [],
+      },
+    };
+  } catch (error) {
+    console.error("Error in getServerSideProps:", error.message);
+    return {
+      props: {
+        initialConsultancies: [],
+        initialTotalPages: 1,
+        districts: [],
+        exams: [],
+        destinations: [],
+        error: error.message,
+      },
+    };
+  }
+}
 
 export default ConsultancyList;

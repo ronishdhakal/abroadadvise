@@ -1,10 +1,11 @@
 import { Search, Award, FileText, MapPin, Globe } from "lucide-react";
+import Select from "react-select";
 
 const ConsultancyFilters = ({
   search,
   setSearch,
-  district,
-  setDistrict,
+  selectedDistricts,
+  setSelectedDistricts,
   destination,
   setDestination,
   exam,
@@ -13,6 +14,7 @@ const ConsultancyFilters = ({
   setMoeCertified,
   exams,
   destinations,
+  districts,
 }) => {
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
@@ -21,7 +23,7 @@ const ConsultancyFilters = ({
         <button
           onClick={() => {
             setSearch("");
-            setDistrict("");
+            setSelectedDistricts([]);
             setDestination("");
             setExam("");
             setMoeCertified("");
@@ -45,15 +47,29 @@ const ConsultancyFilters = ({
           />
         </div>
 
-        {/* District Filter */}
+        {/* District Multi-Select Filter with Search */}
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="District"
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+          <Select
+            isMulti
+            options={districts.map((d) => ({ value: d.id, label: d.name }))}
+            value={selectedDistricts}
+            onChange={setSelectedDistricts}
+            placeholder="Search & Select Districts..."
+            classNamePrefix="react-select"
+            styles={{
+              control: (base) => ({
+                ...base,
+                padding: "2px",
+                borderColor: "#ccc",
+                boxShadow: "none",
+                "&:hover": { borderColor: "#888" },
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 10, // Ensures dropdown appears above other elements
+              }),
+            }}
           />
         </div>
 
@@ -74,6 +90,7 @@ const ConsultancyFilters = ({
           </select>
         </div>
 
+        {/* Exam Dropdown */}
         <div className="relative">
           <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
@@ -90,6 +107,7 @@ const ConsultancyFilters = ({
           </select>
         </div>
 
+        {/* MOE Certification Dropdown */}
         <div className="relative">
           <Award className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
