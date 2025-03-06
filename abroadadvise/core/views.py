@@ -8,6 +8,16 @@ from .reviews import Review
 from .serializers import ReviewSerializer
 from .filters import ReviewFilter  # ✅ Import the Review filter
 from django_filters.rest_framework import DjangoFilterBackend
+from .models import District
+from .serializers import DistrictSerializer
+
+# ✅ API for Fetching All Districts
+class DistrictListAPIView(generics.ListAPIView):
+    queryset = District.objects.all().order_by("name")  # Sort alphabetically
+    serializer_class = DistrictSerializer
+    permission_classes = [permissions.AllowAny]  # Public access
+    renderer_classes = [JSONRenderer]  # Ensure JSON response
+
 
 # ✅ API for Users to Submit Reviews
 class ReviewCreateAPIView(generics.CreateAPIView):

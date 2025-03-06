@@ -2,6 +2,15 @@ from rest_framework import serializers
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
 from .reviews import Review
+from .models import District
+
+# For District
+
+class DistrictSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = District
+        fields = ["id", "name"]
+
 
 class ReviewSerializer(serializers.ModelSerializer):
     content_type = serializers.SlugRelatedField(

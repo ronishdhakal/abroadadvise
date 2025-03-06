@@ -22,6 +22,10 @@ urlpatterns = [
     
     # for Text Editor
     path('tinymce/', include('tinymce.urls')),
+    
+    # for districts
+    path('', include('core.urls')),  # Make sure this line exists
+
 ]
 
 # ✅ Support API format suffixes (optional)
