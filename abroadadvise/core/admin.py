@@ -1,5 +1,8 @@
 from django.contrib import admin
 from .reviews import Review  # ✅ Ensure Review is imported
+from .models import District
+
+admin.site.register(District)
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

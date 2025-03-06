@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Consultancy, ConsultancyGallery
+from core.models import District  # Import District model
 from destination.models import Destination
 from exam.models import Exam
 from university.models import University
@@ -42,6 +43,11 @@ class ConsultancyGallerySerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.image.url) if obj.image else None
 
+class DistrictSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = District
+        fields = ["id", "name"]
+
 class ConsultancySerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()
     cover_photo = serializers.SerializerMethodField()
@@ -50,6 +56,7 @@ class ConsultancySerializer(serializers.ModelSerializer):
     test_preparation = ExamSerializer(many=True)
     partner_universities = UniversitySerializer(many=True)
     gallery_images = ConsultancyGallerySerializer(many=True, read_only=True)
+    districts = DistrictSerializer(many=True)  # ✅ Include districts
 
     class Meta:
         model = Consultancy

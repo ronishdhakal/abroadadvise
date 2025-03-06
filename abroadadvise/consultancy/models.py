@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField  # TinyMCE HTML Editor
+from core.models import District
 
 User = get_user_model()
 
@@ -15,6 +16,7 @@ class Consultancy(models.Model):
     brochure = models.FileField(upload_to='brochure/', blank=True, null=True)
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
+    districts = models.ManyToManyField(District, blank=True)  # Many-to-Many for multiple districts
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
