@@ -1,38 +1,42 @@
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from core.pagination import StandardResultsSetPagination  # ✅ Import pagination
-from core.filters import ConsultancyFilter  # ✅ Import filtering
+from rest_framework.response import Response
+from rest_framework import status
+from core.pagination import StandardResultsSetPagination
+from core.filters import ConsultancyFilter
 from authentication.permissions import IsAdminUser, IsConsultancyUser
 from .models import Consultancy
 from .serializers import ConsultancySerializer
 
 # ✅ Publicly Accessible List of Consultancies with Pagination, Search, and Filtering
 class ConsultancyListView(ListAPIView):
-    queryset = Consultancy.objects.select_related("user").prefetch_related("districts", "study_abroad_destinations", "test_preparation")
+    queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
+        "districts", "study_abroad_destinations", "test_preparation"
+    ).order_by('priority', 'name')  # Order by priority
     serializer_class = ConsultancySerializer
-    permission_classes = [AllowAny]  # ✅ Public access allowed
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ConsultancyFilter
-    search_fields = ["name"]
+    search_fields = ["name", "services"]
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
-    queryset = Consultancy.objects.select_related("user").prefetch_related("districts", "study_abroad_destinations", "test_preparation")
+    queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
+        "districts", "study_abroad_destinations", "test_preparation", "gallery_images", "branches"
+    )
     serializer_class = ConsultancySerializer
-    permission_classes = [AllowAny]  # ✅ Public access allowed
+    permission_classes = [AllowAny]
     lookup_field = "slug"
 
 # ✅ Create Consultancy (Admin Only)
 @api_view(["POST"])
-@permission_classes([IsAdminUser])  
-@parser_classes([MultiPartParser, FormParser])  
+@permission_classes([IsAdminUser])
+@parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
     serializer = ConsultancySerializer(data=request.data)
     if serializer.is_valid():
@@ -42,8 +46,8 @@ def create_consultancy(request):
 
 # ✅ Update Consultancy (Admin & Consultancy User)
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAdminUser, IsConsultancyUser])  
-@parser_classes([MultiPartParser, FormParser])  
+@permission_classes([IsAdminUser | IsConsultancyUser])  
+@parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
     try:
         consultancy = Consultancy.objects.get(slug=slug)
@@ -57,7 +61,7 @@ def update_consultancy(request, slug):
 
 # ✅ Delete Consultancy (Admin Only)
 @api_view(["DELETE"])
-@permission_classes([IsAdminUser])  
+@permission_classes([IsAdminUser])
 def delete_consultancy(request, slug):
     try:
         consultancy = Consultancy.objects.get(slug=slug)
