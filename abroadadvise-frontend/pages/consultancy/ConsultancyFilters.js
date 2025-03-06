@@ -1,4 +1,4 @@
-import { MapPin, Globe, FileText, Award, Search } from "lucide-react";
+import { Search, Award, FileText, MapPin, Globe } from "lucide-react";
 
 const ConsultancyFilters = ({
   search,
@@ -12,14 +12,13 @@ const ConsultancyFilters = ({
   moeCertified,
   setMoeCertified,
   exams,
-  destinations, // Added destinations list
+  destinations,
 }) => {
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-800">Advanced Filters</h3>
+        <h2 className="text-xl font-semibold">Advanced Filters</h2>
         <button
-          className="text-blue-600 hover:underline text-sm"
           onClick={() => {
             setSearch("");
             setDistrict("");
@@ -27,98 +26,80 @@ const ConsultancyFilters = ({
             setExam("");
             setMoeCertified("");
           }}
+          className="text-sm text-blue-600 hover:underline"
         >
-          Clear all filters
+          Clear All
         </button>
       </div>
 
-      {/* 🔹 Filter Options */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* 🔍 Search Input */}
+        {/* Search Field */}
         <div className="relative">
-          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+          <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search consultancies..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 text-sm"
+            className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
           />
         </div>
 
-        {/* 📌 District Filter */}
-        <div>
-          <label className="text-sm font-medium text-gray-800 flex items-center">
-            <MapPin className="h-4 w-4 mr-2 text-gray-500" /> District
-          </label>
+        {/* District Filter */}
+        <div className="relative">
+          <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Filter by district..."
+            placeholder="District"
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
           />
         </div>
 
-        {/* 🌍 Destination Dropdown (Dynamic) */}
-        <div>
-          <label className="text-sm font-medium text-gray-800 flex items-center">
-            <Globe className="h-4 w-4 mr-2 text-gray-500" /> Destination
-          </label>
+        {/* Destination Dropdown */}
+        <div className="relative">
+          <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
           >
-            <option value="">🌍 All Destinations</option>
-            {destinations.length > 0 ? (
-              destinations.map((dest) => (
-                <option key={dest.id} value={dest.slug}>
-                  {dest.name}
-                </option>
-              ))
-            ) : (
-              <option disabled>Loading destinations...</option>
-            )}
+            <option value="">All Destinations</option>
+            {destinations.map((dest) => (
+              <option key={dest.slug} value={dest.slug}>
+                {dest.title}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* 📝 Exam Preparation Dropdown (Dynamic) */}
-        <div>
-          <label className="text-sm font-medium text-gray-800 flex items-center">
-            <FileText className="h-4 w-4 mr-2 text-gray-500" /> Exam Preparation
-          </label>
+        <div className="relative">
+          <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={exam}
             onChange={(e) => setExam(e.target.value)}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
           >
-            <option value="">📝 All Exams</option>
-            {exams.length > 0 ? (
-              exams.map((examItem) => (
-                <option key={examItem.id} value={examItem.slug}>
-                  {examItem.name}
-                </option>
-              ))
-            ) : (
-              <option disabled>Loading exams...</option>
-            )}
+            <option value="">All Exams</option>
+            {exams.map((item) => (
+              <option key={item.slug} value={item.slug}>
+                {item.name}
+              </option>
+            ))}
           </select>
         </div>
 
-        {/* 🏆 MOE Certification Dropdown */}
-        <div>
-          <label className="text-sm font-medium text-gray-800 flex items-center">
-            <Award className="h-4 w-4 mr-2 text-gray-500" /> MOE Certification
-          </label>
+        <div className="relative">
+          <Award className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={moeCertified}
             onChange={(e) => setMoeCertified(e.target.value)}
-            className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+            className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
           >
-            <option value="">🏆 Any Status</option>
-            <option value="true">✅ Certified Only</option>
-            <option value="false">❌ Non-Certified Only</option>
+            <option value="">MOE Certification</option>
+            <option value="true">Certified</option>
+            <option value="false">Not Certified</option>
           </select>
         </div>
       </div>

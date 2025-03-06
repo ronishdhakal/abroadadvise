@@ -68,15 +68,22 @@ const ConsultancyDetailPage = () => {
       <Header />
 
       <main className="bg-white text-black min-h-screen pb-12">
-        {/* Cover Photo Section */}
-        <div className="relative h-[420px] w-full">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${consultancy.cover_photo})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/80"></div>
-          </div>
-        </div>
+        {/* Cover Photo */}
+<div className="relative w-full h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] flex items-center bg-gray-200 overflow-hidden">
+  {consultancy.cover_photo ? (
+    <img
+      src={consultancy.cover_photo}
+      alt="Cover"
+      className="absolute inset-0 w-full h-full object-cover md:object-center"
+    />
+  ) : (
+    <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+      No Cover Photo Available
+    </div>
+  )}
+  <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-black/80"></div>
+</div>
+
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-6 py-10">

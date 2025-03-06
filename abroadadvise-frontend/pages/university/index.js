@@ -1,32 +1,29 @@
+// Ensure default exports for components
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import HeroSection from "./HeroSection";
+import UniversityFilters from "./UniversityFilters";
+import UniversityCard from "./UniversityCard";
+import Pagination from "./Pagination";
 
 const UniversityList = () => {
     const [universities, setUniversities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCountry, setSelectedCountry] = useState("");
 
-    // ✅ Fetch universities with error handling
-    const fetchUniversities = async (page = 1) => {
+    const fetchUniversities = async (page = 1, search = "", country = "") => {
         setLoading(true);
         try {
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/university/?page=${page}`;
-            console.log("Fetching from API:", apiUrl);
-
+            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/university/?page=${page}&search=${search}&country=${country}`;
             const res = await fetch(apiUrl);
-
-            // ✅ Check if response is valid JSON
-            const contentType = res.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("Received non-JSON response from API");
-            }
-
+            if (!res.ok) throw new Error("Failed to fetch universities");
             const data = await res.json();
             setUniversities(data.results || []);
-            setTotalPages(Math.ceil(data.count / 10)); // Adjust for pagination size
+            setTotalPages(Math.ceil(data.count / 10));
         } catch (error) {
             console.error("Error fetching universities:", error);
         }
@@ -34,62 +31,41 @@ const UniversityList = () => {
     };
 
     useEffect(() => {
-        fetchUniversities(currentPage).catch((err) => {
-            console.error("API Fetch Failed:", err);
-        });
-    }, [currentPage]);
+        fetchUniversities(currentPage, searchQuery, selectedCountry);
+    }, [currentPage, searchQuery, selectedCountry]);
 
     return (
-        <div>
-            <Header /> {/* Include Header */}
-            <div className="container mx-auto p-4">
-                <h1 className="text-3xl font-bold mb-6">Universities</h1>
-
+        <div className="bg-white min-h-screen">
+            <Header />
+            {HeroSection && <HeroSection title="Explore Universities" subtitle="Find the best universities for your studies abroad" />}
+            
+            {UniversityFilters && (
+                <UniversityFilters 
+                    searchQuery={searchQuery} 
+                    setSearchQuery={setSearchQuery} 
+                    selectedCountry={selectedCountry} 
+                    setSelectedCountry={setSelectedCountry} 
+                />
+            )}
+            
+            <div className="container mx-auto px-4 py-6">
                 {loading ? (
-                    <p>Loading...</p>
+                    <p className="text-center text-lg">Loading...</p>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {universities.map((university) => (
-                            <div key={university.slug} className="border p-4 rounded-lg shadow-md bg-white">
-                                {/* ✅ FIXED: Ensure valid logo path */}
-                                {university.logo && (
-                                    <img 
-                                        src={university.logo}  
-                                        alt={university.name} 
-                                        className="h-20 w-20 mb-2 object-cover"
-                                        onError={(e) => e.target.style.display = 'none'} // ✅ Hide broken images
-                                    />
-                                )}
-                                <h2 className="text-xl font-semibold">{university.name}</h2>
-                                <p className="text-gray-600">{university.country}</p>
-                                <Link href={`/university/${university.slug}`} className="text-blue-600 font-medium">
-                                    View Details →
-                                </Link>
-                            </div>
-                        ))}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {universities.length > 0 ? (
+                            universities.map((university) => (
+                                UniversityCard ? <UniversityCard key={university.slug} university={university} /> : null
+                            ))
+                        ) : (
+                            <p className="text-center text-gray-500">No universities found.</p>
+                        )}
                     </div>
                 )}
-
-                {/* Pagination */}
-                <div className="mt-6 flex justify-center">
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-                    >
-                        Prev
-                    </button>
-                    <span className="px-4 py-2">Page {currentPage} of {totalPages}</span>
-                    <button
-                        onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
-                    >
-                        Next
-                    </button>
-                </div>
             </div>
-            <Footer /> {/* Include Footer */}
+            
+            {Pagination && <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />}
+            <Footer />
         </div>
     );
 };
