@@ -5,3 +5,19 @@ class District(models.Model):
 
     def __str__(self):
         return self.name
+
+# ✅ New Verified Model (for courses, consultancy, university, events)
+# core/models.py
+
+
+class VerifiedItem(models.Model):
+    VERIFIED_CHOICES = [
+        (True, "Yes"),
+        (False, "No"),
+    ]
+
+    verified = models.BooleanField(default=False, choices=VERIFIED_CHOICES)
+
+    def __str__(self):
+        return "Verified" if self.verified else "Not Verified"
+

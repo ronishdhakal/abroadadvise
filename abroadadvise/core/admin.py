@@ -1,8 +1,9 @@
 from django.contrib import admin
-from .reviews import Review  # ✅ Ensure Review is imported
-from .models import District
+from .reviews import Review
+from .models import District, VerifiedItem  # ✅ Imported VerifiedItem
 
 admin.site.register(District)
+admin.site.register(VerifiedItem)  # ✅ Registered VerifiedItem
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

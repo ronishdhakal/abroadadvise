@@ -5,13 +5,16 @@ from .reviews import Review
 from .models import District
 
 # For District
-
 class DistrictSerializer(serializers.ModelSerializer):
     class Meta:
         model = District
         fields = ["id", "name"]
 
+# ✅ New Mixin Serializer for Verified Items
+class VerifiedItemSerializerMixin(serializers.Serializer):
+    verified = serializers.BooleanField(read_only=True)
 
+# For Reviews
 class ReviewSerializer(serializers.ModelSerializer):
     content_type = serializers.SlugRelatedField(
         queryset=ContentType.objects.all(), slug_field='model'

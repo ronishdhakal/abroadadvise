@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
+from core.models import VerifiedItem  # ✅ Import VerifiedItem
 
 class University(models.Model):
     UNIVERSITY_TYPE_CHOICES = (
@@ -23,7 +24,7 @@ class University(models.Model):
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
 
-    is_verified = models.BooleanField(default=False)
+    verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)  # ✅ ForeignKey added
 
     eligibility = HTMLField(blank=True, null=True)
     facilities_features = HTMLField(blank=True, null=True)
@@ -45,7 +46,14 @@ class University(models.Model):
         from course.models import Course  # Dynamic import to avoid circular dependency
         return Course.objects.filter(university=self)
 
+
 @receiver(pre_save, sender=University)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
-        instance.slug = slugify(instance.name)
+        base_slug = slugify(instance.name)
+        slug = base_slug
+        counter = 1
+        while University.objects.filter(slug=slug).exclude(id=instance.id).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        instance.slug = slug

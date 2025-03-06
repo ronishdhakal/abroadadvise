@@ -1,11 +1,13 @@
+# consultancy/models.py
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
-from tinymce.models import HTMLField  # TinyMCE HTML Editor
-from core.models import District
+from tinymce.models import HTMLField
+from core.models import District, VerifiedItem  # ✅ VerifiedItem imported properly
 
 User = get_user_model()
 
@@ -16,7 +18,11 @@ class Consultancy(models.Model):
     brochure = models.FileField(upload_to='brochure/', blank=True, null=True)
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
-    districts = models.ManyToManyField(District, blank=True)  # Many-to-Many for multiple districts
+    districts = models.ManyToManyField(District, blank=True)
+    
+    # ✅ Correctly implemented ForeignKey to VerifiedItem
+    verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)
+
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
@@ -32,12 +38,10 @@ class Consultancy(models.Model):
     test_preparation = models.ManyToManyField('exam.Exam', related_name='consultancies', blank=True)
     partner_universities = models.ManyToManyField('university.University', related_name='consultancies', blank=True)
 
-
-    
     def __str__(self):
         return self.name
 
-# Slug Creation for Consultancy (Moved outside the class)
+# Slug Creation
 @receiver(pre_save, sender=Consultancy)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
@@ -49,7 +53,7 @@ def create_slug(sender, instance, **kwargs):
             counter += 1
         instance.slug = slug
 
-# Auto-create user if not assigned (Moved outside the class)
+# Auto-create user if not assigned
 @receiver(post_save, sender=Consultancy)
 def create_consultancy_user(sender, instance, created, **kwargs):
     if created and not instance.user:
@@ -58,7 +62,7 @@ def create_consultancy_user(sender, instance, created, **kwargs):
         instance.user = user
         instance.save()
 
-# Consultancy Gallery Model (Added this model outside Consultancy class)
+# Consultancy Gallery
 class ConsultancyGallery(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='gallery_images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='gallery/')
