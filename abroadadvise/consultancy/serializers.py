@@ -23,7 +23,7 @@ class ExamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Exam
-        fields = ["id", "name", "slug"]  # ✅ Added slug field
+        fields = ["id", "name", "slug", "icon"]  # ✅ Added slug field
 
 class UniversitySerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()

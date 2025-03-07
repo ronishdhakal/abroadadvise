@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-const ConsultancyDestinations = ({ destinations }) => {
+const ConsultancyDestinations = ({ destinations, openInquiryModal, consultancyId, consultancyName }) => {
   const [showAll, setShowAll] = useState(false);
 
   if (!destinations || destinations.length === 0) return null;
@@ -18,18 +18,27 @@ const ConsultancyDestinations = ({ destinations }) => {
       {/* Destinations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {visibleDestinations.map((dest) => (
-          <Link
+          <div 
             key={dest.id}
-            href={`/destination/${dest.slug}`} 
-            className="flex items-center gap-3 p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
+            className="flex flex-col items-start p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
           >
-            <img
-              src={dest.country_logo || "/placeholder-flag.png"}
-              alt={dest.title}
-              className="w-8 h-8 object-cover rounded-full border"
-            />
-            <span className="text-gray-800 font-medium">{dest.title}</span>
-          </Link>
+            <Link href={`/destination/${dest.slug}`} className="flex items-center gap-3 w-full">
+              <img
+                src={dest.country_logo || "/placeholder-flag.png"}
+                alt={dest.title}
+                className="w-8 h-8 object-cover rounded-full border"
+              />
+              <span className="text-gray-800 font-medium">{dest.title}</span>
+            </Link>
+
+            {/* Apply Now Button */}
+            <button
+              onClick={() => openInquiryModal("destination", dest.id, dest.title, consultancyId, consultancyName)}
+              className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-md transition duration-200 w-full text-center"
+            >
+              Apply Now
+            </button>
+          </div>
         ))}
       </div>
 

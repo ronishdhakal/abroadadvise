@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Head from "next/head";
 
-// Importing consultancy sections from pages/consultancy
+// Importing consultancy sections
 import ConsultancyHeader from "./ConsultancyHeader";
 import ConsultancyContact from "./ConsultancyContact";
 import ConsultancyAbout from "./ConsultancyAbout";
@@ -16,8 +16,8 @@ import ConsultancyGallery from "./ConsultancyGallery";
 import ConsultancyBranches from "./ConsultancyBranches";
 import ConsultancyMap from "./ConsultancyMap"; // ✅ Map Component Added
 
-// Importing Inquiry from components
-import ConsultancyInquiry from "../../components/ConsultancyInquiry";
+// Importing Inquiry Modal
+import InquiryModal from "../../components/InquiryModal"; // ✅ Dynamic Inquiry Modal
 
 // Importing global layout components
 import Footer from "../../components/footer";
@@ -32,6 +32,11 @@ const ConsultancyDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState({
+    entityType: "consultancy",
+    entityId: null,
+    entityName: "",
+  });
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -53,6 +58,20 @@ const ConsultancyDetailPage = () => {
     fetchConsultancy();
   }, [router.isReady, slug, API_URL]);
 
+  // ✅ Open Inquiry Modal Dynamically
+  const openInquiryModal = (entityType, entityId, entityName) => {
+    if (!entityType || !entityId) {
+      console.error("❌ Missing entityType or entityId:", { entityType, entityId });
+      alert("Something went wrong! Missing entity type or ID.");
+      return;
+    }
+
+    console.log("✅ Opening Inquiry Modal for:", { entityType, entityId, entityName });
+
+    setSelectedEntity({ entityType, entityId, entityName });
+    setIsModalOpen(true);
+  };
+
   if (loading)
     return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
   if (error)
@@ -70,38 +89,72 @@ const ConsultancyDetailPage = () => {
       <Header />
 
       <main className="bg-gray-50 text-black min-h-screen pb-12">
-        {/* Consultancy Header */}
-        <ConsultancyHeader consultancy={consultancy} setIsModalOpen={setIsModalOpen} />
+        {/* Consultancy Header - Fixed Props */}
+        <ConsultancyHeader
+          consultancy={consultancy}
+          setIsModalOpen={setIsModalOpen}
+          setSelectedEntity={setSelectedEntity} // ✅ Fixed
+        />
 
         <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="md:col-span-1 space-y-6">
             <ConsultancyContact consultancy={consultancy} />
-            <ConsultancyMap google_map_url={consultancy.google_map_url} consultancyName={consultancy.name} /> {/* ✅ Map Included */}
+            <ConsultancyMap google_map_url={consultancy.google_map_url} consultancyName={consultancy.name} />
           </div>
 
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
-            <ConsultancyAbout consultancy={consultancy} />
-            <ConsultancyServices consultancy={consultancy} />
-            <ConsultancyUniversities universities={consultancy.partner_universities} />
-            <ConsultancyDestinations destinations={consultancy.study_abroad_destinations} />
-            <ConsultancyExams exams={consultancy.test_preparation} />
+
+
+            
+
+            {/* Destinations Section with Apply Now Buttons */}
+            <ConsultancyDestinations
+              destinations={consultancy.study_abroad_destinations}
+              openInquiryModal={openInquiryModal}
+            />
+
+            {/* Exams Section with Apply Now Buttons */}
+            <ConsultancyExams
+              exams={consultancy.test_preparation}
+              openInquiryModal={openInquiryModal}
+            />
+
+            {/* Branches */}
+
             <ConsultancyBranches branches={consultancy.branches} />
             <ConsultancyGallery gallery={consultancy.gallery_images} />
+
+            {/* Universities Section with Apply Now Buttons */}
+            <ConsultancyUniversities
+              universities={consultancy.partner_universities}
+              openInquiryModal={openInquiryModal}
+            />
+
+            {/* About Section */}
+            <ConsultancyAbout consultancy={consultancy} />
+            <ConsultancyServices consultancy={consultancy} />
+
+            
           </div>
         </div>
       </main>
 
       <Footer />
 
-      {/* Inquiry Modal */}
-      <ConsultancyInquiry
-        consultancyId={consultancy.id}
-        consultancyName={consultancy.name}
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-      />
+      {/* Dynamic Inquiry Modal */}
+      {isModalOpen && (
+        <InquiryModal
+          consultancyId={consultancy?.id ?? null}
+          consultancyName={consultancy?.name ?? ""}
+          entityType={selectedEntity.entityType}
+          entityId={selectedEntity.entityId}
+          entityName={selectedEntity.entityName}
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+        />
+      )}
     </>
   );
 };

@@ -1,26 +1,66 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-const ConsultancyExams = ({ exams }) => {
+const ConsultancyExams = ({ exams, openInquiryModal, consultancyId, consultancyName }) => {
+  const [showAll, setShowAll] = useState(false);
+
   if (!exams || exams.length === 0) return null;
+
+  const visibleExams = showAll ? exams : exams.slice(0, 6);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Test Preparation</h2>
 
-      {/* Exam Tags with Links */}
-      <div className="flex flex-wrap gap-2">
-        {exams.map((exam) => (
-          <Link
+      {/* Exam Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visibleExams.map((exam) => (
+          <div
             key={exam.id}
-            href={`/exam/${exam.slug}`}  // ✅ Link to exam detail page
-            className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition"
+            className="flex flex-col items-start p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
           >
-            {exam.name}
-          </Link>
+            <Link href={`/exam/${exam.slug}`} className="flex items-center gap-3 w-full">
+              <img
+                src={exam.icon || "/placeholder-icon.png"}
+                alt={exam.name}
+                className="w-8 h-8 object-cover rounded-full border"
+              />
+              <span className="text-gray-800 font-medium">{exam.name}</span>
+            </Link>
+
+            {/* Apply Now Button */}
+            <button
+              onClick={() =>
+                openInquiryModal("exam", exam.id, exam.name, consultancyId, consultancyName)
+              }
+              className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-md transition duration-200 w-full text-center"
+            >
+              Apply Now
+            </button>
+          </div>
         ))}
       </div>
+
+      {/* Show More/Less Button */}
+      {exams.length > 6 && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="w-full mt-4 flex items-center justify-center text-blue-600 hover:underline"
+        >
+          {showAll ? (
+            <>
+              <ChevronUp className="h-5 w-5 mr-1" /> Show Less
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-5 w-5 mr-1" /> Show All ({exams.length})
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 };
