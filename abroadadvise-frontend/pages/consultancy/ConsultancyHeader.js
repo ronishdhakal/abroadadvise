@@ -25,13 +25,20 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
 
   return (
     <div className="relative w-full flex flex-col justify-end overflow-hidden">
-      <div className="relative h-[280px] sm:h-[320px] md:h-[380px] w-full overflow-hidden">
+      {/* Fixed Cover Photo Section: Strict 2000x400 on All Devices */}
+      <div className="relative w-full mx-auto h-[400px] overflow-hidden">
         {consultancy.cover_photo ? (
           <img
             src={consultancy.cover_photo}
             alt="Cover"
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            className="absolute inset-0 w-full h-full"
             style={{
+              maxWidth: "2000px",
+              maxHeight: "400px",
+              width: "100vw",
+              height: "400px",
+              objectFit: "cover", // 🔹 Crops images that exceed the size
+              objectPosition: "center top", // 🔹 Ensures the important part is visible
               transform: isScrolled ? "translateY(-5%)" : "translateY(0)",
               transition: "transform 0.5s ease-out",
             }}
@@ -42,7 +49,8 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/10"></div>
+        {/* Background Limited to Image Area */}
+        <div className="absolute w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/10"></div>
       </div>
 
       <div
