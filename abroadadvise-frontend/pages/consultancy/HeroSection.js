@@ -1,13 +1,20 @@
 const HeroSection = () => {
-    return (
-      <section className="bg-blue-600 text-white text-center py-10 rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold">Find Your Perfect Educational Consultancy</h1>
-        <p className="text-lg mt-2">
+  return (
+    <section className="w-full px-4 md:px-0 flex justify-center mt-10">
+      <div
+        className="bg-gradient-to-r from-[#009ada] to-blue-700 text-white text-center py-16 px-6 md:px-16 
+        rounded-2xl shadow-xl w-7xl"
+        style={{ fontFamily: "'Poppins', sans-serif" }}
+      >
+        <h1 className="text-3xl md:text-5xl font-extrabold">
+          Find Your Perfect Educational Consultancy
+        </h1>
+        <p className="text-base md:text-lg mt-3">
           Discover top-rated consultancies to guide your international education journey
         </p>
-      </section>
-    );
-  };
-  
-  export default HeroSection;
-  
+      </div>
+    </section>
+  );
+};
+
+export default HeroSection;

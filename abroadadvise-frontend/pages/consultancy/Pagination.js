@@ -1,10 +1,15 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-  if (!totalPages || totalPages <= 1) return null; // ✅ Hide pagination if totalPages is undefined or 1
+  if (!totalPages || totalPages <= 1) return null; // ✅ Hide pagination if totalPages is 1 or less
+
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pages.push(i);
+  }
 
   return (
-    <div className="mt-8 flex items-center justify-center space-x-2 bg-white py-4 shadow-md rounded-lg border">
+    <div className="mt-8 flex flex-wrap items-center justify-center space-x-2 bg-white py-4 shadow-md rounded-lg border">
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
@@ -14,9 +19,17 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         Previous
       </button>
 
-      <span className="px-4 py-2 border rounded-lg text-gray-700">
-        Page {currentPage} of {totalPages}
-      </span>
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={`px-4 py-2 border rounded-lg ${
+            currentPage === page ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          {page}
+        </button>
+      ))}
 
       <button
         onClick={() => onPageChange(currentPage + 1)}

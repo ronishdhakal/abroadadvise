@@ -25,20 +25,20 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
 
   return (
     <div className="relative w-full flex flex-col justify-end overflow-hidden">
-      {/* Fixed Cover Photo Section: Strict 2000x400 on All Devices */}
-      <div className="relative w-full mx-auto h-[400px] overflow-hidden">
+      {/* Fixed Cover Photo Section: Ensures 2000x400 Resolution on All Devices */}
+      <div className="relative w-full max-w-[2000px] mx-auto h-[400px] sm:h-[400px] md:h-[400px] lg:h-[400px] overflow-hidden">
         {consultancy.cover_photo ? (
           <img
             src={consultancy.cover_photo}
             alt="Cover"
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full object-cover" // 🔹 Crops any excess image
             style={{
               maxWidth: "2000px",
               maxHeight: "400px",
-              width: "100vw",
-              height: "400px",
-              objectFit: "cover", // 🔹 Crops images that exceed the size
-              objectPosition: "center top", // 🔹 Ensures the important part is visible
+              width: "100%",
+              height: "100%",
+              objectFit: "cover", // Ensures cropping instead of stretching
+              objectPosition: "center", // Centers the image to prevent cutoff issues
               transform: isScrolled ? "translateY(-5%)" : "translateY(0)",
               transition: "transform 0.5s ease-out",
             }}
@@ -49,12 +49,12 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           </div>
         )}
 
-        {/* Background Limited to Image Area */}
+        {/* Background Limited to the Image Area */}
         <div className="absolute w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/10"></div>
       </div>
 
       <div
-        className={`relative w-full bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
+        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
           isScrolled ? "shadow-2xl" : "shadow-lg"
         }`}
         style={{ marginTop: "-2rem" }}

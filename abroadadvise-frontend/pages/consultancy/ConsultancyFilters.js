@@ -19,7 +19,7 @@ const ConsultancyFilters = ({
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">Advanced Filters</h2>
+        <h2 className="text-xl font-semibold text-black">Advanced Filters</h2>
         <button
           onClick={() => {
             setSearch("");
