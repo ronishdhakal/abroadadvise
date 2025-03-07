@@ -22,11 +22,11 @@ class ConsultancyFilter(django_filters.FilterSet):
         to_field_name="id",
     )
 
-    # ✅ Fix filtering by destination (ManyToManyField)
+    # ✅ Fix filtering by destination (Now uses slug instead of ID)
     destination = django_filters.ModelMultipleChoiceFilter(
-        field_name="study_abroad_destinations__id",
+        field_name="study_abroad_destinations__slug",  # ✅ Now filters by slug
         queryset=Destination.objects.all(),
-        to_field_name="id",
+        to_field_name="slug",
     )
 
     # ✅ Fix filtering by exam (ManyToManyField)

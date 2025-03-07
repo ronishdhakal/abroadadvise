@@ -21,19 +21,19 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
   // ✅ Function to fetch consultancies with filters
   const fetchConsultancies = async () => {
     try {
-      let query = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=${currentPage}`;
+      const queryParams = new URLSearchParams({ page: currentPage });
 
-      if (search) query += `&name=${encodeURIComponent(search)}`;
+      if (search) queryParams.append("name", search);
       if (selectedDistricts.length > 0) {
         selectedDistricts.forEach((district) => {
-          query += `&districts=${district.value}`; // ✅ Sends multiple district filters
+          queryParams.append("districts", district.value);
         });
       }
-      if (destination) query += `&destination=${destination}`;
-      if (exam) query += `&exam=${exam}`;
-      if (moeCertified !== "") query += `&moe_certified=${moeCertified}`;
+      if (destination) queryParams.append("destination", destination);
+      if (exam) queryParams.append("exam", exam);
+      if (moeCertified !== "") queryParams.append("moe_certified", moeCertified);
 
-      const response = await fetch(query);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?${queryParams.toString()}`);
       if (!response.ok) throw new Error(`Failed to fetch consultancies: ${response.status}`);
 
       const data = await response.json();

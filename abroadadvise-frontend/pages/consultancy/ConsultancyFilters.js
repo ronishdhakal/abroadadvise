@@ -44,6 +44,7 @@ const ConsultancyFilters = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
+            aria-label="Search Consultancies"
           />
         </div>
 
@@ -57,6 +58,7 @@ const ConsultancyFilters = ({
             onChange={setSelectedDistricts}
             placeholder="Search & Select Districts..."
             classNamePrefix="react-select"
+            aria-label="Select Districts"
           />
         </div>
 
@@ -65,8 +67,12 @@ const ConsultancyFilters = ({
           <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={destination}
-            onChange={(e) => setDestination(e.target.value)}
+            onChange={(e) => {
+              console.log("Selected Destination:", e.target.value); // Debugging log
+              setDestination(e.target.value);
+            }}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
+            aria-label="Select Destination"
           >
             <option value="">All Destinations</option>
             {destinations.map((dest) => (
@@ -84,6 +90,7 @@ const ConsultancyFilters = ({
             value={exam}
             onChange={(e) => setExam(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
+            aria-label="Select Exam"
           >
             <option value="">All Exams</option>
             {exams.map((item) => (
@@ -101,6 +108,7 @@ const ConsultancyFilters = ({
             value={moeCertified}
             onChange={(e) => setMoeCertified(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
+            aria-label="MOE Certification Filter"
           >
             <option value="">MOE Certification</option>
             <option value="true">Certified</option>
