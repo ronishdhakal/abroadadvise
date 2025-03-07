@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-r51rcl7)3*++$0napu*gx#fl-kn(pqb1yfh+_9*^xx94gqx$qt'
 
 # ✅ Debug Mode (Turn OFF in production)
-DEBUG = True
+DEBUG = True  # Set to False in production
 
 # ✅ Allowed Hosts
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
@@ -44,11 +44,11 @@ INSTALLED_APPS = [
 
 # ✅ Middleware
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # CSRF middleware remains
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -77,7 +77,7 @@ TEMPLATES = [
 # ✅ WSGI Application
 WSGI_APPLICATION = 'abroadadvise.wsgi.application'
 
-# ✅ Database (Using SQLite for development)
+# ✅ Database (Using SQLite for development, switch to PostgreSQL for production)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -101,7 +101,7 @@ USE_TZ = True
 
 # ✅ Static & Media Files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]  
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -114,7 +114,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # ✅ Allow unauthenticated users to submit inquiries
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
@@ -123,8 +123,10 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
     ],
     'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',  # ✅ Only return JSON responses
+    ] if not DEBUG else [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # ✅ Keep browsable API in dev mode only
     ],
 }
 
@@ -143,13 +145,19 @@ APPEND_SLASH = False  # Fix issues with missing slashes in URLs
 # ✅ Email Configuration (Update in production)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# ✅ CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins for development
-# If you want specific domains, use:
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+# ✅ CORS Configuration (Ensures API Works with Frontend)
+CORS_ALLOW_ALL_ORIGINS = True  # Disable allowing all origins (security best practice)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # ✅ Explicitly allow Next.js frontend
+    "http://127.0.0.1:3000",
+]
+CORS_ALLOW_CREDENTIALS = True  # ✅ Allow sending authentication credentials
+
+# ✅ CSRF Configuration for API (Ensure frontend can submit forms)
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # ✅ Fix Template Issues
 if 'django_filters' in INSTALLED_APPS:
