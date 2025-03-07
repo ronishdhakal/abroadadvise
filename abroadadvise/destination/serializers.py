@@ -7,7 +7,7 @@ class StudyDestinationSerializer(serializers.ModelSerializer):
     country_logo = serializers.SerializerMethodField()
     cover_page = serializers.SerializerMethodField()
     
-    # Fix ManyToMany Fields to Return Data
+    # Fix ManyToMany Fields to Return Correct Data
     courses_to_study = serializers.SerializerMethodField()
     universities = serializers.SerializerMethodField()
     consultancies = serializers.SerializerMethodField()
@@ -29,11 +29,10 @@ class StudyDestinationSerializer(serializers.ModelSerializer):
         return None
 
     def get_courses_to_study(self, obj):
-        return [{"id": c.id, "name": c.name} for c in obj.courses_to_study.all()]
+        return [{"id": c.id, "name": c.name} for c in obj.courses_to_study.all()]  # ✅ No change needed
 
     def get_universities(self, obj):
-        return [{"id": u.id, "name": u.name} for u in obj.universities.all()]
+        return [{"id": u.id, "name": u.name} for u in obj.universities.all()]  # ✅ Ensure University has `name`
 
     def get_consultancies(self, obj):
-        return [{"id": c.id, "name": c.name} for c in obj.consultancies.all()]
-
+        return [{"id": c.id, "name": c.name} for c in obj.consultancies.all()]  # ✅ Ensure Consultancy has `name`

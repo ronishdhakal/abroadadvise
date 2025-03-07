@@ -13,7 +13,12 @@ class UniversitySerializer(serializers.ModelSerializer):
     brochure = serializers.FileField(required=False)
     logo = serializers.ImageField(required=False)
     cover_photo = serializers.ImageField(required=False)
+    country = serializers.CharField(read_only=True)  # Explicitly include country
 
     class Meta:
         model = University
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'slug', 'brochure', 'logo', 'cover_photo', 'country', 'address', 'email', 'phone',
+            'type', 'website', 'priority', 'eligibility', 'facilities_features', 'scholarship', 'tuition_fees',
+            'consultancies_to_apply', 'about', 'faqs', 'courses'
+        ]

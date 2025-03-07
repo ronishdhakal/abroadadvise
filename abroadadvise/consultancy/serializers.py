@@ -6,25 +6,37 @@ from exam.models import Exam
 from university.models import University
 
 class DestinationSerializer(serializers.ModelSerializer):
+    slug = serializers.ReadOnlyField()  # ✅ Ensure slug is explicitly included
+    country_logo = serializers.SerializerMethodField()
+
     class Meta:
         model = Destination
-        fields = ["id", "name"]
+        fields = ["id", "title", "slug", "country_logo"]  # ✅ Ensure slug is in fields
+
+    def get_country_logo(self, obj):
+        request = self.context.get("request")
+        return request.build_absolute_uri(obj.country_logo.url) if obj.country_logo else None
+
 
 class ExamSerializer(serializers.ModelSerializer):
+    slug = serializers.ReadOnlyField()  # ✅ Ensure slug is included
+
     class Meta:
         model = Exam
-        fields = ["id", "name"]
+        fields = ["id", "name", "slug"]  # ✅ Added slug field
 
 class UniversitySerializer(serializers.ModelSerializer):
     logo = serializers.SerializerMethodField()
+    country = serializers.CharField()  # ✅ Explicitly include country field
 
     class Meta:
         model = University
-        fields = ["id", "name", "logo"]
+        fields = ["id", "name", "slug", "logo", "country"]  # ✅ Added country
 
     def get_logo(self, obj):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.logo.url) if obj.logo else None
+
 
 class ConsultancyGallerySerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -66,7 +78,7 @@ class ConsultancySerializer(serializers.ModelSerializer):
             "verified", "address", "latitude", "longitude", "establishment_date", "website",
             "email", "phone", "moe_certified", "about", "priority", "google_map_url", "services",
             "has_branches", "branches", "gallery_images", "study_abroad_destinations",
-            "test_preparation", "partner_universities"
+            "test_preparation", "partner_universities", 
         ]
 
     def get_logo(self, obj):
@@ -80,3 +92,5 @@ class ConsultancySerializer(serializers.ModelSerializer):
     def get_brochure(self, obj):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.brochure.url) if obj.brochure else None
+    
+    
