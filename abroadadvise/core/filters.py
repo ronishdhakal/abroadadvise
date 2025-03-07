@@ -8,6 +8,8 @@ from exam.models import Exam
 from event.models import Event
 from news.models import News
 from django.apps import apps  # ✅ Avoid circular imports
+from core.models import District
+
 
 class ConsultancyFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr="icontains")
@@ -16,7 +18,7 @@ class ConsultancyFilter(django_filters.FilterSet):
     # ✅ Fix district filtering (ManyToManyField)
     districts = django_filters.ModelMultipleChoiceFilter(
         field_name="districts__id",
-        queryset=Destination.objects.all(),  # ⚠ FIX: Replace with District Model
+        queryset=District.objects.all(),  # ✅ Fixed: Using District Model
         to_field_name="id",
     )
 
@@ -36,7 +38,8 @@ class ConsultancyFilter(django_filters.FilterSet):
 
     class Meta:
         model = Consultancy
-        fields = ["name", "districts", "moe_certified", "destination", "exam"]
+        fields = ["name", "districts", "moe_certified", "destination", "exam"]  # ✅ Fixed Indentation
+
 
 class UniversityFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -45,6 +48,7 @@ class UniversityFilter(filters.FilterSet):
     class Meta:
         model = University
         fields = ["name", "country"]
+
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -56,12 +60,14 @@ class CourseFilter(filters.FilterSet):
         model = Course
         fields = ["name", "country", "university", "duration"]
 
+
 class DestinationFilter(filters.FilterSet):
     title = filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = Destination
         fields = ["title"]
+
 
 class ExamFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -70,6 +76,7 @@ class ExamFilter(filters.FilterSet):
         model = Exam
         fields = ["name"]
 
+
 class EventFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
 
@@ -77,12 +84,14 @@ class EventFilter(filters.FilterSet):
         model = Event
         fields = ["name"]
 
+
 class NewsFilter(filters.FilterSet):
     title = filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = News
         fields = ["title"]
+
 
 # ✅ New: Filter for Reviews
 class ReviewFilter(filters.FilterSet):

@@ -18,30 +18,34 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Fetch consultancies on filter change
-  useEffect(() => {
-    const fetchConsultancies = async () => {
+  // ✅ Function to fetch consultancies with filters
+  const fetchConsultancies = async () => {
+    try {
       let query = `${process.env.NEXT_PUBLIC_API_URL}/consultancy/?page=${currentPage}`;
 
-      if (search) query += `&name=${search}`;
-      if (selectedDistricts.length > 0)
-        query += `&districts=${selectedDistricts.map(d => d.value).join(",")}`; // ✅ Fix here      
+      if (search) query += `&name=${encodeURIComponent(search)}`;
+      if (selectedDistricts.length > 0) {
+        selectedDistricts.forEach((district) => {
+          query += `&districts=${district.value}`; // ✅ Sends multiple district filters
+        });
+      }
       if (destination) query += `&destination=${destination}`;
       if (exam) query += `&exam=${exam}`;
       if (moeCertified !== "") query += `&moe_certified=${moeCertified}`;
 
-      try {
-        const response = await fetch(query);
-        if (!response.ok) throw new Error(`Failed to fetch consultancies: ${response.status}`);
+      const response = await fetch(query);
+      if (!response.ok) throw new Error(`Failed to fetch consultancies: ${response.status}`);
 
-        const data = await response.json();
-        setConsultancies(data.results || []);
-        setTotalPages(data.total_pages || 1);
-      } catch (error) {
-        console.error("Error fetching consultancies:", error);
-      }
-    };
+      const data = await response.json();
+      setConsultancies(data.results || []);
+      setTotalPages(data.total_pages || 1);
+    } catch (error) {
+      console.error("Error fetching consultancies:", error.message);
+    }
+  };
 
+  // ✅ Fetch consultancies on filter change
+  useEffect(() => {
     fetchConsultancies();
   }, [search, selectedDistricts, destination, exam, moeCertified, currentPage]);
 
@@ -147,16 +151,7 @@ export async function getServerSideProps() {
     };
   } catch (error) {
     console.error("Error in getServerSideProps:", error.message);
-    return {
-      props: {
-        initialConsultancies: [],
-        initialTotalPages: 1,
-        districts: [],
-        exams: [],
-        destinations: [],
-        error: error.message,
-      },
-    };
+    return { props: { initialConsultancies: [], initialTotalPages: 1, districts: [], exams: [], destinations: [] }};
   }
 }
 

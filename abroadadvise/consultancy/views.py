@@ -1,11 +1,14 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import get_object_or_404
+from django.utils.text import slugify
+
 from core.pagination import StandardResultsSetPagination
 from core.filters import ConsultancyFilter
 from authentication.permissions import IsAdminUser, IsConsultancyUser
@@ -24,6 +27,16 @@ class ConsultancyListView(ListAPIView):
     filterset_class = ConsultancyFilter
     search_fields = ["name", "services"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # ✅ Ensure filtering for districts (ManyToManyField)
+        district_ids = self.request.GET.getlist("districts")
+        if district_ids:
+            queryset = queryset.filter(districts__id__in=district_ids)
+
+        return queryset.distinct()  # Avoid duplicate results
+
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
     queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
@@ -32,7 +45,6 @@ class ConsultancyDetailView(RetrieveAPIView):
     serializer_class = ConsultancySerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"
-
 # ✅ Create Consultancy (Admin Only)
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
@@ -40,8 +52,17 @@ class ConsultancyDetailView(RetrieveAPIView):
 def create_consultancy(request):
     serializer = ConsultancySerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
+        consultancy = serializer.save()
+
+        # ✅ Ensure slug is created properly and is unique
+        if not consultancy.slug:
+            consultancy.slug = slugify(consultancy.name)
+        while Consultancy.objects.filter(slug=consultancy.slug).exists():
+            consultancy.slug = f"{consultancy.slug}-{consultancy.id}"
+        
+        consultancy.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ✅ Update Consultancy (Admin & Consultancy User)
@@ -49,23 +70,19 @@ def create_consultancy(request):
 @permission_classes([IsAdminUser | IsConsultancyUser])  
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
-    try:
-        consultancy = Consultancy.objects.get(slug=slug)
-        serializer = ConsultancySerializer(consultancy, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    except Consultancy.DoesNotExist:
-        return Response({"error": "Consultancy not found"}, status=status.HTTP_404_NOT_FOUND)
+    consultancy = get_object_or_404(Consultancy, slug=slug)
+    serializer = ConsultancySerializer(consultancy, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # ✅ Delete Consultancy (Admin Only)
 @api_view(["DELETE"])
 @permission_classes([IsAdminUser])
 def delete_consultancy(request, slug):
-    try:
-        consultancy = Consultancy.objects.get(slug=slug)
-        consultancy.delete()
-        return Response({"message": "Consultancy deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-    except Consultancy.DoesNotExist:
-        return Response({"error": "Consultancy not found"}, status=status.HTTP_404_NOT_FOUND)
+    consultancy = get_object_or_404(Consultancy, slug=slug)
+    consultancy.delete()
+    return Response({"message": "Consultancy deleted successfully"}, status=status.HTTP_204_NO_CONTENT)

@@ -19,8 +19,8 @@ class Exam(models.Model):
     exam_fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     type = models.CharField(max_length=50, choices=EXAM_TYPE_CHOICES)
 
-    # ❌ Removed direct ManyToManyField to Consultancy to fix circular dependency
-    # preparation_classes = models.ManyToManyField('consultancy.Consultancy', related_name='exams_preparation', blank=True)
+  
+    preparation_classes = models.ManyToManyField('consultancy.Consultancy', related_name='exams_preparation', blank=True)
 
     exam_centers = HTMLField(blank=True, null=True)
     about = HTMLField(blank=True, null=True)
