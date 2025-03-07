@@ -35,6 +35,7 @@ class Consultancy(models.Model):
     services = HTMLField(blank=True, null=True)
     has_branches = models.BooleanField(default=False)
 
+    # ✅ Restored ManyToMany Relationships
     study_abroad_destinations = models.ManyToManyField('destination.Destination', related_name='consultancy_destinations', blank=True)
     test_preparation = models.ManyToManyField('exam.Exam', related_name='consultancies', blank=True)
     partner_universities = models.ManyToManyField('university.University', related_name='consultancies', blank=True)
@@ -42,7 +43,6 @@ class Consultancy(models.Model):
     def __str__(self):
         return self.name
 
-# Consultancy Branch
 class ConsultancyBranch(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='branches', on_delete=models.CASCADE)
     branch_name = models.CharField(max_length=255)
@@ -53,7 +53,6 @@ class ConsultancyBranch(models.Model):
     def __str__(self):
         return f"{self.consultancy.name} - {self.branch_name}"
 
-# Slug Creation
 @receiver(pre_save, sender=Consultancy)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
@@ -65,7 +64,6 @@ def create_slug(sender, instance, **kwargs):
             counter += 1
         instance.slug = slug
 
-# Auto-create user if not assigned
 @receiver(post_save, sender=Consultancy)
 def create_consultancy_user(sender, instance, created, **kwargs):
     if created and not instance.user:
@@ -74,7 +72,6 @@ def create_consultancy_user(sender, instance, created, **kwargs):
         instance.user = user
         instance.save()
 
-# Consultancy Gallery
 class ConsultancyGallery(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='gallery_images', on_delete=models.CASCADE)
     image = models.ImageField(upload_to='gallery/')

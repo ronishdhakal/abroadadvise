@@ -3,7 +3,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
-from core.models import VerifiedItem  # ✅ Import VerifiedItem
+from core.models import VerifiedItem
 
 class University(models.Model):
     UNIVERSITY_TYPE_CHOICES = (
@@ -24,28 +24,22 @@ class University(models.Model):
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
 
-    verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)  # ✅ ForeignKey added
+    verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)
+
+    priority = models.PositiveIntegerField(default=999, help_text="1 has the highest priority.")
 
     eligibility = HTMLField(blank=True, null=True)
     facilities_features = HTMLField(blank=True, null=True)
     scholarship = HTMLField(blank=True, null=True)
     tuition_fees = models.CharField(max_length=100, blank=True, null=True)
 
-    consultancies_to_apply = models.ManyToManyField(
-        'consultancy.Consultancy', blank=True, related_name='universities'
-    )
+    consultancies_to_apply = models.ManyToManyField('consultancy.Consultancy', blank=True, related_name='universities')
 
     about = HTMLField(blank=True, null=True)
     faqs = HTMLField(blank=True, null=True)
 
     def __str__(self):
         return self.name
-
-    def get_courses(self):
-        """Retrieve related courses dynamically to avoid circular dependency."""
-        from course.models import Course  # Dynamic import to avoid circular dependency
-        return Course.objects.filter(university=self)
-
 
 @receiver(pre_save, sender=University)
 def create_slug(sender, instance, **kwargs):

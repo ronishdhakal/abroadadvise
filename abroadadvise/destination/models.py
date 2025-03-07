@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from tinymce.models import HTMLField  # Import TinyMCE HTMLField
+from tinymce.models import HTMLField
 
 class Destination(models.Model):
     title = models.CharField(max_length=255, unique=True)
@@ -10,14 +10,13 @@ class Destination(models.Model):
     country_logo = models.ImageField(upload_to='logos/', blank=True, null=True)
     cover_page = models.ImageField(upload_to='cover_pages/', blank=True, null=True)
 
-    # Using HTMLField for better formatting and flexibility with TinyMCE
     why_choose = HTMLField(blank=True, null=True)
     requirements = HTMLField(blank=True, null=True)
     documents_required = HTMLField(blank=True, null=True)
 
     courses_to_study = models.ManyToManyField('course.Course', related_name='destinations', blank=True)
     universities = models.ManyToManyField('university.University', related_name='destinations', blank=True)
-    consultancies = models.ManyToManyField('consultancy.Consultancy', related_name='destinations', blank=True)
+    consultancies = models.ManyToManyField('consultancy.Consultancy', related_name='destination_consultancies', blank=True)
 
     scholarships = HTMLField(blank=True, null=True)
     more_information = HTMLField(blank=True, null=True)
@@ -31,4 +30,3 @@ class Destination(models.Model):
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
         instance.slug = slugify(instance.title)
-
