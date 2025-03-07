@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Mail, Phone, Calendar } from "lucide-react";
+import { Globe, Mail, Phone, Calendar, CheckCircle } from "lucide-react";
 
 const ConsultancyContact = ({ consultancy }) => {
   return (
@@ -9,52 +9,70 @@ const ConsultancyContact = ({ consultancy }) => {
 
       {/* Website */}
       {consultancy.website && (
-        <p className="flex items-center space-x-2 text-gray-700">
+        <div className="flex items-center space-x-3 mb-3">
           <Globe className="h-5 w-5 text-gray-500" />
-          <a href={consultancy.website} target="_blank" className="text-blue-600 font-medium hover:underline">
-            {consultancy.website}
-          </a>
-        </p>
+          <div>
+            <p className="text-gray-500 text-sm">Website</p>
+            <a
+              href={consultancy.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 font-medium hover:underline"
+            >
+              {consultancy.website}
+            </a>
+          </div>
+        </div>
       )}
 
       {/* Email */}
       {consultancy.email && (
-        <p className="flex items-center space-x-2 text-gray-700 mt-2">
+        <div className="flex items-center space-x-3 mb-3">
           <Mail className="h-5 w-5 text-gray-500" />
-          <a href={`mailto:${consultancy.email}`} className="text-blue-600 font-medium hover:underline">
-            {consultancy.email}
-          </a>
-        </p>
+          <div>
+            <p className="text-gray-500 text-sm">Email</p>
+            <a href={`mailto:${consultancy.email}`} className="text-blue-600 font-medium hover:underline">
+              {consultancy.email}
+            </a>
+          </div>
+        </div>
       )}
 
       {/* Phone */}
       {consultancy.phone && (
-        <p className="flex items-center space-x-2 text-gray-700 mt-2">
+        <div className="flex items-center space-x-3 mb-3">
           <Phone className="h-5 w-5 text-gray-500" />
-          <a href={`tel:${consultancy.phone}`} className="text-blue-600 font-medium hover:underline">
-            {consultancy.phone}
-          </a>
-        </p>
+          <div>
+            <p className="text-gray-500 text-sm">Phone</p>
+            <a href={`tel:${consultancy.phone}`} className="text-blue-600 font-medium hover:underline">
+              {consultancy.phone}
+            </a>
+          </div>
+        </div>
       )}
 
       {/* Established Date */}
       {consultancy.establishment_date && (
-        <p className="flex items-center space-x-2 text-gray-700 mt-2">
+        <div className="flex items-center space-x-3 mb-4">
           <Calendar className="h-5 w-5 text-gray-500" />
-          <span>
-            <strong>Established:</strong> {new Date(consultancy.establishment_date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </span>
-        </p>
+          <div>
+            <p className="text-gray-500 text-sm">Established</p>
+            <p className="text-gray-900 font-medium">
+              {new Date(consultancy.establishment_date).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Ministry Certification */}
       {consultancy.moe_certified && (
         <div className="mt-4 flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 border border-green-500">
-          ✅ <span className="ml-2">Ministry of Education Certified</span>
+          <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+          <span>Certified Ministry of Education</span>
         </div>
       )}
 

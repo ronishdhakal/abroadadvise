@@ -70,12 +70,13 @@ class ConsultancySerializer(serializers.ModelSerializer):
     test_preparation = ExamSerializer(many=True, read_only=True)
     partner_universities = UniversitySerializer(many=True, read_only=True)
     branches = ConsultancyBranchSerializer(many=True, read_only=True)
+    is_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = Consultancy
         fields = [
             "id", "user", "name", "slug", "brochure", "logo", "cover_photo", "districts",
-            "verified", "address", "latitude", "longitude", "establishment_date", "website",
+            "verified", "is_verified", "address", "latitude", "longitude", "establishment_date", "website",
             "email", "phone", "moe_certified", "about", "priority", "google_map_url", "services",
             "has_branches", "branches", "gallery_images", "study_abroad_destinations",
             "test_preparation", "partner_universities", 
@@ -92,5 +93,9 @@ class ConsultancySerializer(serializers.ModelSerializer):
     def get_brochure(self, obj):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.brochure.url) if obj.brochure else None
+    
+    def get_is_verified(self, obj):
+        """ ✅ This ensures `is_verified` is a simple boolean """
+        return obj.verified.verified if obj.verified else False
     
     
