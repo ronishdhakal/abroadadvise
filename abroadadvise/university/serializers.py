@@ -20,5 +20,5 @@ class UniversitySerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'slug', 'brochure', 'logo', 'cover_photo', 'country', 'address', 'email', 'phone',
             'type', 'website', 'priority', 'eligibility', 'facilities_features', 'scholarship', 'tuition_fees',
-            'consultancies_to_apply', 'about', 'faqs', 'courses'
+            'consultancies_to_apply', 'about', 'faqs', 'courses', 'verified',
         ]

@@ -13,19 +13,26 @@ const UniversityHeader = ({ university }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Early return if university data is not yet available
-  if (!university) {
-    return <div>Loading...</div>; // Show loading state if university is not yet fetched
-  }
+  // Check and construct image URLs
+  const coverPhotoUrl = university.cover_photo
+    ? university.cover_photo.startsWith("http")
+      ? university.cover_photo
+      : `${process.env.NEXT_PUBLIC_API_URL}${university.cover_photo}`
+    : null;
+
+  const logoUrl = university.logo
+    ? university.logo.startsWith("http")
+      ? university.logo
+      : `${process.env.NEXT_PUBLIC_API_URL}${university.logo}`
+    : null;
 
   return (
     <div className="relative w-full flex flex-col justify-end overflow-hidden">
       {/* Cover Photo */}
       <div className="relative w-full max-w-[2000px] mx-auto h-[400px] overflow-hidden">
-        {/* Check if cover_photo exists */}
-        {university.cover_photo ? (
+        {coverPhotoUrl ? (
           <img
-            src={university.cover_photo}  // Full URL will be added by the backend
+            src={coverPhotoUrl}
             alt="Cover"
             className="absolute inset-0 w-full h-full object-cover"
             style={{
@@ -58,10 +65,10 @@ const UniversityHeader = ({ university }) => {
       >
         <div className="flex items-center gap-5 w-full sm:w-auto">
           {/* University Logo */}
-          {university.logo && (
+          {logoUrl && (
             <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
               <img
-                src={university.logo}
+                src={logoUrl}
                 alt={`${university.name} logo`}
                 className="w-full h-full object-contain rounded-xl"
               />

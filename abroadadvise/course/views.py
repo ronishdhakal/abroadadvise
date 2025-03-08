@@ -13,14 +13,25 @@ from .models import Course
 from .serializers import CourseSerializer
 
 # ✅ List Courses with Pagination, Search (No Authentication Required)
+# ✅ List Courses for a Specific University
 class CourseListView(ListAPIView):
-    queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = [AllowAny]  # Publicly accessible
+    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]  # Keep filtering
-    filterset_class = CourseFilter  # Ensure filtering works
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = CourseFilter
     search_fields = ['name']
+
+    def get_queryset(self):
+        queryset = Course.objects.all()
+
+        # ✅ Change university_id to university__slug
+        university_slug = self.request.GET.get("university")
+        if university_slug:
+            queryset = queryset.filter(university__slug=university_slug)
+
+        return queryset
+
 
 # ✅ Create Course (Admin Only)
 @api_view(['POST'])

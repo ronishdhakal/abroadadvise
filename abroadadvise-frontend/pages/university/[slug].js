@@ -1,75 +1,94 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import Header from "@/components/header";  // Import Header
-import Footer from "@/components/footer";  // Import Footer
-import UniversityHeader from "./UniversityHeader";  // University Header Section
-import UniversityOverview from "./UniversityOverview";  // University Overview Section
-import UniversityContact from "./UniversityContact";  // University Contact Section
-import UniversityConsultancies from "./UniversityConsultancies";  // University Consultancies Section
-import UniversityAbout from "./UniversityAbout";  // University About Section
-import UniversityCourses from "./UniversityCourses";  // University Courses Section
-import UniversityFAQs from "./UniversityFAQs";  // University FAQs Section
-import UniversityFacilities from "./UniversityFacilities";  // University Facilities Section
-import UniversityScholarship from "./UniversityScholarship";  // University Scholarship Section
-import UniversityEligibility from "./UniversityEligibility";  // University Eligibility Section
+import Header from "@/components/header";
+import Footer from "@/components/footer";
+import UniversityHeader from "./UniversityHeader";
+import UniversityOverview from "./UniversityOverview";
+import UniversityContact from "./UniversityContact";
+import UniversityConsultancies from "./UniversityConsultancies";
+import UniversityAbout from "./UniversityAbout";
+import UniversityCourses from "./UniversityCourses";
+import UniversityFAQs from "./UniversityFAQs";
+import UniversityFacilities from "./UniversityFacilities";
+import UniversityScholarship from "./UniversityScholarship";
+import UniversityEligibility from "./UniversityEligibility";
 
 export async function getServerSideProps({ params }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/${params.slug}/`);
-  const university = await res.json();
+  try {
+    // ✅ Fetch University Details
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/${params.slug}/`);
+    if (!res.ok) throw new Error("Failed to fetch university data.");
+    const university = await res.json();
 
-  // Fetch related data (consultancies, courses, etc.)
-  const coursesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/?university=${university.id}`);
-  const courses = await coursesRes.json();
+    // ✅ Fetch Consultancies (using university slug)
+    const consultanciesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?university=${params.slug}`);
+    const consultancies = consultanciesRes.ok ? await consultanciesRes.json() : { results: [] };
 
-  return {
-    props: { university, courses: courses.results || [] },
-  };
+    // ✅ Fetch Courses (using university slug)
+    const coursesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/?university=${params.slug}`);
+    const courses = coursesRes.ok ? await coursesRes.json() : { results: [] };
+
+    return {
+      props: {
+        university,
+        consultancies: consultancies.results || [],
+        courses: courses.results || [],
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return {
+      props: {
+        university: null,
+        consultancies: [],
+        courses: [],
+      },
+    };
+  }
 }
 
-export default function UniversityDetail({ university, courses }) {
+export default function UniversityDetail({ university, consultancies, courses }) {
   const router = useRouter();
 
   if (!university) {
-    return <p>Loading...</p>;
+    return <p className="text-center text-gray-500">University not found.</p>;
   }
 
   return (
     <div>
-      <Header /> {/* Include Header */}
+      <Header />
 
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 space-y-6 md:px-10 lg:px-16 xl:px-24">
         {/* University Header */}
         <UniversityHeader university={university} />
 
         {/* University Overview */}
-        <UniversityOverview university={university} />
+        <div className="w-full">
+          <UniversityOverview university={university} />
+        </div>
 
-        {/* University Contact Information */}
-        <UniversityContact university={university} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Left Sidebar - Contact & Consultancies */}
+          <div className="space-y-6 md:col-span-1">
+            <UniversityContact university={university} />
+            <UniversityConsultancies consultancies={consultancies} />
+          </div>
 
-        {/* University Consultancies */}
-        <UniversityConsultancies consultancies={university.consultancies_to_apply} />
-
-        {/* University About */}
-        <UniversityAbout university={university} />
-
-        {/* University Courses */}
-        <UniversityCourses courses={courses} />
-
-        {/* University Facilities */}
-        <UniversityFacilities university={university} />
-
-        {/* University Scholarships */}
-        <UniversityScholarship university={university} />
-
-        {/* University Eligibility */}
-        <UniversityEligibility university={university} />
-
-        {/* University FAQs */}
-        <UniversityFAQs university={university} />
+          {/* Right Section - Main Content */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="w-full">
+              <UniversityAbout university={university} />
+            </div>
+            <UniversityFacilities university={university} />
+            <UniversityScholarship university={university} />
+            <UniversityEligibility university={university} />
+            <UniversityCourses courses={courses} />
+            <UniversityFAQs university={university} />
+          </div>
+        </div>
       </div>
 
-      <Footer /> {/* Include Footer */}
+      <Footer />
     </div>
   );
 }

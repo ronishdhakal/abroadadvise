@@ -52,13 +52,12 @@ class UniversityFilter(filters.FilterSet):
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
-    country = filters.CharFilter(lookup_expr="icontains")
-    university = filters.CharFilter(field_name="university__name", lookup_expr="icontains")
-    duration = filters.CharFilter(lookup_expr="icontains")
+    university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")  # ✅ Use slug instead of name
 
     class Meta:
         model = Course
-        fields = ["name", "country", "university", "duration"]
+        fields = ["name", "university", "duration"]
+
 
 
 class DestinationFilter(filters.FilterSet):

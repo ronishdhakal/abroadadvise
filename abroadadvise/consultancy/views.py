@@ -18,7 +18,7 @@ from .serializers import ConsultancySerializer
 # ✅ Publicly Accessible List of Consultancies with Pagination, Search, and Filtering
 class ConsultancyListView(ListAPIView):
     queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
-        "districts", "study_abroad_destinations", "test_preparation"
+        "districts", "study_abroad_destinations", "test_preparation", "partner_universities"
     ).order_by('priority', 'name')  # Order by priority
     serializer_class = ConsultancySerializer
     permission_classes = [AllowAny]
@@ -35,16 +35,22 @@ class ConsultancyListView(ListAPIView):
         if district_ids:
             queryset = queryset.filter(districts__id__in=district_ids)
 
+        # ✅ Filter consultancies by university slug if provided in request
+        university_slug = self.request.GET.get("university")
+        if university_slug:
+            queryset = queryset.filter(partner_universities__slug=university_slug)
+
         return queryset.distinct()  # Avoid duplicate results
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
     queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
-        "districts", "study_abroad_destinations", "test_preparation", "gallery_images", "branches"
+        "districts", "study_abroad_destinations", "test_preparation", "gallery_images", "branches", "partner_universities"
     )
     serializer_class = ConsultancySerializer
     permission_classes = [AllowAny]
     lookup_field = "slug"
+
 # ✅ Create Consultancy (Admin Only)
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
