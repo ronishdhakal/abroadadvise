@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Head from "next/head"; // ✅ Import Head for setting the page title
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import HeroSection from "./HeroSection";
@@ -51,6 +52,11 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
 
   return (
     <>
+     {/* ✅ Set Page Title & Meta Description */}
+     <Head>
+        <title>Best Consultancies in Nepal to Study Abroad -Abroad Advise</title>
+        <meta name="description" content="Explore top study abroad education consultancies for Nepalese students and plan your international education journey." />
+      </Head>
       <Header />
       <HeroSection />
 

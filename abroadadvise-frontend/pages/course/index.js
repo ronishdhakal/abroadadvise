@@ -88,7 +88,8 @@ export default function Courses() {
   return (
     <>
       <Head>
-        <title>Courses - Abroad Advise</title>
+        <title>Top Courses for Nepalese Students to Study Abroad - Abroad Advise</title>
+        <meta name="description" content="Explore top study abroad courses for Nepalese students and plan your international education journey." />
       </Head>
       <Header />
       <HeroSection />
