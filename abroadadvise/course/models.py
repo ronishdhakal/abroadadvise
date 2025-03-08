@@ -21,6 +21,8 @@ class Course(models.Model):
     # ✅ Many-to-Many relationship with Discipline
     disciplines = models.ManyToManyField(Discipline, related_name="courses", blank=True)
 
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
+
     short_description = HTMLField(blank=True, null=True)
     eligibility = HTMLField(blank=True, null=True)
     course_structure = HTMLField(blank=True, null=True)
@@ -36,4 +38,10 @@ class Course(models.Model):
 @receiver(pre_save, sender=Course)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
-        instance.slug = slugify(instance.name)
+        base_slug = slugify(instance.name)
+        slug = base_slug
+        counter = 1
+        while Course.objects.filter(slug=slug).exclude(id=instance.id).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        instance.slug = slug

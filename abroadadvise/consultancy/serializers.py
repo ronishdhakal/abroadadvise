@@ -17,7 +17,6 @@ class DestinationSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.country_logo.url) if obj.country_logo else None
 
-
 class ExamSerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()  # ✅ Ensure slug is included
 
@@ -36,7 +35,6 @@ class UniversitySerializer(serializers.ModelSerializer):
     def get_logo(self, obj):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.logo.url) if obj.logo else None
-
 
 class ConsultancyGallerySerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -68,7 +66,7 @@ class ConsultancySerializer(serializers.ModelSerializer):
     gallery_images = ConsultancyGallerySerializer(many=True, read_only=True)
     study_abroad_destinations = DestinationSerializer(many=True, read_only=True)
     test_preparation = ExamSerializer(many=True, read_only=True)
-    partner_universities = UniversitySerializer(many=True, read_only=True)
+    partner_universities = serializers.SerializerMethodField()  # ✅ Updated for priority sorting
     branches = ConsultancyBranchSerializer(many=True, read_only=True)
     is_verified = serializers.SerializerMethodField()
 
@@ -97,5 +95,8 @@ class ConsultancySerializer(serializers.ModelSerializer):
     def get_is_verified(self, obj):
         """ ✅ This ensures `is_verified` is a simple boolean """
         return obj.verified.verified if obj.verified else False
-    
-    
+
+    def get_partner_universities(self, obj):
+        """ ✅ Ensure partner universities are ordered by priority """
+        universities = obj.partner_universities.all().order_by("priority", "-id")  # ✅ Sorted by priority
+        return UniversitySerializer(universities, many=True, context=self.context).data

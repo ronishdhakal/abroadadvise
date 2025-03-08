@@ -17,9 +17,6 @@ from .serializers import ConsultancySerializer
 
 # ✅ Publicly Accessible List of Consultancies with Pagination, Search, and Filtering
 class ConsultancyListView(ListAPIView):
-    queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
-        "districts", "study_abroad_destinations", "test_preparation", "partner_universities"
-    ).order_by('priority', 'name')  # Order by priority
     serializer_class = ConsultancySerializer
     permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
@@ -28,7 +25,9 @@ class ConsultancyListView(ListAPIView):
     search_fields = ["name", "services"]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
+            "districts", "study_abroad_destinations", "test_preparation", "partner_universities"
+        ).order_by("priority", "-id")  # ✅ Order by priority first, then by creation order
 
         # ✅ Ensure filtering for districts (ManyToManyField)
         district_ids = self.request.GET.getlist("districts")

@@ -26,7 +26,7 @@ class University(models.Model):
 
     verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)
 
-    priority = models.PositiveIntegerField(default=999, help_text="1 has the highest priority.")
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
 
     eligibility = HTMLField(blank=True, null=True)
     facilities_features = HTMLField(blank=True, null=True)

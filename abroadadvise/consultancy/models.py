@@ -30,7 +30,7 @@ class Consultancy(models.Model):
     moe_certified = models.BooleanField(default=False)
     about = HTMLField(blank=True, null=True)
 
-    priority = models.PositiveIntegerField(default=1, help_text="Lower the number, higher the priority")
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
     google_map_url = models.URLField(blank=True, null=True)
     services = HTMLField(blank=True, null=True)
     has_branches = models.BooleanField(default=False)

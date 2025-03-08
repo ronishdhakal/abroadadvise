@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import F  # ✅ Import F for sorting null values properly
 from core.pagination import StandardResultsSetPagination  # Import pagination
 from core.filters import CourseFilter  # Import filtering
 from authentication.permissions import IsAdminUser
@@ -25,12 +26,13 @@ class CourseListView(ListAPIView):
     def get_queryset(self):
         queryset = Course.objects.all()
 
-        # ✅ Change university_id to university__slug
+        # ✅ Filter courses by university slug if provided
         university_slug = self.request.GET.get("university")
         if university_slug:
             queryset = queryset.filter(university__slug=university_slug)
 
-        return queryset
+        # ✅ Order courses by priority (NULL values will be last) and then by latest created courses
+        return queryset.order_by(F('priority').asc(nulls_last=True), '-id')
 
 
 # ✅ Create Course (Admin Only)
