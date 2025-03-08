@@ -1,9 +1,11 @@
 from django.contrib import admin
 from .reviews import Review
-from .models import District, VerifiedItem  # ✅ Imported VerifiedItem
+from .models import District, VerifiedItem, Discipline  # ✅ Imported Discipline
 
 admin.site.register(District)
 admin.site.register(VerifiedItem)  # ✅ Registered VerifiedItem
+admin.site.register(Discipline)  # ✅ Registered Discipline
+
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):

@@ -1,8 +1,13 @@
-from django.urls import path, include
-from .views import ReviewCreateAPIView, ReviewListAPIView, ReviewModerationAPIView, ReviewReplyAPIView, DistrictListAPIView
+from django.urls import path
+from .views import (
+    ReviewCreateAPIView, ReviewListAPIView, ReviewModerationAPIView, ReviewReplyAPIView,
+    DistrictListAPIView, DisciplineListAPIView  # ✅ Added DisciplineListAPIView
+)
 
 urlpatterns = [
     path('districts/', DistrictListAPIView.as_view(), name='list-districts'),
+    path('disciplines/', DisciplineListAPIView.as_view(), name='list-disciplines'),  # ✅ New API route
+
     # User submits review
     path('', ReviewCreateAPIView.as_view(), name='submit-review'),
 

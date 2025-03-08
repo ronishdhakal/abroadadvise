@@ -8,7 +8,7 @@ from exam.models import Exam
 from event.models import Event
 from news.models import News
 from django.apps import apps  # ✅ Avoid circular imports
-from core.models import District
+from core.models import District, Discipline  # ✅ Import Discipline
 
 
 class ConsultancyFilter(django_filters.FilterSet):
@@ -38,26 +38,39 @@ class ConsultancyFilter(django_filters.FilterSet):
 
     class Meta:
         model = Consultancy
-        fields = ["name", "districts", "moe_certified", "destination", "exam"]  # ✅ Fixed Indentation
+        fields = ["name", "districts", "moe_certified", "destination", "exam"]
 
 
 class UniversityFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
     country = filters.CharFilter(lookup_expr="icontains")
 
+    # ✅ New Filter: Filter Universities by Discipline (using slug)
+    disciplines = django_filters.ModelMultipleChoiceFilter(
+        field_name="disciplines__id",
+        queryset=Discipline.objects.all(),
+        to_field_name="id",
+    )
+
     class Meta:
         model = University
-        fields = ["name", "country"]
+        fields = ["name", "country", "disciplines"]  # ✅ Added disciplines
 
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
     university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")  # ✅ Use slug instead of name
 
+    # ✅ New Filter: Filter Courses by Discipline (using slug)
+    disciplines = django_filters.ModelMultipleChoiceFilter(
+        field_name="disciplines__slug",
+        queryset=Discipline.objects.all(),
+        to_field_name="slug",
+    )
+
     class Meta:
         model = Course
-        fields = ["name", "university", "duration"]
-
+        fields = ["name", "university", "duration", "disciplines"]  # ✅ Added disciplines
 
 
 class DestinationFilter(filters.FilterSet):

@@ -5,11 +5,12 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .reviews import Review
-from .serializers import ReviewSerializer
+from .serializers import ReviewSerializer, DistrictSerializer  # ✅ Import both
 from .filters import ReviewFilter  # ✅ Import the Review filter
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import District
-from .serializers import DistrictSerializer
+from .models import District, Discipline  # ✅ Import Discipline model
+from .serializers import DisciplineSerializer  # ✅ Create a serializer for Discipline
+
 
 # ✅ API for Fetching All Districts
 class DistrictListAPIView(generics.ListAPIView):
@@ -17,6 +18,15 @@ class DistrictListAPIView(generics.ListAPIView):
     serializer_class = DistrictSerializer
     permission_classes = [permissions.AllowAny]  # Public access
     renderer_classes = [JSONRenderer]  # Ensure JSON response
+
+
+# ✅ New API: Fetch All Disciplines for Filtering
+class DisciplineListAPIView(generics.ListAPIView):
+    queryset = Discipline.objects.all().order_by("name")  # ✅ Sort alphabetically
+    serializer_class = DisciplineSerializer
+    permission_classes = [permissions.AllowAny]  # ✅ Public access
+    renderer_classes = [JSONRenderer]  # ✅ Ensure JSON response
+
 
 
 # ✅ API for Users to Submit Reviews
@@ -28,6 +38,7 @@ class ReviewCreateAPIView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)  # Assign user automatically
 
+
 # ✅ API for Viewing Approved Reviews
 class ReviewListAPIView(generics.ListAPIView):
     serializer_class = ReviewSerializer
@@ -38,6 +49,7 @@ class ReviewListAPIView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ReviewFilter
     renderer_classes = [JSONRenderer]  # ✅ Force API to return JSON instead of a template
+
 
 # ✅ API for Admin to Approve/Delete Reviews
 class ReviewModerationAPIView(generics.UpdateAPIView, generics.DestroyAPIView):
@@ -53,6 +65,7 @@ class ReviewModerationAPIView(generics.UpdateAPIView, generics.DestroyAPIView):
         review.is_approved = True  # Approve review
         review.save()
         return Response({"message": "Review approved!"})
+
 
 # ✅ API for Universities/Consultancies to Reply to Reviews
 class ReviewReplyAPIView(generics.UpdateAPIView):

@@ -7,11 +7,12 @@ import UniversityCard from "./UniversityCard";
 import Pagination from "./Pagination";
 import { Search, Filter } from "lucide-react";
 
-const UniversityList = ({ initialUniversities, initialTotalPages }) => {
+const UniversityList = ({ initialUniversities, initialTotalPages, disciplines }) => {
   const [universities, setUniversities] = useState(initialUniversities);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
-  const [searchQuery, setSearchQuery] = useState(""); // ✅ Correctly defined
-  const [countryQuery, setCountryQuery] = useState(""); // ✅ Correctly defined
+  const [searchQuery, setSearchQuery] = useState(""); 
+  const [countryQuery, setCountryQuery] = useState(""); 
+  const [selectedDisciplines, setSelectedDisciplines] = useState([]); // ✅ New: Store selected disciplines
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -22,6 +23,9 @@ const UniversityList = ({ initialUniversities, initialTotalPages }) => {
 
       if (searchQuery) queryParams.append("search", searchQuery);
       if (countryQuery) queryParams.append("country", countryQuery);
+      if (selectedDisciplines.length > 0) {
+        queryParams.append("disciplines", selectedDisciplines.map(d => d.value).join(",")); // ✅ Apply discipline filter
+      }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?${queryParams.toString()}`);
       if (!response.ok) throw new Error(`Failed to fetch universities: ${response.status}`);
@@ -37,7 +41,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages }) => {
   // ✅ Fetch universities on filter change
   useEffect(() => {
     fetchUniversities();
-  }, [searchQuery, countryQuery, currentPage]);
+  }, [searchQuery, countryQuery, selectedDisciplines, currentPage]);
 
   return (
     <>
@@ -73,8 +77,11 @@ const UniversityList = ({ initialUniversities, initialTotalPages }) => {
           <UniversityFilters
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            countryQuery={countryQuery} // ✅ Pass it correctly
-            setCountryQuery={setCountryQuery} // ✅ Pass it correctly
+            countryQuery={countryQuery}
+            setCountryQuery={setCountryQuery}
+            selectedDisciplines={selectedDisciplines}
+            setSelectedDisciplines={setSelectedDisciplines}
+            disciplines={disciplines} // ✅ Pass available disciplines
           />
         )}
 
@@ -108,19 +115,23 @@ const UniversityList = ({ initialUniversities, initialTotalPages }) => {
 export async function getServerSideProps() {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?page=1`);
-    if (!response.ok) throw new Error(`University API failed: ${response.status}`);
+    const disciplinesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/discipline/`); // ✅ Fetch disciplines
+
+    if (!response.ok || !disciplinesRes.ok) throw new Error("Failed to fetch data");
 
     const data = await response.json();
+    const disciplines = await disciplinesRes.json();
 
     return {
       props: {
         initialUniversities: data.results || [],
         initialTotalPages: data.total_pages || 1,
+        disciplines: disciplines.results || [], // ✅ Pass disciplines
       },
     };
   } catch (error) {
     console.error("Error fetching data:", error.message);
-    return { props: { initialUniversities: [], initialTotalPages: 1 } };
+    return { props: { initialUniversities: [], initialTotalPages: 1, disciplines: [] } };
   }
 }
 

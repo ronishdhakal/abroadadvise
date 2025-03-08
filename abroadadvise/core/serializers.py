@@ -2,19 +2,29 @@ from rest_framework import serializers
 from django.utils.timezone import now
 from django.contrib.contenttypes.models import ContentType
 from .reviews import Review
-from .models import District
+from .models import District, Discipline  # ✅ Import Discipline Model
 
-# For District
+
+# ✅ New Serializer: DisciplineSerializer (for API response)
+class DisciplineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = ["id", "name"]
+
+
+# ✅ District Serializer (Already Present)
 class DistrictSerializer(serializers.ModelSerializer):
     class Meta:
         model = District
         fields = ["id", "name"]
 
+
 # ✅ New Mixin Serializer for Verified Items
 class VerifiedItemSerializerMixin(serializers.Serializer):
     verified = serializers.BooleanField(read_only=True)
 
-# For Reviews
+
+# ✅ Review Serializer (Already Present)
 class ReviewSerializer(serializers.ModelSerializer):
     content_type = serializers.SlugRelatedField(
         queryset=ContentType.objects.all(), slug_field='model'

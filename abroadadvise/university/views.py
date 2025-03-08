@@ -15,7 +15,7 @@ from .serializers import UniversitySerializer
 
 # ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
-    queryset = University.objects.all()
+    queryset = University.objects.prefetch_related("disciplines").all()  # ✅ Prefetch disciplines for filtering
     serializer_class = UniversitySerializer
     permission_classes = [AllowAny]  # 🔓 Public Access
     pagination_class = StandardResultsSetPagination
@@ -40,7 +40,7 @@ def create_university(request):
 @permission_classes([AllowAny])  # 🔓 Public Access
 def get_university(request, slug):
     try:
-        university = University.objects.get(slug=slug)
+        university = University.objects.prefetch_related("disciplines").get(slug=slug)
         serializer = UniversitySerializer(university)
         return Response(serializer.data)
     except University.DoesNotExist:
@@ -52,7 +52,7 @@ def get_university(request, slug):
 @parser_classes([MultiPartParser, FormParser])  
 def update_university(request, slug):
     try:
-        university = University.objects.get(slug=slug)
+        university = University.objects.prefetch_related("disciplines").get(slug=slug)
         serializer = UniversitySerializer(university, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()

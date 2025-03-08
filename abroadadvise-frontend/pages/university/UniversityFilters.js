@@ -1,14 +1,54 @@
 import { Search, MapPin } from "lucide-react";
+import Select from "react-select"; // ✅ Import react-select for multi-select
 
-const UniversityFilters = ({ searchQuery, setSearchQuery, countryQuery, setCountryQuery }) => {
+const UniversityFilters = ({
+  searchQuery,
+  setSearchQuery,
+  countryQuery,
+  setCountryQuery,
+  selectedDisciplines,
+  setSelectedDisciplines,
+  disciplines,
+}) => {
+  // ✅ Convert disciplines to react-select options
+  const disciplineOptions = disciplines.map((discipline) => ({
+    value: discipline.id,
+    label: discipline.name,
+  }));
+
+  // ✅ Custom styles to make dropdown text **black**
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      borderRadius: "8px",
+      borderColor: "#D1D5DB", // Gray border
+      boxShadow: "none",
+      "&:hover": { borderColor: "#2563EB" }, // Blue on hover
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "#fff" : "#000", // White for selected, Black for others
+      backgroundColor: state.isSelected ? "#2563EB" : "#fff", // Blue for selected
+      "&:hover": {
+        backgroundColor: "#E5E7EB", // Light gray hover effect
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "8px",
+      boxShadow: "rgba(0, 0, 0, 0.1) 0px 4px 12px",
+    }),
+  };
+
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-black">Advanced Filters</h2> {/* Changed text color to black */}
+        <h2 className="text-xl font-semibold text-black">Advanced Filters</h2>
         <button
           onClick={() => {
             setSearchQuery("");
             setCountryQuery("");
+            setSelectedDisciplines([]);
           }}
           className="text-sm text-blue-600 hover:underline"
         >
@@ -25,8 +65,7 @@ const UniversityFilters = ({ searchQuery, setSearchQuery, countryQuery, setCount
             placeholder="Search for a university..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
-            aria-label="Search Universities"
+            className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
           />
         </div>
 
@@ -35,11 +74,24 @@ const UniversityFilters = ({ searchQuery, setSearchQuery, countryQuery, setCount
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by country name..."
+            placeholder="Search by country..."
             value={countryQuery}
             onChange={(e) => setCountryQuery(e.target.value)}
-            className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
-            aria-label="Search by Country"
+            className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
+          />
+        </div>
+
+        {/* Discipline Multi-Select */}
+        <div className="col-span-full">
+          <label className="text-sm font-medium text-gray-700">Discipline</label>
+          <Select
+            options={disciplineOptions}
+            isMulti
+            value={selectedDisciplines}
+            onChange={setSelectedDisciplines}
+            placeholder="Select disciplines..."
+            styles={customStyles} // ✅ Apply custom styles
+            className="mt-1"
           />
         </div>
       </div>

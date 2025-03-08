@@ -3,7 +3,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
-from core.models import VerifiedItem
+from core.models import VerifiedItem, Discipline  # ✅ Import Discipline
 
 class University(models.Model):
     UNIVERSITY_TYPE_CHOICES = (
@@ -38,8 +38,13 @@ class University(models.Model):
     about = HTMLField(blank=True, null=True)
     faqs = HTMLField(blank=True, null=True)
 
+    # ✅ Many-to-Many relationship with Discipline
+    disciplines = models.ManyToManyField(Discipline, related_name="universities", blank=True)
+
     def __str__(self):
-        return self.name
+        """ ✅ Return University name along with its linked disciplines """
+        discipline_names = ', '.join(discipline.name for discipline in self.disciplines.all())
+        return f"{self.name} ({discipline_names})" if discipline_names else self.name
 
 @receiver(pre_save, sender=University)
 def create_slug(sender, instance, **kwargs):

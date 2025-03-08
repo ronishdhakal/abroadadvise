@@ -7,9 +7,6 @@ class District(models.Model):
         return self.name
 
 # ✅ New Verified Model (for courses, consultancy, university, events)
-# core/models.py
-
-
 class VerifiedItem(models.Model):
     VERIFIED_CHOICES = [
         (True, "Yes"),
@@ -21,3 +18,9 @@ class VerifiedItem(models.Model):
     def __str__(self):
         return "Verified" if self.verified else "Not Verified"
 
+# ✅ New Discipline Model (e.g., IT, Management, Engineering)
+class Discipline(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name

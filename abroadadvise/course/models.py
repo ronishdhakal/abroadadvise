@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField  # TinyMCE HTML Editor
+from core.models import Discipline  # ✅ Importing Discipline model
 
 class Course(models.Model):
     name = models.CharField(max_length=255)
@@ -17,6 +18,9 @@ class Course(models.Model):
     cover_image = models.ImageField(upload_to='cover_images/', blank=True, null=True)
     fee = models.CharField(max_length=100, blank=True, null=True)
 
+    # ✅ Many-to-Many relationship with Discipline
+    disciplines = models.ManyToManyField(Discipline, related_name="courses", blank=True)
+
     short_description = HTMLField(blank=True, null=True)
     eligibility = HTMLField(blank=True, null=True)
     course_structure = HTMLField(blank=True, null=True)
@@ -25,7 +29,9 @@ class Course(models.Model):
     features = HTMLField(blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        """ ✅ Return Course name along with its linked disciplines """
+        discipline_names = ', '.join(discipline.name for discipline in self.disciplines.all())
+        return f"{self.name} ({discipline_names})" if discipline_names else self.name
 
 @receiver(pre_save, sender=Course)
 def create_slug(sender, instance, **kwargs):
