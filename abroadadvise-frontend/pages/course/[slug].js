@@ -1,102 +1,149 @@
-// frontend/pages/course/[slug].js
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import Head from 'next/head';
-import Image from 'next/image';
-import Header from '../../components/header'; // ✅ Fixed Import
-import Footer from '../../components/footer'; // ✅ Fixed Import
-import Link from 'next/link';
+"use client";
+
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import Head from "next/head";
+import Header from "../../components/header";
+import Footer from "../../components/footer";
+
+// Importing course components
+import CourseHeader from "./CourseHeader";
+import CourseSummary from "./CourseSummary";
+import CourseOverview from "./CourseOverview";
+import CourseDiscipline from "./CourseDiscipline";
+import CourseEligibility from "./CourseEligibility";
+import CourseStructure from "./CourseStructure";
+import CourseCareer from "./CourseCareer";
+import CourseScholarship from "./CourseScholarship";
+import CourseFeatures from "./CourseFeatures";
+import CourseAbout from "./CourseAbout";
+import CourseConsultancies from "./CourseConsultancies"; // ✅ New Component
 
 export default function CourseDetail() {
-    const router = useRouter();
-    const { slug } = router.query;
-    const [course, setCourse] = useState(null);
-    const [error, setError] = useState(null);
+  const router = useRouter();
+  const { slug } = router.query;
+  const [course, setCourse] = useState(null);
+  const [consultancies, setConsultancies] = useState([]);
+  const [error, setError] = useState(null);
 
-    useEffect(() => {
-        if (slug) {
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/${slug}/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Course not found');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Fetched Course Data:", data); // ✅ Debugging Log
-                    setCourse(data);
-                })
-                .catch(error => setError(error.message));
-        }
-    }, [slug]);
-    
+  useEffect(() => {
+    if (slug) {
+      // ✅ Fetch Course Details
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/${slug}/`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Course not found");
+          }
+          return response.json();
+        })
+        .then(data => {
+          setCourse(data);
+          console.log("Fetched Course Data:", data);
 
-    return (
-        <>
-            <Head>
-                <title>{course ? course.name : "Course Details"} - Abroad Advise</title>
-            </Head>
-            <Header />
-            <div className="container mx-auto py-8">
-                {error && <p className="text-center text-red-500">Error: {error}</p>}
-                {course && (
-                    <>
-                        <h1 className="text-4xl font-bold mb-4">{course.name} ({course.abbreviation})</h1>
-                        {course.cover_image && (
-                            <div className="w-full h-64 relative mb-6">
-                                <Image 
-                                    src={course.cover_image.startsWith("http") ? course.cover_image : `${process.env.NEXT_PUBLIC_API_URL}${course.cover_image}`} 
-                                    alt={course.name} 
-                                    width={800} 
-                                    height={400} 
-                                    className="object-cover w-full h-full"
-                                />
-                            </div>
-                        )}
-                        <p className="text-lg text-gray-700 mb-4">{course.short_description}</p>
-                        <p><strong>Duration:</strong> {course.duration}</p>
-                        <p><strong>Level:</strong> {course.level}</p>
-                        <p><strong>Fee:</strong> {course.fee}</p>
-                        {course.university && course.university.slug ? (
-                            <p><strong>University:</strong> <Link href={`/university/${course.university.slug}`} className="text-blue-500 underline">{course.university.name}</Link></p>
-                        ) : (
-                            <p><strong>University:</strong> Not Available</p>
-                        )}
-                        {course.icon && (
-                            <div className="mt-4">
-                                <Image 
-                                    src={course.icon.startsWith("http") ? course.icon : `${process.env.NEXT_PUBLIC_API_URL}${course.icon}`} 
-                                    alt="Course Icon" 
-                                    width={100} 
-                                    height={100} 
-                                    className="object-contain"
-                                />
-                            </div>
-                        )}
-                        <div className="mt-6">
-                            <h2 className="text-2xl font-semibold">Eligibility</h2>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: course.eligibility }} />
-                        </div>
-                        <div className="mt-6">
-                            <h2 className="text-2xl font-semibold">Course Structure</h2>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: course.course_structure }} />
-                        </div>
-                        <div className="mt-6">
-                            <h2 className="text-2xl font-semibold">Job Prospects</h2>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: course.job_prospects }} />
-                        </div>
-                        <div className="mt-6">
-                            <h2 className="text-2xl font-semibold">Scholarship Opportunities</h2>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: course.scholarship }} />
-                        </div>
-                        <div className="mt-6">
-                            <h2 className="text-2xl font-semibold">Key Features</h2>
-                            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: course.features }} />
-                        </div>
-                    </>
+          // ✅ Fetch Consultancies (only if university exists)
+          if (data.university) {
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?university=${data.university.slug}`)
+              .then(res => res.json())
+              .then(result => {
+                setConsultancies(result.results || []);
+                console.log("Fetched Consultancies:", result.results);
+              })
+              .catch(err => console.error("Error fetching consultancies:", err));
+          }
+        })
+        .catch(error => setError(error.message));
+    }
+  }, [slug]);
+
+  return (
+    <>
+      <Head>
+        <title>{course ? `${course.name} - Abroad Advise` : "Course Details"}</title>
+      </Head>
+      <Header />
+
+      {/* ✅ Main Layout */}
+      <main className="bg-gray-50 text-black min-h-screen pb-12">
+        {error && <p className="text-center text-red-500">Error: {error}</p>}
+        {course && (
+          <>
+            {/* ✅ Course Header */}
+            <CourseHeader course={course} />
+
+            {/* ✅ Course Summary */}
+            <CourseSummary course={course} />
+
+            {/* ✅ Main Content Layout */}
+            <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* ✅ Left Sidebar */}
+              <div className="space-y-6 md:col-span-1">
+                {/* ✅ Course Overview */}
+                <CourseOverview course={course} />
+
+                {/* ✅ Disciplines */}
+                {course.disciplines?.length > 0 && (
+                  <CourseDiscipline disciplines={course.disciplines.map(d => d.name)} />
                 )}
+
+                {/* ✅ University Information */}
+                {course.university && (
+                  <div className="bg-white shadow-md rounded-lg p-5 border">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">University</h2>
+                    <p className="text-gray-700">
+                      <strong>{course.university.name}</strong>
+                    </p>
+                    <p className="text-gray-500 text-sm">{course.university.country || "Location not available"}</p>
+                    <a
+                      href={`/university/${course.university.slug}`}
+                      className="mt-4 block px-4 py-2 bg-blue-600 text-white text-center rounded-md hover:bg-blue-700 transition"
+                    >
+                      View University
+                    </a>
+                  </div>
+                )}
+
+                {/* ✅ Consultancies (appears below university in Desktop) */}
+                {consultancies.length > 0 && (
+                  <div className="hidden md:block">
+                    <CourseConsultancies consultancies={consultancies} course={course} />
+                  </div>
+                )}
+              </div>
+
+              {/* ✅ Right Content Section */}
+              <div className="md:col-span-2 space-y-6">
+                {/* ✅ Consultancies (appears above eligibility in Mobile) */}
+                {consultancies.length > 0 && (
+                  <div className="md:hidden">
+                    <CourseConsultancies consultancies={consultancies} course={course} />
+                  </div>
+                )}
+
+                {/* ✅ Eligibility */}
+                <CourseEligibility eligibility={course.eligibility} />
+
+                {/* ✅ Scholarship */}
+                <CourseScholarship scholarship={course.scholarship} />
+
+                {/* ✅ Course Career */}
+                <CourseCareer jobProspects={course.job_prospects} />
+
+                {/* ✅ Course Structure */}
+                <CourseStructure structure={course.course_structure} />
+
+                {/* ✅ Course Features */}
+                <CourseFeatures features={course.features} />
+
+                {/* ✅ About Section */}
+                <CourseAbout about={course.short_description} />
+              </div>
             </div>
-            <Footer />
-        </>
-    );
+          </>
+        )}
+      </main>
+
+      <Footer />
+    </>
+  );
 }

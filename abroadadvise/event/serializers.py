@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event, EventGallery, EventRegistration
+from .models import Event, EventGallery
 from university.models import University
 from consultancy.models import Consultancy
 from destination.models import Destination
@@ -46,12 +46,3 @@ class EventSerializer(serializers.ModelSerializer):
             return {"name": obj.organizer.name, "slug": obj.organizer.slug}
         return None
 
-class EventRegistrationSerializer(serializers.ModelSerializer):
-    event_name = serializers.ReadOnlyField(source="event.name")
-    event_price = serializers.ReadOnlyField(source="event.price")
-    event_registration_type = serializers.ReadOnlyField(source="event.registration_type")
-
-    class Meta:
-        model = EventRegistration
-        fields = ['id', 'event', 'event_name', 'event_price', 'event_registration_type', 'name', 'email', 'phone', 'registered_at', 'payment_status']
-        read_only_fields = ['registered_at', 'payment_status']

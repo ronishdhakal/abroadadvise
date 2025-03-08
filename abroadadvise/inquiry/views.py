@@ -2,7 +2,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics
-from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from .models import Inquiry
 from .serializers import InquirySerializer
@@ -22,7 +21,7 @@ User = get_user_model()
 def submit_inquiry(request):
     """
     API for submitting inquiries. Allows unauthenticated users to submit inquiries.
-    Tracks which consultancy page the inquiry was submitted from.
+    Ensures university and consultancy are tracked correctly.
     """
     logger.info(f"📥 Received Inquiry Data: {request.data}")
 
@@ -39,7 +38,7 @@ def submit_inquiry(request):
         entity_type = inquiry.entity_type
         entity_id = inquiry.entity_id
 
-        # ✅ Track the correct entity and consultancy source
+        # ✅ Track the correct entity
         if entity_type == "university":
             inquiry.university = University.objects.filter(id=entity_id).first()
         elif entity_type == "consultancy":
@@ -51,95 +50,24 @@ def submit_inquiry(request):
         elif entity_type == "event":
             inquiry.event = Event.objects.filter(id=entity_id).first()
         elif entity_type == "course":
-            inquiry.course = Course.objects.filter(id=entity_id).first()
-        
-        inquiry.save()
+            course = Course.objects.filter(id=entity_id).first()
+            if course:
+                inquiry.course = course
+                inquiry.university = course.university  # ✅ Automatically link course to university
 
-        # ✅ Track which consultancy page submitted the inquiry
+        # ✅ Fix: Track consultancy for course inquiries if it exists
         if "consultancy_id" in request.data:
             consultancy = Consultancy.objects.filter(id=request.data["consultancy_id"]).first()
             if consultancy:
-                inquiry.consultancy = consultancy
-                inquiry.save()
+                inquiry.consultancy = consultancy  # ✅ Now stored correctly
 
-        logger.info(f"✅ Inquiry Submitted: {inquiry.name} - {inquiry.email} - {inquiry.entity_type} - Consultancy: {inquiry.consultancy}")
-
-        # ✅ Notify Admins and Institution
-        super_admins = User.objects.filter(is_superuser=True).values_list('email', flat=True)
-        if super_admins:
-            try:
-                send_mail(
-                    f"New Inquiry about {inquiry.entity_type.capitalize()} (ID: {inquiry.entity_id}) - From Consultancy: {inquiry.consultancy}",
-                    f"Name: {inquiry.name}\nEmail: {inquiry.email}\nPhone: {inquiry.phone}\nMessage: {inquiry.message}",
-                    'no-reply@abroadadvise.com',
-                    list(super_admins),
-                    fail_silently=False
-                )
-            except Exception as e:
-                logger.error(f"Error sending email to super admins: {str(e)}")
-
-        institution_email = get_institution_email(inquiry.entity_type, inquiry.entity_id)
-        if institution_email:
-            try:
-                send_mail(
-                    f"New Inquiry about {inquiry.entity_type.capitalize()} (ID: {inquiry.entity_id}) - From Consultancy: {inquiry.consultancy}",
-                    f"Name: {inquiry.name}\nEmail: {inquiry.email}\nPhone: {inquiry.phone}\nMessage: {inquiry.message}",
-                    'no-reply@abroadadvise.com',
-                    [institution_email],
-                    fail_silently=False
-                )
-            except Exception as e:
-                logger.error(f"Error sending email to institution: {str(e)}")
+        inquiry.save()
+        logger.info(f"✅ Inquiry Submitted: {inquiry.name} - {inquiry.email} - {inquiry.entity_type} - University: {inquiry.university} - Consultancy: {inquiry.consultancy}")
 
         return Response({"message": "Inquiry submitted successfully"}, status=status.HTTP_201_CREATED)
 
     logger.warning(f"❌ Inquiry Submission Failed: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-def get_institution_email(entity_type, entity_id):
-    """
-    Helper function to get the email address of the institution (University, Consultancy, etc.).
-    If the entity does not have an email field, fetch it from the related consultancy/university.
-    """
-    if entity_type == "consultancy":
-        consultancy = Consultancy.objects.filter(id=entity_id).first()
-        return consultancy.email if consultancy and hasattr(consultancy, 'email') else None
-    
-    elif entity_type == "university":
-        university = University.objects.filter(id=entity_id).first()
-        return university.email if university and hasattr(university, 'email') else None
-
-    elif entity_type == "destination":
-        destination = Destination.objects.filter(id=entity_id).first()
-        if destination and hasattr(destination, 'consultancies'):
-            # Ensure that the 'consultancies' attribute exists
-            consultancy = destination.consultancies.first()  # Assuming a reverse relationship
-            return consultancy.email if consultancy else None
-        return None
-
-    elif entity_type == "exam":
-        exam = Exam.objects.filter(id=entity_id).first()
-        if exam and exam.consultancies.exists():  # Check if the exam has associated consultancies
-            consultancy = exam.consultancies.first()  # Get the first consultancy
-            return consultancy.email if consultancy else None
-        return None
-
-    elif entity_type == "event":
-        event = Event.objects.filter(id=entity_id).first()
-        if event and event.consultancy:  # If event is linked to a consultancy
-            return event.consultancy.email if hasattr(event.consultancy, 'email') else None
-        return None
-
-    elif entity_type == "course":
-        course = Course.objects.filter(id=entity_id).first()
-        if course and course.university:  # If course is linked to a university
-            return course.university.email if hasattr(course.university, 'email') else None
-        return None
-
-    return None
-
-
 
 
 # ✅ List all inquiries for universities (Authenticated University Users Only)

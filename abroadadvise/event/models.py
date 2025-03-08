@@ -24,7 +24,7 @@ class Event(models.Model):
     featured_image = models.ImageField(upload_to='events/featured/', blank=True, null=True)
     date = models.DateField()
     duration = models.CharField(max_length=50, blank=True, null=True)
-    time = models.TimeField()
+    time = models.CharField(max_length=50, blank=True, null=True)  # ✅ Changed to CharField for manual input
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
     organizer = models.ForeignKey(Consultancy, on_delete=models.SET_NULL, null=True, blank=True)
     targeted_destinations = models.ManyToManyField(Destination, blank=True, related_name='events')  # ✅ Allow multiple destinations
@@ -35,13 +35,21 @@ class Event(models.Model):
     related_universities = models.ManyToManyField(University, blank=True, related_name='events')
     related_consultancies = models.ManyToManyField(Consultancy, blank=True, related_name='events')
 
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")  # ✅ Added Priority Field
+
     def __str__(self):
         return self.name
 
 @receiver(pre_save, sender=Event)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
-        instance.slug = slugify(instance.name)
+        base_slug = slugify(instance.name)
+        slug = base_slug
+        counter = 1
+        while Event.objects.filter(slug=slug).exclude(id=instance.id).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        instance.slug = slug
 
 class EventGallery(models.Model):
     event = models.ForeignKey(Event, related_name='gallery_images', on_delete=models.CASCADE)

@@ -12,8 +12,4 @@ class EventAdmin(admin.ModelAdmin):
 class EventGalleryAdmin(admin.ModelAdmin):
     list_display = ['event', 'uploaded_at']
 
-@admin.register(EventRegistration)
-class EventRegistrationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'event', 'email', 'phone', 'payment_status', 'registered_at')
-    search_fields = ('name', 'email', 'event__name')
-    list_filter = ('payment_status',)
+

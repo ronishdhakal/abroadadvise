@@ -21,7 +21,8 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('exam/', include('exam.urls')),
     path('inquiry/', include('inquiry.urls')),
-    
+    path('blog/', include('blog.urls')),  # ✅ Blog API added
+
     # Core and Reviews paths
     path('', include('core.urls')),
 

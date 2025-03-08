@@ -9,6 +9,8 @@ const InquiryModal = ({
   entityId,
   entityName,
   entityType,
+  universityId,
+  universityName,
   isModalOpen,
   setIsModalOpen,
 }) => {
@@ -21,36 +23,60 @@ const InquiryModal = ({
     message: "",
     entity_type: entityType || "",
     entity_id: entityId || null,
-    consultancy_id: consultancyId || null, // ✅ Always include Consultancy ID
+    consultancy_id: consultancyId || null,
+    consultancy_name: consultancyName || "",
+    university_id: universityId || null,
+    university_name: universityName || "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // ✅ Ensure inquiry data updates when modal opens with new entity
   useEffect(() => {
-    console.log("🔄 Updating Inquiry Data:", {
-      entityType,
-      entityId,
-      consultancyId,
-      consultancyName,
-    });
+    if (isModalOpen) {
+      console.log("🔄 Updating Inquiry Data:", {
+        entityType,
+        entityId,
+        consultancyId,
+        consultancyName,
+        universityId,
+        universityName,
+      });
 
-    setInquiryData((prevData) => ({
-      ...prevData,
-      entity_type: entityType || prevData.entity_type,
-      entity_id: entityId || prevData.entity_id,
-      consultancy_id: consultancyId || prevData.consultancy_id, // ✅ Track which consultancy page submitted the inquiry
-    }));
-  }, [entityType, entityId, consultancyId]);
+      setInquiryData((prevData) => ({
+        ...prevData,
+        entity_type: entityType || prevData.entity_type,
+        entity_id: entityId || prevData.entity_id,
+        consultancy_id: consultancyId || prevData.consultancy_id,
+        consultancy_name: consultancyName || prevData.consultancy_name,
+        university_id: universityId || prevData.university_id,
+        university_name: universityName || prevData.university_name,
+      }));
+    }
+  }, [isModalOpen, entityType, entityId, consultancyId, consultancyName, universityId, universityName]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setIsModalOpen(false);
+      }
+    };
+
+    if (isModalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+    }
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, setIsModalOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmissionMessage(null);
 
-    // ✅ Prevent empty entity_type or entity_id
     if (!inquiryData.entity_type || !inquiryData.entity_id) {
       setSubmissionMessage("Inquiry type or entity is missing. Please try again.");
       setIsSubmitting(false);
@@ -73,17 +99,15 @@ const InquiryModal = ({
 
       setIsSuccess(true);
       setSubmissionMessage("Inquiry sent successfully!");
-      setInquiryData({
+
+      setInquiryData((prevData) => ({
+        ...prevData,
         name: "",
         email: "",
         phone: "",
         message: "",
-        entity_type: entityType,
-        entity_id: entityId,
-        consultancy_id: consultancyId,
-      });
+      }));
 
-      // ✅ Auto-close modal after success
       setTimeout(() => {
         setIsModalOpen(false);
       }, 2000);
@@ -103,14 +127,20 @@ const InquiryModal = ({
         <button
           onClick={() => setIsModalOpen(false)}
           className="absolute top-3 right-3 text-gray-600 hover:text-gray-900"
+          aria-label="Close Modal"
         >
           <X className="h-5 w-5" />
         </button>
 
         <h2 className="text-xl font-semibold mb-4 text-black">
-          Apply for <span className="text-[#4c9bd5]">{entityName || "this opportunity"}</span> at{" "}
-          <span className="font-bold">{consultancyName}</span>
+          Apply for <span className="text-[#4c9bd5]">{entityName || "this opportunity"}</span>
         </h2>
+
+        {universityName && (
+          <p className="text-sm text-center text-gray-600 mb-2">
+            Inquiry related to <strong>{universityName}</strong>
+          </p>
+        )}
 
         {submissionMessage && (
           <p className={`text-sm text-center ${isSuccess ? "text-green-600" : "text-red-600"} mb-2`}>
@@ -127,6 +157,7 @@ const InquiryModal = ({
             onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
             className="w-full p-2 border rounded-lg text-black"
             required
+            aria-label="Your Name"
           />
           <input
             type="email"
@@ -136,6 +167,7 @@ const InquiryModal = ({
             onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
             className="w-full p-2 border rounded-lg text-black"
             required
+            aria-label="Your Email"
           />
           <input
             type="tel"
@@ -144,6 +176,7 @@ const InquiryModal = ({
             value={inquiryData.phone}
             onChange={(e) => setInquiryData({ ...inquiryData, phone: e.target.value })}
             className="w-full p-2 border rounded-lg text-black"
+            aria-label="Your Phone"
           />
           <textarea
             name="message"
@@ -153,6 +186,7 @@ const InquiryModal = ({
             className="w-full p-2 border rounded-lg text-black"
             rows="4"
             required
+            aria-label="Your Message"
           />
           <button
             type="submit"

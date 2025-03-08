@@ -59,18 +59,23 @@ class UniversityFilter(filters.FilterSet):
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
-    university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")  # ✅ Use slug instead of name
+    university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")  # ✅ Use slug
 
-    # ✅ New Filter: Filter Courses by Discipline (using slug)
+    # ✅ Now filtering by discipline `id`
     disciplines = django_filters.ModelMultipleChoiceFilter(
-        field_name="disciplines__slug",
+        field_name="disciplines__id",
         queryset=Discipline.objects.all(),
-        to_field_name="slug",
+        to_field_name="id",
     )
+
+    # ✅ New: Filter courses by University Country
+    country = filters.CharFilter(field_name="university__country", lookup_expr="iexact")  # ✅ Added
 
     class Meta:
         model = Course
-        fields = ["name", "university", "duration", "disciplines"]  # ✅ Added disciplines
+        fields = ["name", "university", "duration", "disciplines", "country"]  # ✅ Added "country"
+
+
 
 
 class DestinationFilter(filters.FilterSet):

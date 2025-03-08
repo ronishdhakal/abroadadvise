@@ -1,43 +1,41 @@
-"use client"
+"use client";
 
-import { MessageSquare, MapPin, BadgeCheck } from "lucide-react"
-import { useState, useEffect } from "react"
+import { MessageSquare, MapPin, BadgeCheck } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) => {
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleInquiry = () => {
     setSelectedEntity({
       entityType: "consultancy",
       entityId: consultancy.id,
       entityName: consultancy.name,
-    })
-    setIsModalOpen(true)
-  }
+    });
+    setIsModalOpen(true);
+  };
 
   return (
-    <div className="relative w-full flex flex-col justify-end overflow-hidden mb-0">
-      {/* Fixed Cover Photo Section: Ensures Image Resizes Proportionally */}
-      <div className="relative w-full max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] mx-auto overflow-hidden">
+    <div className="relative w-full flex flex-col justify-end overflow-hidden">
+      {/* ✅ Fixed Cover Photo Section - Ensures No Cropping */}
+      <div className="relative w-full max-w-[2000px] mx-auto flex items-center justify-center bg-gray-100">
         {consultancy.cover_photo ? (
           <img
             src={consultancy.cover_photo}
             alt="Cover"
-            className="w-full h-auto transition-transform duration-700 ease-out"
+            className="w-full h-auto"
             style={{
-              maxHeight: "400px",
-              width: "100%",
-              display: "block",
-              transform: isScrolled ? "scale(1.05)" : "scale(1)", // ✅ Zoom-in effect on scroll
-              opacity: isScrolled ? 1 : 0.9, // ✅ Smooth opacity transition
+              maxWidth: "2000px",
+              height: "auto",
+              objectFit: "contain", // ✅ Ensures full image is visible, no cropping
             }}
           />
         ) : (
@@ -45,25 +43,19 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
             <span className="text-lg font-light italic">No Cover Photo Available</span>
           </div>
         )}
-
-        {/* Background Limited to the Image Area */}
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/10 pointer-events-none"></div>
       </div>
 
+      {/* ✅ Consultancy Info Section */}
       <div
-        className={`relative w-full max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
+        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
           isScrolled ? "shadow-2xl" : "shadow-lg"
         }`}
-        style={{ marginTop: "-2rem", marginBottom: "0" }} // ✅ Ensures no extra margin
+        style={{ marginTop: "-2rem" }}
       >
         <div className="flex items-center gap-5 w-full sm:w-auto">
           {consultancy.logo && (
-            <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-105">
-              <img
-                src={consultancy.logo}
-                alt={`${consultancy.name} logo`}
-                className="w-full h-full object-contain rounded-xl"
-              />
+            <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+              <img src={consultancy.logo} alt={`${consultancy.name} logo`} className="w-full h-full object-contain rounded-xl" />
             </div>
           )}
 
@@ -91,18 +83,8 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           <span className="font-semibold">Ask a Question</span>
         </button>
       </div>
-
-      {/* ✅ Ensure No Cropping on Mobile */}
-      <style jsx>{`
-        @media (max-width: 768px) {
-          img {
-            max-height: auto !important;
-            height: auto !important;
-          }
-        }
-      `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default ConsultancyHeader
+export default ConsultancyHeader;

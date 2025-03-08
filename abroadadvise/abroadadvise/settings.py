@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'news',
     'core',
     'inquiry',
+    'blog',
 ]
 
 # ✅ Middleware

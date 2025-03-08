@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Head from "next/head";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import UniversityHeader from "./UniversityHeader";
@@ -55,13 +56,20 @@ export default function UniversityDetail({ university, consultancies, courses })
   }
 
   return (
-    <div>
+    <>
+      <Head>
+        <title>{university.name} - Abroad Advise</title>
+      </Head>
+
       <Header />
 
-      <div className="container mx-auto p-4 space-y-6 md:px-10 lg:px-16 xl:px-24">
-        {/* University Header */}
+      {/* ✅ University Header (Edge-to-Edge, No Extra Margins) */}
+      <div className="w-full p-0 m-0">
         <UniversityHeader university={university} />
+      </div>
 
+      {/* ✅ Content Sections (Keep Normal Margins & Spacing) */}
+      <div className="container mx-auto p-4 space-y-6 md:px-10 lg:px-16 py-0 xl:px-24">
         {/* University Overview */}
         <div className="w-full">
           <UniversityOverview university={university} />
@@ -89,6 +97,6 @@ export default function UniversityDetail({ university, consultancies, courses })
       </div>
 
       <Footer />
-    </div>
+    </>
   );
 }
