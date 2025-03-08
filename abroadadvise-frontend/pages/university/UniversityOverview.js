@@ -2,7 +2,7 @@ import { Globe } from "lucide-react";
 
 const UniversityOverview = ({ university }) => {
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200">
       {/* Left Section: University Type & Tuition Fees */}
       <div className="flex flex-wrap items-center gap-3 text-gray-700">
         {/* University Type Badge */}

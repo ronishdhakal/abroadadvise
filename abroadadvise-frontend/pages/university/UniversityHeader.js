@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { MapPin, BadgeCheck } from "lucide-react";
 
@@ -13,7 +14,7 @@ const UniversityHeader = ({ university }) => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Check and construct image URLs
+  // Construct image URLs
   const coverPhotoUrl = university.cover_photo
     ? university.cover_photo.startsWith("http")
       ? university.cover_photo
@@ -27,46 +28,43 @@ const UniversityHeader = ({ university }) => {
     : null;
 
   return (
-    <div className="relative w-full flex flex-col justify-end overflow-hidden">
-      {/* Cover Photo */}
-      <div className="relative w-full max-w-[2000px] mx-auto h-[400px] overflow-hidden">
+    <div className="relative w-full flex flex-col justify-end overflow-hidden mb-0">
+      {/* Cover Photo - Proportional Scaling with Animation */}
+      <div className="relative w-full max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1600px] mx-auto overflow-hidden">
         {coverPhotoUrl ? (
           <img
             src={coverPhotoUrl}
             alt="Cover"
-            className="absolute inset-0 w-full h-full object-cover"
+            className="w-full h-auto transition-transform duration-700 ease-out"
             style={{
-              maxWidth: "2000px",
               maxHeight: "400px",
               width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center",
-              transform: isScrolled ? "translateY(-5%)" : "translateY(0)",
-              transition: "transform 0.5s ease-out",
+              display: "block",
+              transform: isScrolled ? "scale(1.05)" : "scale(1)", // ✅ Smooth zoom effect
+              opacity: isScrolled ? 1 : 0.9, // ✅ Smooth opacity transition
             }}
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-100 to-slate-200 flex items-center justify-center text-gray-400">
+          <div className="w-full h-[400px] bg-gradient-to-r from-slate-100 to-slate-200 flex items-center justify-center text-gray-400">
             <span className="text-lg font-light italic">No Cover Photo Available</span>
           </div>
         )}
 
-        {/* Dark Overlay */}
-        <div className="absolute w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/10"></div>
+        {/* Dark Overlay - Ensures Readability */}
+        <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-black/70 via-black/40 to-black/10 pointer-events-none"></div>
       </div>
 
       {/* Header Info */}
       <div
-        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
+        className={`relative w-full max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] xl:max-w-[1600px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
           isScrolled ? "shadow-2xl" : "shadow-lg"
         }`}
-        style={{ marginTop: "-2rem" }}
+        style={{ marginTop: "-2rem", marginBottom: "0" }}
       >
         <div className="flex items-center gap-5 w-full sm:w-auto">
-          {/* University Logo */}
+          {/* University Logo with Animation */}
           {logoUrl && (
-            <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+            <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-105 animate-floating">
               <img
                 src={logoUrl}
                 alt={`${university.name} logo`}
@@ -92,6 +90,16 @@ const UniversityHeader = ({ university }) => {
           </div>
         </div>
       </div>
+
+      {/* ✅ Ensure No Cropping on Mobile */}
+      <style jsx>{`
+        @media (max-width: 768px) {
+          img {
+            max-height: auto !important;
+            height: auto !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
