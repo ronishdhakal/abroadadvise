@@ -1,38 +1,43 @@
 from rest_framework import serializers
 from .models import Destination
+from course.models import Course
+from university.models import University
+from consultancy.models import Consultancy
 
 class StudyDestinationSerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()
 
     country_logo = serializers.SerializerMethodField()
     cover_page = serializers.SerializerMethodField()
-    
-    # Fix ManyToMany Fields to Return Correct Data
-    courses_to_study = serializers.SerializerMethodField()
-    universities = serializers.SerializerMethodField()
-    consultancies = serializers.SerializerMethodField()
+
+    # ✅ Fixed ManyToMany Fields
+    university_count = serializers.SerializerMethodField()
+    course_count = serializers.SerializerMethodField()
+    consultancy_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Destination
-        fields = '__all__'
+        fields = [
+            "id", "title", "slug", "country_logo", "cover_page", 
+            "university_count", "course_count", "consultancy_count",
+            "why_choose", "requirements", "documents_required", 
+            "scholarships", "more_information", "faqs", "other_destinations"
+        ]
 
     def get_country_logo(self, obj):
         request = self.context.get('request')
-        if obj.country_logo:
-            return request.build_absolute_uri(obj.country_logo.url) if request else obj.country_logo.url
-        return None
+        return request.build_absolute_uri(obj.country_logo.url) if obj.country_logo else None
 
     def get_cover_page(self, obj):
         request = self.context.get('request')
-        if obj.cover_page:
-            return request.build_absolute_uri(obj.cover_page.url) if request else obj.cover_page.url
-        return None
+        return request.build_absolute_uri(obj.cover_page.url) if obj.cover_page else None
 
-    def get_courses_to_study(self, obj):
-        return [{"id": c.id, "name": c.name} for c in obj.courses_to_study.all()]  # ✅ No change needed
+    def get_university_count(self, obj):
+        return University.objects.filter(country=obj.title).count()
 
-    def get_universities(self, obj):
-        return [{"id": u.id, "name": u.name} for u in obj.universities.all()]  # ✅ Ensure University has `name`
+    def get_course_count(self, obj):
+        universities_in_destination = University.objects.filter(country=obj.title)
+        return Course.objects.filter(university__in=universities_in_destination).count()
 
-    def get_consultancies(self, obj):
-        return [{"id": c.id, "name": c.name} for c in obj.consultancies.all()]  # ✅ Ensure Consultancy has `name`
+    def get_consultancy_count(self, obj):
+        return Consultancy.objects.filter(study_abroad_destinations=obj).count()

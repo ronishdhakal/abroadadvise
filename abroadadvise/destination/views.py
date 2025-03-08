@@ -12,7 +12,7 @@ from authentication.permissions import IsAdminUser
 from .models import Destination
 from .serializers import StudyDestinationSerializer
 
-# ✅ Publicly Accessible List of Destinations
+# ✅ Publicly Accessible List of Destinations with Pagination & Filtering
 class DestinationListView(ListAPIView):
     queryset = Destination.objects.all()
     serializer_class = StudyDestinationSerializer
@@ -22,44 +22,52 @@ class DestinationListView(ListAPIView):
     filterset_class = DestinationFilter
     search_fields = ['title']
 
+    def get_serializer_context(self):
+        """Ensure media URLs are correctly returned"""
+        return {'request': self.request}  # ✅ Adds request context for full media URLs
+
+
 # ✅ Publicly Accessible Single Destination View
 @api_view(['GET'])
 @permission_classes([AllowAny])  # ✅ Public access allowed
 def get_destination(request, slug):
     try:
         destination = Destination.objects.get(slug=slug)
-        serializer = StudyDestinationSerializer(destination)
-        return Response(serializer.data)
+        serializer = StudyDestinationSerializer(destination, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
     except Destination.DoesNotExist:
         return Response({"error": "Destination not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Create Destination (Admin Only)
+
+# ✅ Admin-Only: Create a New Destination
 @api_view(['POST'])
 @permission_classes([IsAdminUser])  
 @parser_classes([MultiPartParser, FormParser])  
 def create_destination(request):
-    serializer = StudyDestinationSerializer(data=request.data)
+    serializer = StudyDestinationSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ Update Destination (Admin Only)
+
+# ✅ Admin-Only: Update an Existing Destination
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAdminUser])  
 @parser_classes([MultiPartParser, FormParser])  
 def update_destination(request, slug):
     try:
         destination = Destination.objects.get(slug=slug)
-        serializer = StudyDestinationSerializer(destination, data=request.data, partial=True)
+        serializer = StudyDestinationSerializer(destination, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     except Destination.DoesNotExist:
         return Response({"error": "Destination not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Delete Destination (Admin Only)
+
+# ✅ Admin-Only: Delete a Destination
 @api_view(['DELETE'])
 @permission_classes([IsAdminUser])  
 def delete_destination(request, slug):

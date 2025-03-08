@@ -6,11 +6,13 @@ import { X } from "lucide-react";
 const InquiryModal = ({
   consultancyId,
   consultancyName,
+  universityId,
+  universityName,
   entityId,
   entityName,
   entityType,
-  universityId,
-  universityName,
+  destinationId, // ✅ Track Destination ID
+  destinationName, // ✅ Track Destination Name
   isModalOpen,
   setIsModalOpen,
 }) => {
@@ -27,6 +29,8 @@ const InquiryModal = ({
     consultancy_name: consultancyName || "",
     university_id: universityId || null,
     university_name: universityName || "",
+    destination_id: destinationId || null, // ✅ Added Destination ID
+    destination_name: destinationName || "", // ✅ Added Destination Name
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +46,8 @@ const InquiryModal = ({
         consultancyName,
         universityId,
         universityName,
+        destinationId, // ✅ Logging Destination ID
+        destinationName, // ✅ Logging Destination Name
       });
 
       setInquiryData((prevData) => ({
@@ -52,25 +58,11 @@ const InquiryModal = ({
         consultancy_name: consultancyName || prevData.consultancy_name,
         university_id: universityId || prevData.university_id,
         university_name: universityName || prevData.university_name,
+        destination_id: destinationId || prevData.destination_id, // ✅ Ensure Destination ID is included
+        destination_name: destinationName || prevData.destination_name, // ✅ Ensure Destination Name is included
       }));
     }
-  }, [isModalOpen, entityType, entityId, consultancyId, consultancyName, universityId, universityName]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setIsModalOpen(false);
-      }
-    };
-
-    if (isModalOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-    } else {
-      window.removeEventListener("keydown", handleKeyDown);
-    }
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isModalOpen, setIsModalOpen]);
+  }, [isModalOpen, entityType, entityId, consultancyId, consultancyName, universityId, universityName, destinationId, destinationName]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -139,6 +131,12 @@ const InquiryModal = ({
         {universityName && (
           <p className="text-sm text-center text-gray-600 mb-2">
             Inquiry related to <strong>{universityName}</strong>
+          </p>
+        )}
+
+        {destinationName && (
+          <p className="text-sm text-center text-gray-500 mb-2">
+            Applying from <strong>{destinationName}</strong>
           </p>
         )}
 
