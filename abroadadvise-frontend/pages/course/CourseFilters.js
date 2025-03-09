@@ -33,11 +33,28 @@ const CourseFilters = ({
     label: u?.name || "Unknown",
   }));
 
+  // ✅ Custom Styles for react-select to make text BLACK
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      color: "black",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "black",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "black", // ✅ Black text for unselected options
+      backgroundColor: state.isSelected ? "#2563eb" : "white", // ✅ Blue highlight for selected
+    }),
+  };
+
   return (
-    <div className="bg-white p-4 shadow-lg rounded-xl border border-gray-200 mt-4">
+    <div className="w-full">
       {/* Search Bar & Filter Button */}
-      <div className="flex items-center justify-between">
-        <div className="relative w-full">
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-grow">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
             type="text"
@@ -51,7 +68,7 @@ const CourseFilters = ({
 
         {/* Filter Toggle Button */}
         <button
-          className="ml-4 flex items-center text-white font-semibold bg-blue-600 px-4 py-2 rounded-lg shadow-sm hover:bg-blue-700 transition"
+          className="flex items-center bg-blue-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-blue-700 transition whitespace-nowrap"
           onClick={() => setShowFilters(!showFilters)}
         >
           <Filter className="h-5 w-5 mr-2" />
@@ -71,7 +88,7 @@ const CourseFilters = ({
                 value={universityOptions.find((u) => u.value === universityQuery) || null}
                 onChange={(selected) => setUniversityQuery(selected?.value || null)}
                 placeholder="Select University..."
-                className="mt-1"
+                styles={customStyles} // ✅ Apply black text styles
                 aria-label="Select University"
               />
             </div>
@@ -84,7 +101,7 @@ const CourseFilters = ({
                 value={countryOptions.find((c) => c.value === countryQuery) || null}
                 onChange={(selected) => setCountryQuery(selected?.value || null)}
                 placeholder="Select Country..."
-                className="mt-1"
+                styles={customStyles} // ✅ Apply black text styles
                 aria-label="Select Country"
               />
             </div>
@@ -98,7 +115,7 @@ const CourseFilters = ({
                 value={selectedDisciplines}
                 onChange={setSelectedDisciplines}
                 placeholder="Select Disciplines..."
-                className="mt-1"
+                styles={customStyles} // ✅ Apply black text styles
                 aria-label="Select Disciplines"
               />
             </div>

@@ -53,7 +53,7 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
 
       {/* ✅ Destination Info Section */}
       <div
-        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 py-6 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
+        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 pt-6 sm:pt-8 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300${
           isScrolled ? "shadow-2xl" : "shadow-lg"
         }`}
         style={{ marginTop: "-2rem" }}

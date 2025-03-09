@@ -44,14 +44,16 @@ def create_exam(request):
 
 # ✅ Get Single Exam by Slug (Public Access)
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])  # ✅ Public access
+@permission_classes([permissions.AllowAny])
 def get_exam(request, slug):
     try:
-        exam = Exam.objects.get(slug=slug)
+        # ✅ Convert slug to lowercase to ensure case-insensitive lookup
+        exam = Exam.objects.prefetch_related("similar_exams").get(slug__iexact=slug.lower())
         serializer = ExamSerializer(exam, context={'request': request})
         return Response(serializer.data)
     except Exam.DoesNotExist:
         return Response({"error": "Exam not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 # ✅ Update Exam (Admin Only)
 @api_view(['PUT', 'PATCH'])

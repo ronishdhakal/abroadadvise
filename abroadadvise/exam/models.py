@@ -6,13 +6,18 @@ from tinymce.models import HTMLField  # ✅ Import TinyMCE HTMLField
 
 class Exam(models.Model):
     EXAM_TYPE_CHOICES = (
-        ('physical', 'Physical'),
-        ('online', 'Online'),
-        ('hybrid', 'Hybrid'),
+        ('english_proficiency', 'English Proficiency Test'),
+        ('standardized_test', 'Standardized Test'),
     )
 
     name = models.CharField(max_length=255, unique=True, default="Default Exam Name")
     slug = models.SlugField(unique=True, blank=True, null=True)
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)  # ✅ Generate lowercase slug
+        else:
+            self.slug = self.slug.lower()  # ✅ Ensure stored slug is always lowercase
+        super().save(*args, **kwargs)
     icon = models.ImageField(upload_to='exams/icons/', blank=True, null=True)
     
     short_description = HTMLField(blank=True, null=True)

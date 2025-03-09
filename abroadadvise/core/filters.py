@@ -18,20 +18,20 @@ class ConsultancyFilter(django_filters.FilterSet):
     # ✅ Fix district filtering (ManyToManyField)
     districts = django_filters.ModelMultipleChoiceFilter(
         field_name="districts__id",
-        queryset=District.objects.all(),  # ✅ Fixed: Using District Model
+        queryset=District.objects.all(),
         to_field_name="id",
     )
 
     # ✅ Fix filtering by destination (Now uses slug instead of ID)
     destination = django_filters.ModelMultipleChoiceFilter(
-        field_name="study_abroad_destinations__slug",  # ✅ Now filters by slug
+        field_name="study_abroad_destinations__slug",
         queryset=Destination.objects.all(),
         to_field_name="slug",
     )
 
     # ✅ Fix filtering by exam (Now uses slug instead of ID)
     exam = django_filters.ModelMultipleChoiceFilter(
-        field_name="test_preparation__slug",  # ✅ Now filters by slug
+        field_name="test_preparation__slug",
         queryset=Exam.objects.all(),
         to_field_name="slug",
     )
@@ -54,12 +54,12 @@ class UniversityFilter(filters.FilterSet):
 
     class Meta:
         model = University
-        fields = ["name", "country", "disciplines"]  # ✅ Added disciplines
+        fields = ["name", "country", "disciplines"]
 
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
-    university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")  # ✅ Use slug
+    university = filters.CharFilter(field_name="university__slug", lookup_expr="iexact")
 
     # ✅ Now filtering by discipline `id`
     disciplines = django_filters.ModelMultipleChoiceFilter(
@@ -69,13 +69,11 @@ class CourseFilter(filters.FilterSet):
     )
 
     # ✅ New: Filter courses by University Country
-    country = filters.CharFilter(field_name="university__country", lookup_expr="iexact")  # ✅ Added
+    country = filters.CharFilter(field_name="university__country", lookup_expr="iexact")
 
     class Meta:
         model = Course
-        fields = ["name", "university", "duration", "disciplines", "country"]  # ✅ Added "country"
-
-
+        fields = ["name", "university", "duration", "disciplines", "country"]
 
 
 class DestinationFilter(filters.FilterSet):
@@ -89,17 +87,34 @@ class DestinationFilter(filters.FilterSet):
 class ExamFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
 
+    # ✅ Added: Filter by Exam Type (english_proficiency or standardized_test)
+    type = django_filters.ChoiceFilter(choices=Exam.EXAM_TYPE_CHOICES)
+
     class Meta:
         model = Exam
-        fields = ["name"]
+        fields = ["name", "type"]  # ✅ Now supports filtering by exam type
 
 
 class EventFilter(filters.FilterSet):
+    """
+    Filters events by name, event type, registration type, and destination.
+    """
     name = filters.CharFilter(lookup_expr="icontains")
+    event_type = filters.ChoiceFilter(choices=Event.EVENT_TYPE_CHOICES)
+    registration_type = filters.ChoiceFilter(choices=Event.REGISTRATION_TYPE_CHOICES)
+
+    # ✅ Fix: Filter by destination (which represents the country)
+    destination = filters.CharFilter(method="filter_by_destination")
+
+    def filter_by_destination(self, queryset, name, value):
+        """
+        Filters events by the destination title or slug.
+        """
+        return queryset.filter(targeted_destinations__slug__iexact=value).distinct()
 
     class Meta:
         model = Event
-        fields = ["name"]
+        fields = ["name", "event_type", "registration_type", "destination"]
 
 
 class NewsFilter(filters.FilterSet):
