@@ -4,6 +4,8 @@ from .reviews import Review
 from .models import District, VerifiedItem, Discipline  # ✅ Imported Discipline
 from .models import SiteSetting #For Logos Hero Image
 
+from .models import Ad #For Ad
+
 admin.site.register(District)
 admin.site.register(VerifiedItem)  # ✅ Registered VerifiedItem
 admin.site.register(Discipline)  # ✅ Registered Discipline
@@ -42,4 +44,33 @@ class SiteSettingAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # Prevent creating multiple settings, allow only one entry
         return not SiteSetting.objects.exists()
+    
 
+# Ad System@admin.register(Ad)
+@admin.register(Ad)
+class AdAdmin(admin.ModelAdmin):
+    def desktop_preview(self, obj):
+        if obj.desktop_image:
+            return mark_safe(f'<img src="{obj.desktop_image.url}" width="150" height="auto" style="border-radius:5px;"/>')
+        return "No Image"
+
+    def mobile_preview(self, obj):
+        if obj.mobile_image:
+            return mark_safe(f'<img src="{obj.mobile_image.url}" width="100" height="auto" style="border-radius:5px;"/>')
+        return "No Image"
+
+    desktop_preview.short_description = "Desktop Ad Preview"
+    mobile_preview.short_description = "Mobile Ad Preview"
+
+    list_display = ['title', 'placement', 'desktop_preview', 'mobile_preview', 'is_active', 'updated_at']
+    list_filter = ['placement', 'is_active']
+    search_fields = ['title', 'placement']
+    readonly_fields = ['desktop_preview', 'mobile_preview']
+
+    def has_add_permission(self, request):
+        """Allow adding new ads."""
+        return True  # Allow adding new ads
+
+    def get_queryset(self, request):
+        """Ensure only one ad per placement is shown."""
+        return super().get_queryset(request).order_by('placement')

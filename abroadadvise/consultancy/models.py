@@ -1,14 +1,14 @@
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.db import models
+from django.apps import apps
+from django.conf import settings
 from django.utils.text import slugify
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
-from core.models import District, VerifiedItem
 
-User = get_user_model()
+User = settings.AUTH_USER_MODEL
 
+# Define Consultancy Model (without direct imports)
 class Consultancy(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=255, unique=True)
@@ -16,9 +16,9 @@ class Consultancy(models.Model):
     brochure = models.FileField(upload_to='brochure/', blank=True, null=True)
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
-    districts = models.ManyToManyField(District, blank=True)
+    districts = models.ManyToManyField('core.District', blank=True)
 
-    verified = models.ForeignKey(VerifiedItem, on_delete=models.SET_NULL, null=True, blank=True)
+    verified = models.ForeignKey('core.VerifiedItem', on_delete=models.SET_NULL, null=True, blank=True)
 
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
@@ -35,13 +35,23 @@ class Consultancy(models.Model):
     services = HTMLField(blank=True, null=True)
     has_branches = models.BooleanField(default=False)
 
-    # ✅ Restored ManyToMany Relationships
+    # Restored ManyToMany Relationships
     study_abroad_destinations = models.ManyToManyField('destination.Destination', related_name='consultancy_destinations', blank=True)
     test_preparation = models.ManyToManyField('exam.Exam', related_name='consultancies', blank=True)
     partner_universities = models.ManyToManyField('university.University', related_name='consultancies', blank=True)
 
     def __str__(self):
         return self.name
+
+    def get_district(self):
+        # Lazy load the District model using apps.get_model
+        District = apps.get_model('core', 'District')
+        return self.districts.all()
+
+    def get_verified_item(self):
+        # Lazy load the VerifiedItem model using apps.get_model
+        VerifiedItem = apps.get_model('core', 'VerifiedItem')
+        return self.verified
 
 class ConsultancyBranch(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='branches', on_delete=models.CASCADE)
@@ -53,6 +63,7 @@ class ConsultancyBranch(models.Model):
     def __str__(self):
         return f"{self.consultancy.name} - {self.branch_name}"
 
+# Signal to create a slug before saving the Consultancy
 @receiver(pre_save, sender=Consultancy)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
@@ -64,6 +75,7 @@ def create_slug(sender, instance, **kwargs):
             counter += 1
         instance.slug = slug
 
+# Signal to create a user when a Consultancy is created if it doesn't exist
 @receiver(post_save, sender=Consultancy)
 def create_consultancy_user(sender, instance, created, **kwargs):
     if created and not instance.user:

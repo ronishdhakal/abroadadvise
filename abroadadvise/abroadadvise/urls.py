@@ -10,9 +10,9 @@ from core.views import DisciplineListAPIView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include("authentication.urls")),
+    path("api/auth/", include("authentication.urls")),  # Authentication API
 
-    # Main Apps
+    # Main Apps URLs
     path('consultancy/', include('consultancy.urls')),
     path('university/', include('university.urls')),
     path('destination/', include('destination.urls')),
@@ -21,25 +21,26 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('exam/', include('exam.urls')),
     path('inquiry/', include('inquiry.urls')),
-    path('blog/', include('blog.urls')),  # ✅ Blog API added
+    path('blog/', include('blog.urls')),  # Blog API added
 
-    # Core and Reviews paths
+    # Core and Reviews Paths
     path('', include('core.urls')),
 
-    # ✅ Corrected: Discipline API is now properly imported and included
+    # Discipline API (added)
     path('discipline/', DisciplineListAPIView.as_view(), name='list-disciplines'),
 
     # Text Editor
     path('tinymce/', include('tinymce.urls')),
 ]
 
-# ✅ Optional: API format suffixes
+# Optional: API format suffixes (e.g., .json, .api)
 urlpatterns = format_suffix_patterns(urlpatterns)
 
-# ✅ Serve media files during development
+# Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     ]
+
