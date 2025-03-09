@@ -1,20 +1,43 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import Head from "next/head";
-import Header from "../../components/header";  // ✅ Ensure correct import casing
-import Footer from "../../components/footer";  // ✅ Ensure correct import casing
+import Header from "../../components/header";
+import Footer from "../../components/footer";
+import BlogHeroSection from "./BlogHeroSection";
+import BlogFilter from "./BlogFilter";
+import BlogCard from "./BlogCard";
+import BlogPagination from "./BlogPagination";
+import { Search, Filter } from "lucide-react";
+import { useRouter } from "next/router";
 
 const BlogList = () => {
   const [blogs, setBlogs] = useState([]);
+  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/`);
+        let queryParams = `?page=${currentPage}`;
+        if (searchQuery) queryParams += `&title=${encodeURIComponent(searchQuery)}`;
+        if (category) queryParams += `&category=${encodeURIComponent(category)}`;
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${queryParams}`);
+        if (!res.ok) throw new Error("Failed to fetch blogs");
+
         const data = await res.json();
         setBlogs(data.results || []);
+        setTotalPages(data.total_pages || 1);
+
+        router.push(`/blog${queryParams}`, undefined, { shallow: true });
       } catch (error) {
+        setError("Error fetching blogs.");
         console.error("Error fetching blogs:", error);
       } finally {
         setLoading(false);
@@ -22,43 +45,79 @@ const BlogList = () => {
     };
 
     fetchBlogs();
-  }, []);
-
-  if (loading) return <p className="text-center">Loading...</p>;
+  }, [searchQuery, category, currentPage]);
 
   return (
     <>
       <Head>
-        <title>Blog - Abroad Advise</title>
+        <title>Blogs - Abroad Advise</title>
       </Head>
-
       <Header />
+      <BlogHeroSection />
 
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-6">Latest Blog Posts</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 bg-white">
+        <div className="flex items-center gap-4">
+          {/* Search Bar */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search blogs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
+              aria-label="Search Blogs"
+            />
+          </div>
 
-        {blogs.length === 0 ? (
-          <p className="text-center">No blogs available.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogs.map((blog) => (
-              <div key={blog.id} className="border rounded-lg shadow-md p-4">
-                <Link href={`/blog/${blog.slug}`} className="text-xl font-semibold hover:text-blue-500">
-                  {blog.title}
-                </Link>
-                <p className="text-gray-500 text-sm">By {blog.author_name} • {new Date(blog.published_date).toLocaleDateString()}</p>
-                {blog.featured_image && (
-                  <img src={blog.featured_image} alt={blog.title} className="w-full h-40 object-cover rounded-md mt-2" />
-                )}
-                <p className="text-gray-700 mt-2">{blog.content.substring(0, 100)}...</p>
-                <Link href={`/blog/${blog.slug}`} className="text-blue-600 hover:underline mt-2 block">
-                  Read More →
-                </Link>
-              </div>
-            ))}
+          {/* Filter Toggle Button */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center bg-blue-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-blue-700 transition"
+          >
+            <Filter className="h-5 w-5 mr-2" />
+            {showFilters ? "Hide Filters" : "Filters"}
+          </button>
+        </div>
+
+        {/* Filter Section - Only Category Selection */}
+        {showFilters && (
+          <div className="mt-4">
+            <BlogFilter 
+              category={category} 
+              setCategory={setCategory} 
+            />
           </div>
         )}
       </div>
+
+      {loading ? (
+        <p className="text-center text-gray-500 mt-8">Loading blogs...</p>
+      ) : (
+        <>
+          {blogs.length > 0 ? (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {blogs.map((blog) => (
+                  <BlogCard key={blog.id} blog={blog} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 mt-8">No blogs found.</p>
+          )}
+
+          {totalPages > 1 && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex justify-center">
+              <BlogPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
+        </>
+      )}
 
       <Footer />
     </>

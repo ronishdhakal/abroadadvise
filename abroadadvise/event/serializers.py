@@ -21,7 +21,6 @@ class EventGallerySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.image.url) if obj.image else None
 
-
 class EventSerializer(serializers.ModelSerializer):
     """
     Serializer for the Event model with related fields.
@@ -32,53 +31,46 @@ class EventSerializer(serializers.ModelSerializer):
     related_universities = serializers.SerializerMethodField()
     related_consultancies = serializers.SerializerMethodField()
     targeted_destinations = serializers.SerializerMethodField()
-    organizer = serializers.SerializerMethodField()  # ✅ Ensuring organizer details are returned
+    organizer = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
         fields = '__all__'
 
     def get_featured_image(self, obj):
-        """
-        Returns the absolute URL for the event's featured image.
-        """
         request = self.context.get('request')
         return request.build_absolute_uri(obj.featured_image.url) if obj.featured_image else None
 
     def get_related_universities(self, obj):
-        """
-        Returns a list of related universities.
-        """
+        """Returns related universities with slugs for linking."""
         return [
-            {"name": uni.name, "slug": uni.slug}
+            {"id": uni.id, "name": uni.name, "slug": uni.slug}
             for uni in obj.related_universities.all()
         ]
 
     def get_related_consultancies(self, obj):
-        """
-        Returns a list of related consultancies.
-        """
+        """Returns related consultancies with slugs for linking."""
         return [
-            {"name": cons.name, "slug": cons.slug}
+            {"id": cons.id, "name": cons.name, "slug": cons.slug}
             for cons in obj.related_consultancies.all()
         ]
 
     def get_targeted_destinations(self, obj):
-        """
-        ✅ Fix: Now correctly includes targeted destinations.
-        """
+        """Returns targeted destinations with slugs for linking."""
         return [
-            {
-                "title": dest.title,
-                "slug": dest.slug
-            }
+            {"id": dest.id, "title": dest.title, "slug": dest.slug}
             for dest in obj.targeted_destinations.all()
         ]
 
     def get_organizer(self, obj):
-        """
-        Returns details about the organizer (Consultancy or University).
-        """
+        """Returns organizer details with correct type (consultancy/university) for linking."""
         if obj.organizer:
-            return {"name": obj.organizer.name, "slug": obj.organizer.slug}
+            organizer_type = "consultancy" if isinstance(obj.organizer, Consultancy) else "university"
+            return {
+                "id": obj.organizer.id,
+                "name": obj.organizer.name,
+                "slug": obj.organizer.slug,
+                "type": organizer_type  # ✅ Added organizer type for routing
+            }
         return None
+

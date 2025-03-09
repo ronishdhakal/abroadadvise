@@ -40,7 +40,7 @@ const EventCard = ({ event }) => {
             {event.registration_type === "paid" && event.price && (
               <div className="absolute top-2 right-2 bg-yellow-400 text-black text-xs font-bold px-2.5 py-0.5 rounded-full shadow-md">
                 <DollarSign className="inline-block w-3 h-3 mr-1" />
-                ${event.price}
+                NPR {event.price}
               </div>
             )}
             {event.registration_type === "free" && (

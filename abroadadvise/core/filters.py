@@ -7,8 +7,10 @@ from destination.models import Destination
 from exam.models import Exam
 from event.models import Event
 from news.models import News
+from blog.models import BlogPost
 from django.apps import apps  # ✅ Avoid circular imports
 from core.models import District, Discipline  # ✅ Import Discipline
+from blog.models import BlogPost
 
 
 class ConsultancyFilter(django_filters.FilterSet):
@@ -118,11 +120,12 @@ class EventFilter(filters.FilterSet):
 
 
 class NewsFilter(filters.FilterSet):
-    title = filters.CharFilter(lookup_expr="icontains")
+    title = filters.CharFilter(field_name="title", lookup_expr="icontains")
+    category = filters.CharFilter(field_name="category__slug", lookup_expr="iexact")  # ✅ Filter by category slug
 
     class Meta:
         model = News
-        fields = ["title"]
+        fields = ["title", "category"]
 
 
 # ✅ New: Filter for Reviews
@@ -134,3 +137,18 @@ class ReviewFilter(filters.FilterSet):
     class Meta:
         model = apps.get_model("core", "Review")  # ✅ Avoid direct import to fix circular import issue
         fields = ["rating", "content_type", "is_approved"]
+   
+   
+      #Blog Filter 
+class BlogPostFilter(filters.FilterSet):
+    """
+    Filters blog posts by title and category slug.
+    """
+    title = filters.CharFilter(field_name="title", lookup_expr="icontains")
+    category = filters.CharFilter(field_name="category__slug", lookup_expr="iexact")  # ✅ Use CharFilter
+
+    class Meta:
+        model = BlogPost
+        fields = ["title", "category"]
+
+

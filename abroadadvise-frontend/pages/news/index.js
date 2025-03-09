@@ -1,64 +1,121 @@
-// frontend/pages/news/index.js
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import Head from 'next/head';
-import Header from '../../components/header';
-import Footer from '../../components/footer';
+import { useEffect, useState } from "react";
+import Head from "next/head";
+import Header from "../../components/header";
+import Footer from "../../components/footer";
+import NewsHeroSection from "./HeroSection";
+import NewsFilter from "./NewsFilter";
+import NewsCard from "./NewsCard";
+import NewsPagination from "./NewsPagination";
+import { Search, Filter } from "lucide-react";
 
 export default function NewsPage() {
-    const [newsList, setNewsList] = useState([]);
-    const [error, setError] = useState(null);
+  const [newsList, setNewsList] = useState([]);
+  const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false); // ✅ Toggle filter visibility
 
-    useEffect(() => {
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch news');
-                }
-                return response.json();
-            })
-            .then(data => setNewsList(data.results))
-            .catch(error => setError(error.message));
-    }, []);
-
-    const getFullImageUrl = (url) => {
-        if (!url) return '';
-        return url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL}${url}`;
+  // ✅ Fetch categories for filtering
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/categories/`);
+        if (!response.ok) throw new Error("Failed to fetch categories");
+        const data = await response.json();
+        setCategories(data.results || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error.message);
+      }
     };
+    fetchCategories();
+  }, []);
 
-    return (
-        <>
-            <Head>
-                <title>News - Abroad Advise</title>
-            </Head>
-            <Header />
-            <div className="container mx-auto py-8">
-                <h1 className="text-3xl font-bold mb-6">Latest News</h1>
-                {error && <p className="text-center text-red-500">Error: {error}</p>}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {newsList.map(news => (
-                        <Link key={news.slug} href={`/news/${news.slug}`} className="block border rounded-lg overflow-hidden shadow-md hover:shadow-lg">
-                            {news.featured_image && (
-                                <div className="w-full h-48 relative">
-                                    <Image 
-                                        src={getFullImageUrl(news.featured_image)} 
-                                        alt={news.title} 
-                                        width={500} 
-                                        height={300} 
-                                        className="object-cover w-full h-full"
-                                    />
-                                </div>
-                            )}
-                            <div className="p-4">
-                                <h2 className="text-xl font-semibold">{news.title}</h2>
-                                <p className="text-gray-600">By {news.author} on {news.date}</p>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-            <Footer />
-        </>
-    );
+  // ✅ Fetch news with search and category filters
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/news/`);
+        url.searchParams.append("page", currentPage);
+        if (searchQuery) url.searchParams.append("search", searchQuery);
+        if (category) url.searchParams.append("category", category); // ✅ Filter by category
+
+        const response = await fetch(url.toString());
+        if (!response.ok) throw new Error("Failed to fetch news");
+
+        const data = await response.json();
+        setNewsList(data.results);
+        setTotalPages(data.total_pages);
+      } catch (error) {
+        setError(error.message);
+      }
+    };
+    fetchNews();
+  }, [currentPage, searchQuery, category]);
+
+  return (
+    <>
+      <Head>
+        <title>News - Abroad Advise</title>
+      </Head>
+      <Header />
+      <NewsHeroSection />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
+        {/* ✅ Search & Filter Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Search Field */}
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search news..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-black text-sm"
+            />
+          </div>
+
+          {/* Filter Button */}
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="flex items-center px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
+          >
+            <Filter className="h-5 w-5 mr-2" />
+            {isFilterOpen ? "Hide Filters" : "Filters"}
+          </button>
+        </div>
+
+        {/* ✅ Conditional Filter Display */}
+        {isFilterOpen && (
+          <NewsFilter
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            category={category}
+            setCategory={setCategory}
+            categories={categories}
+          />
+        )}
+
+        {/* ✅ News List */}
+        {error && <p className="text-center text-red-500">Error: {error}</p>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+          {newsList.length > 0 ? (
+            newsList.map((news) => <NewsCard key={news.slug} news={news} />)
+          ) : (
+            <p className="text-center col-span-full text-gray-500">No news found.</p>
+          )}
+        </div>
+
+        {/* ✅ Pagination */}
+        {totalPages > 1 && (
+          <NewsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+        )}
+      </main>
+
+      <Footer />
+    </>
+  );
 }

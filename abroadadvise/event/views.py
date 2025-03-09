@@ -4,12 +4,14 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F  # ✅ Import F for sorting null values correctly
+from django.db.models import F
+from django.utils.timezone import now  # ✅ Import timezone for date filtering
 from core.pagination import StandardResultsSetPagination
 from core.filters import EventFilter
 from authentication.permissions import IsAdminUser
 from .models import Event, EventGallery
 from .serializers import EventSerializer, EventGallerySerializer
+
 
 # ✅ List Events with Pagination, Search, and Filtering (Public Access)
 class EventListView(generics.ListAPIView):
@@ -21,13 +23,26 @@ class EventListView(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
-    search_fields = ['name', 'event_type', 'registration_type', 'location']  # ✅ Improved search
+    search_fields = ['name', 'event_type', 'registration_type', 'location']
 
     def get_queryset(self):
         """
         Get the queryset sorted by priority, then latest date.
         """
         return Event.objects.all().order_by(F('priority').asc(nulls_last=True), '-date', '-id')
+
+
+# ✅ List Active Events (Only Future Events)
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def active_events(request):
+    """
+    Fetch all active events (future events only).
+    """
+    today = now().date()
+    events = Event.objects.filter(date__gte=today).order_by(F('priority').asc(nulls_last=True), 'date')
+    serializer = EventSerializer(events, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # ✅ List All Events (No Pagination) - For Dropdowns
@@ -37,7 +52,7 @@ def all_events(request):
     """
     Fetch all events without pagination for frontend dropdowns.
     """
-    events = Event.objects.all().order_by('-date')  # ✅ Sorted by latest event
+    events = Event.objects.all().order_by('-date')
     serializer = EventSerializer(events, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 

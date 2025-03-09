@@ -10,6 +10,7 @@ from .filters import ReviewFilter  # ✅ Import the Review filter
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import District, Discipline  # ✅ Import Discipline model
 from .serializers import DisciplineSerializer  # ✅ Create a serializer for Discipline
+from core.filters import BlogPostFilter  # ✅ Import the new filter
 
 
 # ✅ API for Fetching All Districts

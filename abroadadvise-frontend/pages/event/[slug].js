@@ -1,125 +1,147 @@
-// frontend/pages/event/[slug].js
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import Head from 'next/head';
-import Image from 'next/image';
-import Header from '../../components/header'; // ✅ Fixed Import
-import Footer from '../../components/footer'; // ✅ Fixed Import
-import Link from 'next/link';
+"use client";
+
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import Head from "next/head";
+import Header from "../../components/header";
+import Footer from "../../components/footer";
+import EventHeader from "./EventHeader";
+import EventRegistrationDetail from "./EventRegistrationDetail";
+import EventOverview from "./EventOverview";
+import EventAbout from "./EventAbout";
+import EventOther from "./EventOther";
+import InquiryModal from "../../components/InquiryModal"; // ✅ Import Inquiry Modal
 
 export default function EventDetail() {
-    const router = useRouter();
-    const { slug } = router.query;
-    const [event, setEvent] = useState(null);
-    const [error, setError] = useState(null);
+  const router = useRouter();
+  const { slug } = router.query;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
-    useEffect(() => {
-        if (slug) {
-            const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/event/${slug}/`;
-            console.log("Fetching Event Data from:", apiUrl); // ✅ Debugging Log
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Event not found');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Fetched Event Data:", data); // ✅ Debugging Log
-                    setEvent(data);
-                })
-                .catch(error => setError(error.message));
-        }
-    }, [slug]);
+  const [event, setEvent] = useState(null);
+  const [error, setError] = useState(null);
+  const [otherEvents, setOtherEvents] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEntity, setSelectedEntity] = useState({
+    entityType: "event",
+    entityId: null,
+    entityName: "",
+  });
+  const [isLoading, setIsLoading] = useState(true); // ✅ Added Loading State
 
-    const getFullImageUrl = (url) => {
-        if (!url) return '';
-        return url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL}${url}`;
+  useEffect(() => {
+    if (!router.isReady || !slug) return;
+
+    const fetchEvent = async () => {
+      try {
+        const res = await fetch(`${API_URL}/event/${slug}/`);
+        if (!res.ok) throw new Error("Event not found.");
+        const data = await res.json();
+        setEvent(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError("Failed to load event details.");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    return (
-        <>
-            <Head>
-                <title>{event ? event.name : "Event Details"} - Abroad Advise</title>
-            </Head>
-            <Header />
-            <div className="container mx-auto py-8">
-                {error && <p className="text-center text-red-500">Error: {error}</p>}
-                {event && (
-                    <>
-                        <h1 className="text-4xl font-bold mb-4">{event.name}</h1>
-                        {event.featured_image && (
-                            <div className="w-full h-64 relative mb-6">
-                                <Image 
-                                    src={getFullImageUrl(event.featured_image)} 
-                                    alt={event.name} 
-                                    width={800} 
-                                    height={400} 
-                                    className="object-cover w-full h-full"
-                                />
-                            </div>
-                        )}
-                        <p className="text-lg text-gray-700 mb-4">{event.description}</p>
-                        <p><strong>Date:</strong> {event.date}</p>
-                        <p><strong>Time:</strong> {event.time}</p>
-                        <p><strong>Duration:</strong> {event.duration}</p>
-                        <p><strong>Location:</strong> {event.location}</p>
-                        <p><strong>Event Type:</strong> {event.event_type}</p>
-                        <p><strong>Registration Type:</strong> {event.registration_type} {event.price && `- $${event.price}`}</p>
-                        {event.organizer && (
-                            <p><strong>Organizer:</strong> <Link href={`/consultancy/${event.organizer.slug}`} className="text-blue-500 underline">{event.organizer.name}</Link></p>
-                        )}
-                        {event.related_universities.length > 0 && (
-                            <div className="mt-6">
-                                <h2 className="text-2xl font-semibold">Related Universities</h2>
-                                <ul className="list-disc pl-5">
-                                    {event.related_universities.map(uni => (
-                                        <li key={uni.slug}><Link href={`/university/${uni.slug}`} className="text-blue-500 underline">{uni.name}</Link></li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {event.related_consultancies.length > 0 && (
-                            <div className="mt-6">
-                                <h2 className="text-2xl font-semibold">Related Consultancies</h2>
-                                <ul className="list-disc pl-5">
-                                    {event.related_consultancies.map(cons => (
-                                        <li key={cons.slug}><Link href={`/consultancy/${cons.slug}`} className="text-blue-500 underline">{cons.name}</Link></li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {event.targeted_destinations.length > 0 && (
-                            <div className="mt-6">
-                                <h2 className="text-2xl font-semibold">Targeted Destinations</h2>
-                                <ul className="list-disc pl-5">
-                                    {event.targeted_destinations.map(dest => (
-                                        <li key={dest.slug}><Link href={`/destination/${dest.slug}`} className="text-blue-500 underline">{dest.title}</Link></li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {event.gallery_images.length > 0 && (
-                            <div className="mt-6">
-                                <h2 className="text-2xl font-semibold">Event Gallery</h2>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                    {event.gallery_images.map(image => (
-                                        <Image 
-                                            key={image.id} 
-                                            src={getFullImageUrl(image.image_url)} 
-                                            alt="Event Gallery Image" 
-                                            width={300} 
-                                            height={200} 
-                                            className="rounded-lg object-cover"
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </>
-                )}
+    fetchEvent();
+  }, [router.isReady, slug, API_URL]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/event/active/`)
+      .then((response) => response.json())
+      .then((data) => setOtherEvents(data))
+      .catch((err) => console.error("Error fetching other events:", err));
+  }, [API_URL]);
+
+  // ✅ Open Inquiry Modal Dynamically
+  const openInquiryModal = (entityType, entityId, entityName) => {
+    if (!entityType || !entityId) {
+      console.error("❌ Missing entityType or entityId:", { entityType, entityId });
+      alert("Something went wrong! Missing entity type or ID.");
+      return;
+    }
+
+    console.log("✅ Opening Inquiry Modal for:", { entityType, entityId, entityName });
+
+    setSelectedEntity({ entityType, entityId, entityName });
+    setIsModalOpen(true);
+  };
+
+  if (isLoading)
+    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  if (error)
+    return <p className="text-center text-red-600 font-semibold mt-10">{error}</p>;
+  if (!event)
+    return <p className="text-center text-gray-600 font-semibold mt-10">Event not found.</p>;
+
+  return (
+    <>
+      <Head>
+        <title>{event.name} - Event</title>
+        <meta name="description" content={event.description || "Study abroad event details"} />
+      </Head>
+
+      <Header />
+
+      <main className="bg-gray-50 text-black min-h-screen pb-12">
+        {/* ✅ Event Header - Fixed Props */}
+        <EventHeader
+          event={event}
+          setIsModalOpen={setIsModalOpen}
+          setSelectedEntity={setSelectedEntity}
+        />
+
+        <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* ✅ Left Column - Registration & Other Events */}
+          <div className="md:col-span-1 space-y-6">
+            <EventRegistrationDetail
+              event={event}
+              setIsModalOpen={setIsModalOpen}
+              setSelectedEntity={setSelectedEntity}
+            />
+
+            {/* ✅ Other Active Events - Visible only in sidebar on desktop */}
+            <div className="hidden lg:block">
+              <EventOther otherEvents={otherEvents} />
             </div>
-            <Footer />
-        </>
-    );
+          </div>
+
+          {/* ✅ Right Column - Event Details & Organizer Info */}
+          <div className="md:col-span-2 space-y-6">
+            {/* ✅ Event Overview Section */}
+            <EventOverview event={event} />
+
+            {/* ✅ About Section */}
+            <EventAbout event={event} />
+
+            {/* ✅ Other Active Events - Visible below on mobile */}
+            <div className="block lg:hidden">
+              <EventOther otherEvents={otherEvents} />
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+
+      {/* ✅ Inquiry Modal - Opens on Register Click */}
+      {isModalOpen && (
+        <InquiryModal
+          isModalOpen={isModalOpen}
+          setIsModalOpen={setIsModalOpen}
+          entityType={selectedEntity.entityType}
+          entityId={selectedEntity.entityId}
+          entityName={selectedEntity.entityName}
+          consultancyId={event.organizer?.type === "consultancy" ? event.organizer.id : null}
+          consultancyName={event.organizer?.type === "consultancy" ? event.organizer.name : null}
+          universityId={event.organizer?.type === "university" ? event.organizer.id : null}
+          universityName={event.organizer?.type === "university" ? event.organizer.name : null}
+          destinationId={null}
+          destinationName={null}
+        />
+      )}
+    </>
+  );
 }
