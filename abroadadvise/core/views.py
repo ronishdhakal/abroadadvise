@@ -3,13 +3,21 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny  # ✅ Import AllowAny
 from rest_framework.views import APIView
+from django.db.models import Q
 from .reviews import Review
 from .models import District, Discipline, Ad, SiteSetting
 from .serializers import ReviewSerializer, DistrictSerializer, DisciplineSerializer, SiteSettingSerializer, AdSerializer
 from .filters import ReviewFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django.conf import settings
+
+
+# ✅ Import Consultancy, University, and Course models
+from consultancy.models import Consultancy
+from university.models import University
+from course.models import Course
 
 # ✅ API for Fetching All Districts
 class DistrictListAPIView(generics.ListAPIView):
@@ -103,3 +111,53 @@ class AdListAPIView(generics.ListAPIView):
             queryset = queryset.filter(placement=placement)
 
         return queryset
+
+# ✅ NEW: Global Search API (Search in Consultancies, Universities, Courses)
+class GlobalSearchAPIView(APIView):
+    permission_classes = [AllowAny]
+    renderer_classes = [JSONRenderer]
+
+    def get(self, request):
+        query = request.GET.get("query", "").strip()
+        if not query:
+            return Response({"results": []})
+
+        # Function to generate full image URL
+        def get_full_url(image_path):
+            if image_path:
+                return request.build_absolute_uri(settings.MEDIA_URL + image_path)
+            return None
+
+        # 🔎 Search in Consultancies (Include location)
+        consultancies = Consultancy.objects.filter(
+            Q(name__icontains=query) | Q(about__icontains=query)
+        ).values("id", "name", "slug", "logo", "address")
+
+        # 🔎 Search in Universities (Include country)
+        universities = University.objects.filter(
+            Q(name__icontains=query) | Q(about__icontains=query)
+        ).values("id", "name", "slug", "logo", "country")
+
+        # 🔎 Search in Courses (Include university name)
+        courses = Course.objects.filter(
+            Q(name__icontains=query) | Q(short_description__icontains=query)
+        ).select_related("university").values("id", "name", "slug", "cover_image", "university__name")
+
+        # Convert relative paths to full URLs
+        for item in consultancies:
+            item["logo"] = get_full_url(item["logo"])
+
+        for item in universities:
+            item["logo"] = get_full_url(item["logo"])
+
+        for item in courses:
+            item["cover_image"] = get_full_url(item["cover_image"])
+            item["university"] = {"name": item.pop("university__name", None)}  # ✅ Fix university structure
+
+        results = {
+            "consultancies": list(consultancies),
+            "universities": list(universities),
+            "courses": list(courses),
+        }
+
+        return Response({"results": results})

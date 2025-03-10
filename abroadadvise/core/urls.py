@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     ReviewCreateAPIView, ReviewListAPIView, ReviewModerationAPIView, ReviewReplyAPIView,
-    DistrictListAPIView, DisciplineListAPIView, SiteSettingAPIView, AdListAPIView
+    DistrictListAPIView, DisciplineListAPIView, SiteSettingAPIView, AdListAPIView,  GlobalSearchAPIView
 )
 
 urlpatterns = [
@@ -25,4 +25,7 @@ urlpatterns = [
 
     # ✅ Fetch Active Ads (Supports Placement Filtering)
     path('api/ads/', AdListAPIView.as_view(), name='ads-list'),
+    
+    # ✅ Global Search API (Now `/search/`, NOT `/api/search/`)
+    path('search/', GlobalSearchAPIView.as_view(), name='global-search'),
 ]

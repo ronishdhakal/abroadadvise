@@ -5,6 +5,7 @@ from django.utils.text import slugify
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
+from django.contrib.auth import get_user_model  # ✅ Import get_user_model
 
 User = settings.AUTH_USER_MODEL
 
@@ -64,16 +65,16 @@ class ConsultancyBranch(models.Model):
         return f"{self.consultancy.name} - {self.branch_name}"
 
 # Signal to create a slug before saving the Consultancy
-@receiver(pre_save, sender=Consultancy)
-def create_slug(sender, instance, **kwargs):
-    if not instance.slug:
-        base_slug = slugify(instance.name)
-        slug = base_slug
-        counter = 1
-        while Consultancy.objects.filter(slug=slug).exclude(id=instance.id).exists():
-            slug = f"{base_slug}-{counter}"
-            counter += 1
-        instance.slug = slug
+@receiver(post_save, sender=Consultancy)
+def create_consultancy_user(sender, instance, created, **kwargs):
+    if created and not instance.user:
+        User = get_user_model()  # ✅ Get actual User model
+
+        username = instance.email.split('@')[0] if instance.email else f"consultancy_{instance.id}"
+        user, created = User.objects.get_or_create(username=username, email=instance.email or "")
+        
+        instance.user = user
+        instance.save()
 
 # Signal to create a user when a Consultancy is created if it doesn't exist
 @receiver(post_save, sender=Consultancy)

@@ -9,15 +9,20 @@ export default function RoadblockAd() {
   const [ad, setAd] = useState(null)
 
   useEffect(() => {
-    // Fetch the roadblock ad
+    // Check if ad has already been shown in this session
+    const hasSeenAd = sessionStorage.getItem("hasSeenRoadblockAd")
+    if (hasSeenAd) return
+
     const fetchAd = async () => {
       try {
         const res = await fetch("http://127.0.0.1:8000/api/ads/?placement=roadblock_ad")
         const data = await res.json()
 
         if (data.results.length > 0) {
-          setAd(data.results[0]) // Get the first ad if available
-          setShowAd(true) // Show the ad
+          setAd(data.results[0])
+          setShowAd(true)
+          // Mark ad as seen in sessionStorage after displaying
+          sessionStorage.setItem("hasSeenRoadblockAd", "true")
         }
       } catch (error) {
         console.error("Error fetching roadblock ad:", error)
@@ -27,63 +32,59 @@ export default function RoadblockAd() {
     fetchAd()
   }, [])
 
-  const closeAd = () => setShowAd(false)
+  const closeAd = () => {
+    setShowAd(false)
+  }
 
   if (!showAd || !ad) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black/75 backdrop-blur-sm flex justify-center items-center z-50 p-4 md:p-6"
-      style={{
-        animation: "fadeIn 0.3s ease-out forwards",
-      }}
-    >
-      <div className="relative mx-auto overflow-hidden rounded-xl shadow-2xl">
-        {/* Container with exact dimensions */}
-        <div className="w-[400px] h-[500px] md:w-[1180px] md:h-[715px]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Subtle Overlay with Minimal Blur */}
+      <div className="fixed inset-0 bg-gray-900/10 backdrop-blur-[0.5px] pointer-events-none" />
+
+      {/* Ad Container */}
+      <div 
+        className="relative max-w-4xl w-full sm:max-w-3xl pointer-events-auto animate-in fade-in zoom-in-95 duration-300 z-60"
+      >
+        {/* Card Container */}
+        <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50">
           {/* Close Button */}
           <button
-            className="absolute top-3 right-3 z-10 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full transition-all duration-200 shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
             onClick={closeAd}
+            className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-gray-100 text-gray-800 p-1.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
             aria-label="Close advertisement"
-            style={{
-              width: "28px",
-              height: "28px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
           >
-            <X className="h-5 w-5" strokeWidth={2.5} />
+            <X className="h-4 w-4" strokeWidth={2} />
           </button>
 
-          {/* Clickable Ad */}
+          {/* Ad Content */}
           <a
             href={ad.redirect_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full h-full transition-transform duration-300 hover:scale-[1.01]"
+            className="block w-full transition-transform duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
           >
-            {/* Desktop Image */}
-            <div className="hidden md:block w-full h-full">
+            {/* Desktop Version */}
+            <div className="hidden sm:block">
               <Image
                 src={ad.desktop_image_url || "/placeholder.svg"}
                 alt={ad.title}
-                width={1180}
-                height={715}
-                className="w-full h-full object-cover"
+                width={960}
+                height={540}
+                className="w-full h-auto object-cover max-h-[80vh]"
                 priority
               />
             </div>
 
-            {/* Mobile Image */}
-            <div className="md:hidden w-full h-full">
+            {/* Mobile Version */}
+            <div className="sm:hidden">
               <Image
                 src={ad.mobile_image_url || "/placeholder.svg"}
                 alt={ad.title}
-                width={400}
-                height={500}
-                className="w-full h-full object-cover"
+                width={320}
+                height={400}
+                className="w-full h-auto object-cover max-h-[65vh]"
                 priority
               />
             </div>
@@ -93,4 +94,3 @@ export default function RoadblockAd() {
     </div>
   )
 }
-
