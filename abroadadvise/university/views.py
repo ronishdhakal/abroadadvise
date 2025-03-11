@@ -1,36 +1,35 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.renderers import JSONRenderer
-from core.pagination import StandardResultsSetPagination  # Import pagination
-from core.filters import UniversityFilter  # Import filtering
-from authentication.permissions import IsAdminUser
+from core.pagination import StandardResultsSetPagination
+from core.filters import UniversityFilter
 from .models import University
 from .serializers import UniversitySerializer
 
 # ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
     serializer_class = UniversitySerializer
-    permission_classes = [AllowAny]  # 🔓 Public Access
+    permission_classes = [AllowAny]  # 🔓 Public Access (No authentication required)
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = UniversityFilter
     search_fields = ['name', 'country']
-    renderer_classes = [JSONRenderer]  # ✅ Ensures JSON Response
+    renderer_classes = [JSONRenderer]
 
     def get_queryset(self):
-        return University.objects.prefetch_related("disciplines").order_by("priority", "-id")  # ✅ Order by priority first, then by creation order
+        return University.objects.prefetch_related("disciplines").order_by("priority", "-id")
 
-# ✅ Create University (Admin Only)
+# ✅ Create University (Authentication Removed)
 @api_view(['POST'])
-@permission_classes([IsAdminUser])  
 @parser_classes([MultiPartParser, FormParser])  
 def create_university(request):
+    """ ✅ Creates a new university """
     serializer = UniversitySerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
@@ -39,8 +38,8 @@ def create_university(request):
 
 # ✅ Get Single University (Public)
 @api_view(['GET'])
-@permission_classes([AllowAny])  # 🔓 Public Access
 def get_university(request, slug):
+    """ ✅ Fetches details of a single university by slug """
     try:
         university = University.objects.prefetch_related("disciplines").get(slug=slug)
         serializer = UniversitySerializer(university)
@@ -48,11 +47,11 @@ def get_university(request, slug):
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Update University (Admin Only)
+# ✅ Update University (Authentication Removed)
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAdminUser])  
 @parser_classes([MultiPartParser, FormParser])  
 def update_university(request, slug):
+    """ ✅ Updates an existing university """
     try:
         university = University.objects.prefetch_related("disciplines").get(slug=slug)
         serializer = UniversitySerializer(university, data=request.data, partial=True)
@@ -63,10 +62,10 @@ def update_university(request, slug):
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Delete University (Admin Only)
+# ✅ Delete University (Authentication Removed)
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])  
 def delete_university(request, slug):
+    """ ✅ Deletes an existing university """
     try:
         university = University.objects.get(slug=slug)
         university.delete()

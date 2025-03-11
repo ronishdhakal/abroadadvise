@@ -1,10 +1,15 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // ✅ Helper Function: Get Auth Headers
+// ✅ Helper Function: Get Auth Headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem("accessToken"); // Get stored JWT token
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  if (typeof window !== "undefined") {  // ✅ Ensure running in browser
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+  return {}; // ✅ Return empty headers on server-side
 };
+
 
 // ✅ Fetch Districts
 export const fetchDistricts = async () => {
@@ -44,6 +49,28 @@ export const fetchDestinations = async () => {
   }
 };
 
+
+
+// ✅ Fetch Disciplines (Needed for University Form Dropdowns)
+export const fetchDisciplines = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/disciplines/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch disciplines");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching disciplines:", error);
+    throw error;
+  }
+};
+
+
 // ✅ Fetch Test Preparation Exams
 export const fetchExams = async () => {
   try {
@@ -63,10 +90,33 @@ export const fetchExams = async () => {
   }
 };
 
-// ✅ Fetch Universities
-export const fetchUniversities = async () => {
+// Fetch COurses
+export const fetchCourses = async (page = 1) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/university/`, {
+    console.log("🔍 Fetching courses from:", `${API_BASE_URL}/course/?page=${page}`);
+    
+    const response = await fetch(`${API_BASE_URL}/course/?page=${page}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text(); // Log API response if it fails
+      throw new Error(`Failed to fetch courses: ${errorMessage}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching courses:", error);
+    throw error;
+  }
+};
+
+
+// ✅ Fetch Universities (With Pagination & Search)
+export const fetchUniversities = async (page = 1, search = "") => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/university/?page=${page}&search=${search}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -82,6 +132,25 @@ export const fetchUniversities = async () => {
   }
 };
 
+// ✅ Fetch Single University Details
+export const fetchUniversityDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/university/${slug}/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch university details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching university details:", error);
+    throw error;
+  }
+};
+
 // ✅ Fetch Consultancies with Pagination & Search
 export const fetchConsultancies = async (page = 1, search = "") => {
   try {
@@ -91,18 +160,17 @@ export const fetchConsultancies = async (page = 1, search = "") => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || "Failed to fetch consultancies");
+      throw new Error("Failed to fetch consultancies");
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Fetch Error:", error.message);
+    console.error("Error fetching consultancies:", error);
     throw error;
   }
 };
 
-// ✅ Fetch Single Consultancy Details (Ensures Data Pre-Fills)
+// ✅ Fetch Single Consultancy Details
 export const fetchConsultancyDetails = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/`, {
@@ -133,7 +201,9 @@ const convertArrayToJson = (formData, key) => {
   }
 };
 
-// ✅ Create Consultancy (Handles FormData & File Uploads)
+
+// Consultancy API
+
 // ✅ Create Consultancy (Handles FormData & File Uploads)
 export const createConsultancy = async (formData) => {
   try {
@@ -236,22 +306,20 @@ export const toggleConsultancyVerification = async (slug, isVerified) => {
     const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json", // ✅ Ensure JSON format
+        "Content-Type": "application/json",
         ...getAuthHeaders(),
       },
-      body: JSON.stringify({ is_verified: isVerified }), // ✅ Fix: Send JSON data
+      body: JSON.stringify({ is_verified: isVerified }),
     });
 
+    const responseData = await response.json();
+    console.log("🔍 Toggle Response:", responseData);
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Verification Toggle Error:", errorData);
-      throw new Error(errorData.error || "Failed to update verification");
+      throw new Error(responseData.detail || "Failed to update verification");
     }
 
-    const updatedData = await response.json();
-    console.log(`✅ Consultancy verification updated: ${updatedData.is_verified}`);
-
-    return updatedData; // ✅ Return updated consultancy data for UI update
+    return responseData;
   } catch (error) {
     console.error("❌ Error updating verification:", error);
     throw error;
@@ -283,3 +351,108 @@ export const deleteConsultancy = async (slug) => {
 
 
 
+
+// ✅ Create University (Handles FormData & File Uploads)
+export const createUniversity = async (formData) => {
+  try {
+    console.log("Submitting University FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/university/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create University API Error:", errorData);
+      throw new Error(JSON.stringify(errorData));
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating university:", error);
+    throw error;
+  }
+};
+export const toggleUniversityVerification = async (slug, isVerified) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/university/${slug}/update/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ is_verified: isVerified }),
+    });
+
+    const responseData = await response.json();
+    console.log("🔍 Toggle Response:", responseData);
+
+    if (!response.ok) {
+      throw new Error(responseData.detail || "Failed to update verification");
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error("❌ Error updating verification:", error);
+    throw error;
+  }
+};
+
+
+// ✅ Update University (Handles FormData & File Uploads)
+export const updateUniversity = async (slug, formData) => {
+  try {
+    console.log("Updating University FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    // ✅ Convert boolean values correctly
+    if (formData.has("is_verified")) {
+      formData.set("is_verified", formData.get("is_verified") === "true"); // ✅ Convert to boolean
+    }
+
+    // ✅ Convert arrays to JSON
+    convertArrayToJson(formData, "consultancies_to_apply");
+    convertArrayToJson(formData, "disciplines");
+
+    const response = await fetch(`${API_BASE_URL}/university/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update university");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating university:", error);
+    throw error;
+  }
+};
+
+// ✅ Delete University
+export const deleteUniversity = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/university/${slug}/delete/`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete university");
+    }
+
+    return { success: true, message: "University deleted successfully!" };
+  } catch (error) {
+    console.error("Error deleting university:", error);
+    throw error;
+  }
+};
