@@ -1,6 +1,5 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -8,86 +7,205 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
+from django.contrib.auth import get_user_model
+import json
+import os
+from django.conf import settings
 
 from core.pagination import StandardResultsSetPagination
 from core.filters import ConsultancyFilter
-from authentication.permissions import IsAdminUser, IsConsultancyUser
-from .models import Consultancy
-from .serializers import ConsultancySerializer
+from .models import Consultancy, ConsultancyGallery, ConsultancyBranch
+from destination.models import Destination
+from exam.models import Exam
+from university.models import University
+from core.models import District
+from .serializers import ConsultancySerializer, ConsultancyBranchSerializer
 
-# ✅ Publicly Accessible List of Consultancies with Pagination, Search, and Filtering
+User = get_user_model()
+
+# ✅ Publicly Accessible List of Consultancies
 class ConsultancyListView(ListAPIView):
     serializer_class = ConsultancySerializer
-    permission_classes = [AllowAny]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ConsultancyFilter
     search_fields = ["name", "services"]
 
     def get_queryset(self):
-        queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
-            "districts", "study_abroad_destinations", "test_preparation", "partner_universities"
-        ).order_by("priority", "-id")  # ✅ Order by priority first, then by creation order
-
-        # ✅ Ensure filtering for districts (ManyToManyField)
-        district_ids = self.request.GET.getlist("districts")
-        if district_ids:
-            queryset = queryset.filter(districts__id__in=district_ids)
-
-        # ✅ Filter consultancies by university slug if provided in request
-        university_slug = self.request.GET.get("university")
-        if university_slug:
-            queryset = queryset.filter(partner_universities__slug=university_slug)
-
-        return queryset.distinct()  # Avoid duplicate results
+        return Consultancy.objects.prefetch_related(
+            "districts", "study_abroad_destinations", "test_preparation", 
+            "partner_universities", "gallery_images", "branches"
+        ).order_by("priority", "-id").distinct()
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
-    queryset = Consultancy.objects.select_related("user", "verified").prefetch_related(
-        "districts", "study_abroad_destinations", "test_preparation", "gallery_images", "branches", "partner_universities"
+    queryset = Consultancy.objects.prefetch_related(
+        "districts", "study_abroad_destinations", "test_preparation", 
+        "gallery_images", "branches", "partner_universities"
     )
     serializer_class = ConsultancySerializer
-    permission_classes = [AllowAny]
     lookup_field = "slug"
 
-# ✅ Create Consultancy (Admin Only)
+# ✅ Dashboard - Get Consultancies
+@api_view(["GET"])
+def dashboard_consultancy_list(request):
+    consultancies = Consultancy.objects.all()
+    serializer = ConsultancySerializer(consultancies, many=True, context={"request": request})
+    return Response(serializer.data)
+
+# ✅ Create Consultancy
 @api_view(["POST"])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
-    serializer = ConsultancySerializer(data=request.data)
+    """ ✅ Creates a new consultancy (Handles Districts, Branches, Study Destinations, Test Prep, Universities, File Uploads, and Gallery) """
+    
+    data = request.data.copy()
+
+    # ✅ Convert JSON string to lists
+    branches_data = json.loads(data.get("branches", "[]"))
+    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
+    test_preparation = json.loads(data.get("test_preparation", "[]"))
+    partner_universities = json.loads(data.get("partner_universities", "[]"))
+    districts = json.loads(data.get("districts", "[]"))
+
+    data["branches"] = branches_data
+
+    # ✅ Auto-generate a unique slug if not provided
+    slug = data.get("slug") or slugify(data.get("name", ""))
+    original_slug = slug
+    counter = 1
+    while Consultancy.objects.filter(slug=slug).exists():
+        slug = f"{original_slug}-{counter}"
+        counter += 1
+    data["slug"] = slug
+
+    serializer = ConsultancySerializer(data=data)
     if serializer.is_valid():
         consultancy = serializer.save()
 
-        # ✅ Ensure slug is created properly and is unique
-        if not consultancy.slug:
-            consultancy.slug = slugify(consultancy.name)
-        while Consultancy.objects.filter(slug=consultancy.slug).exists():
-            consultancy.slug = f"{consultancy.slug}-{consultancy.id}"
-        
+        # ✅ Assign ManyToMany Fields
+        consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
+        consultancy.test_preparation.set(Exam.objects.filter(id__in=test_preparation))
+        consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
+        consultancy.districts.set(District.objects.filter(id__in=districts))
+
+        # ✅ Handle File Uploads
+        if "logo" in request.FILES:
+            consultancy.logo = request.FILES["logo"]
+        if "cover_photo" in request.FILES:
+            consultancy.cover_photo = request.FILES["cover_photo"]
+        if "brochure" in request.FILES:
+            consultancy.brochure = request.FILES["brochure"]
+
         consultancy.save()
+
+        # ✅ Save Branches
+        for branch in branches_data:
+            ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
+
+        # ✅ Save Gallery Images
+        for file in request.FILES.getlist("gallery_images"):
+            ConsultancyGallery.objects.create(consultancy=consultancy, image=file)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ Update Consultancy (Admin & Consultancy User)
+# ✅ Update Consultancy
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAdminUser | IsConsultancyUser])  
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
+    """ ✅ Fully updates a consultancy, ensuring pre-filled data updates correctly. """
+    
     consultancy = get_object_or_404(Consultancy, slug=slug)
-    serializer = ConsultancySerializer(consultancy, data=request.data, partial=True)
+    data = request.data.copy()
+
+    # ✅ Convert JSON string to lists
+    branches_data = json.loads(data.get("branches", "[]"))
+    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
+    test_preparation = json.loads(data.get("test_preparation", "[]"))
+    partner_universities = json.loads(data.get("partner_universities", "[]"))
+    districts = json.loads(data.get("districts", "[]"))
+
+    serializer = ConsultancySerializer(consultancy, data=data, partial=True)
     
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data)
-    
+        consultancy = serializer.save()
+
+        # ✅ Assign ManyToMany Fields
+        consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
+        consultancy.test_preparation.set(Exam.objects.filter(id__in=test_preparation))
+        consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
+        consultancy.districts.set(District.objects.filter(id__in=districts))
+
+        # ✅ Handle File Uploads (Only update if a new file is provided)
+        if "logo" in request.FILES:
+            consultancy.logo = request.FILES["logo"]
+        if "cover_photo" in request.FILES:
+            consultancy.cover_photo = request.FILES["cover_photo"]
+        if "brochure" in request.FILES:
+            consultancy.brochure = request.FILES["brochure"]
+
+        consultancy.save()
+
+        # ✅ Update Branches (Delete old and add new)
+        consultancy.branches.all().delete()
+        for branch in branches_data:
+            ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
+
+        # ✅ Save New Gallery Images (Keep old ones, add new ones)
+        for file in request.FILES.getlist("gallery_images"):
+            ConsultancyGallery.objects.create(consultancy=consultancy, image=file)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ Delete Consultancy (Admin Only)
+# ✅ Delete Consultancy (Handles Deleting Files & Related Data)
+# ✅ Dashboard - Get Consultancies
+@api_view(["GET"])
+def dashboard_consultancy_list(request):
+    consultancies = Consultancy.objects.all()
+    serializer = ConsultancySerializer(consultancies, many=True, context={"request": request})
+    return Response(serializer.data)
+
+# ✅ Delete Consultancy (Ensures Complete Data & File Removal)
+# ✅ Delete Consultancy (Handles Deleting Files & Related Data)
 @api_view(["DELETE"])
-@permission_classes([IsAdminUser])
 def delete_consultancy(request, slug):
+    """ ✅ Deletes a consultancy and ensures all related data and files are removed safely. """
+
     consultancy = get_object_or_404(Consultancy, slug=slug)
+
+    # ✅ Delete related ManyToMany relationships
+    consultancy.study_abroad_destinations.clear()
+    consultancy.test_preparation.clear()
+    consultancy.partner_universities.clear()
+    consultancy.districts.clear()
+
+    # ✅ Delete Branches
+    consultancy.branches.all().delete()
+
+    # ✅ Delete Gallery Images & Remove Files from System
+    for gallery_image in consultancy.gallery_images.all():
+        if gallery_image.image:
+            image_path = os.path.join(settings.MEDIA_ROOT, str(gallery_image.image))
+            if os.path.exists(image_path):
+                os.remove(image_path)
+        gallery_image.delete()
+
+    # ✅ Delete Consultancy Logo, Cover Photo, and Brochure Files
+    def delete_file(file_field):
+        if file_field:
+            file_path = os.path.join(settings.MEDIA_ROOT, str(file_field))
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+    delete_file(consultancy.logo)
+    delete_file(consultancy.cover_photo)
+    delete_file(consultancy.brochure)
+
+    # ✅ Delete the consultancy itself
     consultancy.delete()
+
     return Response({"message": "Consultancy deleted successfully"}, status=status.HTTP_204_NO_CONTENT)

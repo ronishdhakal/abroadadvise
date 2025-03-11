@@ -10,37 +10,38 @@ from core.views import DisciplineListAPIView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/auth/", include("authentication.urls")),  # Authentication API
+    
+    # ✅ Fix authentication URL path (matches frontend expectations)
+    path("auth/", include("authentication.urls", namespace="authentication")),  
 
-    # Main Apps URLs
-    path('consultancy/', include('consultancy.urls')),
-    path('university/', include('university.urls')),
-    path('destination/', include('destination.urls')),
-    path('course/', include('course.urls')),
-    path('event/', include('event.urls')),
-    path('news/', include('news.urls')),
-    path('exam/', include('exam.urls')),
-    path('inquiry/', include('inquiry.urls')),
-    path('blog/', include('blog.urls')),  # Blog API added
+    # ✅ Main Apps URLs
+    path("consultancy/", include("consultancy.urls")),
+    path("university/", include("university.urls")),
+    path("destination/", include("destination.urls")),
+    path("course/", include("course.urls")),
+    path("event/", include("event.urls")),
+    path("news/", include("news.urls")),
+    path("exam/", include("exam.urls")),
+    path("inquiry/", include("inquiry.urls")),
+    path("blog/", include("blog.urls")),  # ✅ Blog API added
 
-    # Core and Reviews Paths
-    path('', include('core.urls')),
+    # ✅ Core and Reviews Paths
+    path("", include("core.urls")),
 
-    # Discipline API (added)
-    path('discipline/', DisciplineListAPIView.as_view(), name='list-disciplines'),
+    # ✅ Discipline API (added)
+    path("discipline/", DisciplineListAPIView.as_view(), name="list-disciplines"),
 
-    # Text Editor
-    path('tinymce/', include('tinymce.urls')),
+    # ✅ Text Editor (TinyMCE)
+    path("tinymce/", include("tinymce.urls")),
 ]
 
-# Optional: API format suffixes (e.g., .json, .api)
+# ✅ Optional: API format suffixes (e.g., .json, .api)
 urlpatterns = format_suffix_patterns(urlpatterns)
 
-# Serve media files during development
+# ✅ Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += [
-        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+        re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
     ]
-

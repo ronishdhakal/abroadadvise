@@ -1,4 +1,6 @@
 from pathlib import Path
+from datetime import timedelta
+
 import os
 
 # ✅ Base Directory
@@ -28,6 +30,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'tinymce',
+    'rest_framework_simplejwt.token_blacklist',  # ✅ Add this
 
     # Custom apps
     'authentication',
@@ -42,6 +45,18 @@ INSTALLED_APPS = [
     'inquiry',
     'blog',
 ]
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
 
 # ✅ Middleware
 MIDDLEWARE = [
