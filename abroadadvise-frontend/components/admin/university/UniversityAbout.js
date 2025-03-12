@@ -9,6 +9,7 @@ const UniversityAbout = ({ formData, setFormData }) => {
   const [eligibilityContent, setEligibilityContent] = useState("");
   const [facilitiesContent, setFacilitiesContent] = useState("");
   const [scholarshipContent, setScholarshipContent] = useState("");
+  const [faqsContent, setFaqsContent] = useState(""); // ✅ Added FAQs Field
   const [priority, setPriority] = useState(""); // ✅ Added Priority Field
 
   // ✅ Sync form data when editing
@@ -17,12 +18,14 @@ const UniversityAbout = ({ formData, setFormData }) => {
     setEligibilityContent(formData.eligibility || "");
     setFacilitiesContent(formData.facilities_features || "");
     setScholarshipContent(formData.scholarship || "");
+    setFaqsContent(formData.faqs || ""); // ✅ Load FAQs
     setPriority(formData.priority || ""); // ✅ Load priority from formData
   }, [
     formData.about,
     formData.eligibility,
     formData.facilities_features,
     formData.scholarship,
+    formData.faqs,
     formData.priority,
   ]);
 
@@ -108,7 +111,7 @@ const UniversityAbout = ({ formData, setFormData }) => {
       </div>
 
       {/* Scholarships */}
-      <div>
+      <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Scholarships Offered</label>
         <Editor
           apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
@@ -116,6 +119,26 @@ const UniversityAbout = ({ formData, setFormData }) => {
           onEditorChange={(content) => {
             setScholarshipContent(content);
             setFormData((prev) => ({ ...prev, scholarship: content }));
+          }}
+          init={{
+            height: 250,
+            menubar: false,
+            plugins: "advlist autolink lists link image charmap preview anchor table",
+            toolbar:
+              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          }}
+        />
+      </div>
+
+      {/* FAQs */}
+      <div>
+        <label className="block text-gray-700 font-medium mb-2">Frequently Asked Questions (FAQs)</label>
+        <Editor
+          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+          value={faqsContent}
+          onEditorChange={(content) => {
+            setFaqsContent(content);
+            setFormData((prev) => ({ ...prev, faqs: content }));
           }}
           init={{
             height: 250,

@@ -24,10 +24,10 @@ const CourseCard = ({ course }) => {
             {course.name}
           </h2>
 
-          {/* 🎓 University Name */}
+          {/* 🎓 University Name (Show "No University" if missing) */}
           <p className="text-gray-600 text-center mt-2 flex items-center justify-center">
             <GraduationCap className="h-4 w-4 text-gray-400 mr-1" />
-            {course.university.name}
+            {course.university?.name || "No University"}
           </p>
         </div>
       </div>

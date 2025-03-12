@@ -127,39 +127,36 @@ const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations
 
     const submissionData = new FormData();
 
-    // ✅ Append all form fields correctly
+    // ✅ Ensure disciplines are sent as an array of numbers
+    if (formData.disciplines.length > 0) {
+        submissionData.append("disciplines", JSON.stringify(formData.disciplines.map(Number))); // ✅ Convert to numbers
+    } else {
+        submissionData.append("disciplines", JSON.stringify([])); // ✅ Ensure empty array is sent
+    }
+
+    // ✅ Append all other fields correctly
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        if (["branches", "districts", "study_abroad_destinations", "test_preparation", "partner_universities"].includes(key)) {
-          submissionData.append(key, JSON.stringify(value));
-        } else if (key === "gallery_images") {
-          value.forEach((file) => {
-            if (file.file) {
-              submissionData.append("gallery_images", file.file);
-            }
-          });
-        } else {
-          submissionData.append(key, value);
+        if (value !== null && value !== undefined && key !== "disciplines") {
+            submissionData.append(key, value);
         }
-      }
     });
 
     try {
-      if (isEditing) {
-        await updateConsultancy(consultancySlug, submissionData);
-        setSuccess("Consultancy updated successfully!");
-      } else {
-        await createConsultancy(submissionData);
-        setSuccess("Consultancy created successfully!");
-      }
-      onSuccess();
+        if (isEditing) {
+            await updateCourse(courseSlug, submissionData);
+            setSuccess("✅ Course updated successfully!");
+        } else {
+            await createCourse(submissionData);
+            setSuccess("✅ Course created successfully!");
+        }
+        onSuccess();
     } catch (err) {
-      console.error("API Error:", err);
-      setError(err.message || "Failed to save consultancy.");
+        console.error("❌ API Error:", err);
+        setError(err.message || "❌ Failed to save course.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">

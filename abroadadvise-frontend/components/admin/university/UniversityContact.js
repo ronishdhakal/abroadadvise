@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, Mail, Phone, Landmark, CheckCircle, MapPin, Edit3 } from "lucide-react"; // ✅ Added icons for Address, Country, and Slug
+import { Globe, Mail, Phone, Landmark, MapPin, Edit3 } from "lucide-react"; // ✅ Removed CheckCircle (verification icon)
 
 const UniversityContact = ({ formData, setFormData }) => {
   // ✅ Handle input changes
@@ -10,14 +10,6 @@ const UniversityContact = ({ formData, setFormData }) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
-
-  // ✅ Handle Verification Toggle
-  const handleVerificationToggle = () => {
-    setFormData((prev) => ({
-      ...prev,
-      verified: !prev.verified, // ✅ Toggle verification status
     }));
   };
 
@@ -125,46 +117,24 @@ const UniversityContact = ({ formData, setFormData }) => {
         </div>
       </div>
 
-      {/* University Type */}
       {/* University Type (Added "required" validation) */}
-<div className="mb-4">
-  <label className="block text-gray-700 font-medium mb-1">University Type *</label>
-  <div className="flex items-center gap-2">
-    <Landmark className="h-5 w-5 text-gray-500" />
-    <select
-      name="type"
-      value={formData.type || ""}
-      onChange={handleInputChange}
-      required
-      className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
-    >
-      <option value="">Select Type</option>
-      <option value="private">Private University</option>
-      <option value="community">Community University</option>
-    </select>
-  </div>
-</div>
-
-
-      {/* Verification Toggle */}
-      <div className="mb-4 flex items-center">
-        <input
-          type="checkbox"
-          name="verified"
-          checked={formData.verified || false}
-          onChange={handleVerificationToggle}
-          className="h-5 w-5 text-green-500 border-gray-300 rounded focus:ring-blue-500"
-        />
-        <span className="ml-2 text-gray-700 font-medium">Verified Institution</span>
-      </div>
-
-      {/* Verification Badge Display */}
-      {formData.verified && (
-        <div className="flex items-center bg-green-100 text-green-700 px-4 py-2 rounded-md">
-          <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-          <span className="font-semibold text-sm">Verified Institution</span>
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">University Type *</label>
+        <div className="flex items-center gap-2">
+          <Landmark className="h-5 w-5 text-gray-500" />
+          <select
+            name="type"
+            value={formData.type || ""}
+            onChange={handleInputChange}
+            required
+            className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
+          >
+            <option value="">Select Type</option>
+            <option value="private">Private University</option>
+            <option value="community">Community University</option>
+          </select>
         </div>
-      )}
+      </div>
     </div>
   );
 };

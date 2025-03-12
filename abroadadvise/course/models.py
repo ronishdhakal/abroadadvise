@@ -12,7 +12,11 @@ class Course(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     abbreviation = models.CharField(max_length=50, blank=True, null=True)
 
-    university = models.ForeignKey(University, on_delete=models.CASCADE, related_name='university_courses')
+    # ✅ University is now optional (null=True, blank=True)
+    university = models.ForeignKey(
+        University, on_delete=models.SET_NULL, null=True, blank=True, related_name='university_courses'
+    )
+    
     destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
 
     duration = models.CharField(max_length=50, blank=True, null=True)

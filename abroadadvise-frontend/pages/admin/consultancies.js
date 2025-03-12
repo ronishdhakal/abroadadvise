@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Head from "next/head"; // ✅ SEO optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import ConsultancyForm from "@/components/admin/ConsultancyForm";
 import {
@@ -13,13 +14,13 @@ import {
   fetchConsultancyDetails,
 } from "@/utils/api";
 
-const ConsultanciesPage = () => {
-  const [consultancies, setConsultancies] = useState([]);
+const ConsultanciesPage = ({ initialConsultancies }) => {
+  const [consultancies, setConsultancies] = useState(initialConsultancies);
   const [allDestinations, setAllDestinations] = useState([]);
   const [allExams, setAllExams] = useState([]);
   const [allUniversities, setAllUniversities] = useState([]);
   const [allDistricts, setAllDistricts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -28,7 +29,7 @@ const ConsultanciesPage = () => {
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Fetch consultancies with pagination & search
+  // ✅ Fetch consultancies dynamically when page or search query changes
   const loadConsultancies = async () => {
     setLoading(true);
     setError(null);
@@ -46,39 +47,41 @@ const ConsultanciesPage = () => {
     }
   };
 
-  // ✅ Fetch Study Destinations, Exams, Universities, and Districts for Dropdowns
-  const loadOptions = async () => {
-    try {
-      const destinationsData = await fetchDestinations();
-      setAllDestinations(destinationsData.results || []);
-
-      const examsData = await fetchExams();
-      setAllExams(examsData.results || []);
-
-      const universitiesData = await fetchUniversities();
-      setAllUniversities(universitiesData.results || []);
-
-      const districtsData = await fetchDistricts();
-      setAllDistricts(districtsData.results || []);
-    } catch (err) {
-      console.error("❌ Failed to load options:", err);
-      setError(
-        "Failed to load study destinations, exams, universities, or districts."
-      );
-    }
-  };
-
   useEffect(() => {
     loadConsultancies();
-    loadOptions();
   }, [page, search]);
 
-  // ✅ Handle Delete Consultancy with Optimistic UI & Error Handling
-  const handleDelete = async (slug) => {
-    if (!window.confirm("Are you sure you want to delete this consultancy?"))
-      return;
+  // ✅ Fetch Study Destinations, Exams, Universities, and Districts for Dropdowns
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        const destinationsData = await fetchDestinations();
+        setAllDestinations(destinationsData.results || []);
 
-    // ✅ Optimistic UI Update (Remove from list instantly)
+        const examsData = await fetchExams();
+        setAllExams(examsData.results || []);
+
+        const universitiesData = await fetchUniversities();
+        setAllUniversities(universitiesData.results || []);
+
+        const districtsData = await fetchDistricts();
+        setAllDistricts(districtsData.results || []);
+      } catch (err) {
+        console.error("❌ Failed to load options:", err);
+        setError(
+          "Failed to load study destinations, exams, universities, or districts."
+        );
+      }
+    };
+
+    loadOptions();
+  }, []);
+
+  // ✅ Handle Delete Consultancy
+  const handleDelete = async (slug) => {
+    if (!window.confirm("Are you sure you want to delete this consultancy?")) return;
+
+    // Optimistic UI update
     const originalConsultancies = [...consultancies];
     setConsultancies((prev) => prev.filter((c) => c.slug !== slug));
 
@@ -88,9 +91,7 @@ const ConsultanciesPage = () => {
     } catch (err) {
       console.error("❌ Failed to delete consultancy:", err);
       setError("Failed to delete consultancy.");
-
-      // ✅ Revert UI if deletion fails
-      setConsultancies(originalConsultancies);
+      setConsultancies(originalConsultancies); // Revert UI on failure
     }
   };
 
@@ -102,9 +103,10 @@ const ConsultanciesPage = () => {
 
     try {
       const consultancyData = await fetchConsultancyDetails(slug);
+      console.log("✅ Editing Consultancy:", consultancyData);
       setEditingData(consultancyData);
     } catch (err) {
-      console.error("❌ Failed to load consultancy details for editing:", err);
+      console.error("❌ Failed to load consultancy details:", err);
       setError("Failed to load consultancy details.");
     } finally {
       setLoading(false);
@@ -122,10 +124,30 @@ const ConsultanciesPage = () => {
 
   return (
     <AdminLayout>
+      {/* ✅ SEO Optimization */}
+      <Head>
+        <title>Manage Consultancies | Admin Panel</title>
+        <meta name="description" content="Manage consultancies in Abroad Advise admin panel. Add, edit, and delete consultancy records seamlessly." />
+      </Head>
+
       <h1 className="text-2xl font-bold mb-4">Manage Consultancies</h1>
 
       {/* ✅ Success Message */}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
+
+      {/* ✅ Search Functionality */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search consultancies..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded-lg p-2 w-full"
+        />
+        <button onClick={loadConsultancies} className="bg-blue-500 text-white px-4 py-2 rounded">
+          Search
+        </button>
+      </div>
 
       {/* ✅ Toggle Form for Create/Edit */}
       <button
@@ -179,9 +201,7 @@ const ConsultanciesPage = () => {
               <tr key={consultancy.id}>
                 <td className="border p-2">{index + 1}</td>
                 <td className="border p-2">{consultancy.name}</td>
-                <td className="border p-2">
-                  {consultancy.is_verified ? "Yes" : "No"}
-                </td>
+                <td className="border p-2">{consultancy.is_verified ? "Yes" : "No"}</td>
                 <td className="border p-2">
                   {consultancy.logo ? (
                     <img
@@ -194,16 +214,10 @@ const ConsultanciesPage = () => {
                   )}
                 </td>
                 <td className="border p-2">
-                  <button
-                    onClick={() => handleEdit(consultancy.slug)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                  >
+                  <button onClick={() => handleEdit(consultancy.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleDelete(consultancy.slug)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
+                  <button onClick={() => handleDelete(consultancy.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
                     Delete
                   </button>
                 </td>
@@ -215,5 +229,15 @@ const ConsultanciesPage = () => {
     </AdminLayout>
   );
 };
+
+// ✅ Server-Side Rendering
+export async function getServerSideProps() {
+  try {
+    const consultancies = await fetchConsultancies();
+    return { props: { initialConsultancies: consultancies.results || [] } };
+  } catch (error) {
+    return { props: { initialConsultancies: [] } };
+  }
+}
 
 export default ConsultanciesPage;

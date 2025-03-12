@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
@@ -9,7 +9,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import F  # ✅ Import F for sorting null values properly
 from core.pagination import StandardResultsSetPagination  # ✅ Import pagination
 from core.filters import CourseFilter  # ✅ Import filtering
-from authentication.permissions import IsAdminUser
 from .models import Course
 from .serializers import CourseSerializer
 
@@ -39,9 +38,8 @@ class CourseListView(ListAPIView):
         return queryset.order_by(F("priority").asc(nulls_last=True), "-id")
 
 
-# ✅ Create Course (Admin Only)
+# ✅ Create Course (Now Publicly Accessible)
 @api_view(["POST"])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_course(request):
     serializer = CourseSerializer(data=request.data)
@@ -53,7 +51,6 @@ def create_course(request):
 
 # ✅ Get Single Course (Publicly Accessible)
 @api_view(["GET"])
-@permission_classes([AllowAny])  
 def get_course(request, slug):
     try:
         course = Course.objects.select_related("university", "destination").get(slug=slug)
@@ -63,9 +60,8 @@ def get_course(request, slug):
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Update Course (Admin Only)
+# ✅ Update Course (Now Publicly Accessible)
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_course(request, slug):
     try:
@@ -79,9 +75,8 @@ def update_course(request, slug):
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Delete Course (Admin Only)
+# ✅ Delete Course (Now Publicly Accessible)
 @api_view(["DELETE"])
-@permission_classes([IsAdminUser])
 def delete_course(request, slug):
     try:
         course = Course.objects.get(slug=slug)

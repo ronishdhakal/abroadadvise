@@ -4,18 +4,10 @@ import { useEffect, useState } from "react";
 import Head from "next/head"; // ✅ SEO optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import UniversityForm from "@/components/admin/UniversityForm";
-import {
-  fetchUniversities,
-  deleteUniversity,
-  fetchDisciplines,
-  fetchConsultancies,
-  fetchUniversityDetails,
-} from "@/utils/api";
+import { fetchUniversities, deleteUniversity, fetchUniversityDetails } from "@/utils/api";
 
-const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialConsultancies }) => {
+const UniversitiesPage = ({ initialUniversities }) => {
   const [universities, setUniversities] = useState(initialUniversities);
-  const [allDisciplines, setAllDisciplines] = useState(initialDisciplines);
-  const [allConsultancies, setAllConsultancies] = useState(initialConsultancies);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -73,6 +65,7 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
 
     try {
       const universityData = await fetchUniversityDetails(slug);
+      console.log("✅ Editing University:", universityData);
       setEditingData(universityData);
     } catch (err) {
       console.error("❌ Failed to load university details:", err);
@@ -95,7 +88,7 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
     <AdminLayout>
       {/* ✅ SEO Optimization */}
       <Head>
-
+        <title>Manage Universities | Admin Panel</title>
         <meta name="description" content="Manage universities in Abroad Advise admin panel. Add, edit, and delete university records seamlessly." />
       </Head>
 
@@ -103,6 +96,20 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
 
       {/* ✅ Success Message */}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
+
+      {/* ✅ Search Functionality */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search universities..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="border rounded-lg p-2 w-full"
+        />
+        <button onClick={loadUniversities} className="bg-blue-500 text-white px-4 py-2 rounded">
+          Search
+        </button>
+      </div>
 
       {/* ✅ Toggle Form for Create/Edit */}
       <button
@@ -127,8 +134,6 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
             setEditingSlug(null);
             setEditingData(null);
           }}
-          allDisciplines={allDisciplines}
-          allConsultancies={allConsultancies}
         />
       )}
 
@@ -144,6 +149,7 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
             <tr className="bg-gray-100">
               <th className="border p-2">#</th>
               <th className="border p-2">Name</th>
+              <th className="border p-2">Country</th>
               <th className="border p-2">Verified</th>
               <th className="border p-2">Logo</th>
               <th className="border p-2">Actions</th>
@@ -154,6 +160,7 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
               <tr key={university.id}>
                 <td className="border p-2">{index + 1}</td>
                 <td className="border p-2">{university.name}</td>
+                <td className="border p-2">{university.country || "N/A"}</td>
                 <td className="border p-2">{university.is_verified ? "Yes" : "No"}</td>
                 <td className="border p-2">
                   {university.logo ? <img src={university.logo} alt="Logo" className="w-12 h-12 object-contain" /> : "No Logo"}
@@ -179,22 +186,16 @@ const UniversitiesPage = ({ initialUniversities, initialDisciplines, initialCons
 export async function getServerSideProps() {
   try {
     const universities = await fetchUniversities();
-    const disciplines = await fetchDisciplines();
-    const consultancies = await fetchConsultancies();
 
     return {
       props: {
         initialUniversities: universities.results || [],
-        initialDisciplines: disciplines.results || [],
-        initialConsultancies: consultancies.results || [],
       },
     };
   } catch (error) {
     return {
       props: {
         initialUniversities: [],
-        initialDisciplines: [],
-        initialConsultancies: [],
       },
     };
   }
