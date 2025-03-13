@@ -6,12 +6,11 @@ import { createUniversity, updateUniversity, fetchUniversityDetails } from "@/ut
 import UniversityHeader from "./university/UniversityHeader";
 import UniversityContact from "./university/UniversityContact";
 import UniversityAbout from "./university/UniversityAbout";
-import UniversityDisciplines from "./university/UniversityDisciplines"; // ✅ Import Disciplines Component
 
-const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines }) => {
+const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
   const isEditing = !!universitySlug;
 
-  // ✅ Define initial form state (Includes disciplines)
+  // ✅ Define initial form state (Discipline Removed)
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -31,14 +30,13 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines })
     brochure: null,
     cover_photo: null,
     type: "",
-    disciplines: [],
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // ✅ Load university data if editing (Now includes disciplines)
+  // ✅ Load university data if editing
   useEffect(() => {
     if (isEditing) {
       setLoading(true);
@@ -49,7 +47,6 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines })
           setFormData((prev) => ({
             ...prev,
             ...data,
-            disciplines: data.disciplines?.map((d) => d.id) || [],
             logo: data.logo || prev.logo,
             cover_photo: data.cover_photo || prev.cover_photo,
             brochure: data.brochure || prev.brochure,
@@ -78,16 +75,26 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines })
 
     try {
       const submissionData = new FormData();
-      
-      // ✅ Append all text fields
-      ["name", "email", "website", "phone", "address", "country", "priority", 
-       "eligibility", "facilities_features", "scholarship", "tuition_fees", "about", "faqs", "type"]
-        .forEach((field) => {
-          if (formData[field]) submissionData.append(field, formData[field]);
-        });
 
-      // ✅ Convert disciplines to JSON before appending
-      submissionData.append("disciplines", JSON.stringify(formData.disciplines));
+      // ✅ Append all text fields
+      [
+        "name",
+        "email",
+        "website",
+        "phone",
+        "address",
+        "country",
+        "priority",
+        "eligibility",
+        "facilities_features",
+        "scholarship",
+        "tuition_fees",
+        "about",
+        "faqs",
+        "type",
+      ].forEach((field) => {
+        if (formData[field]) submissionData.append(field, formData[field]);
+      });
 
       // ✅ Handle Logo, Brochure & Cover Image Uploads
       if (formData.logo instanceof File) submissionData.append("logo", formData.logo);
@@ -125,9 +132,6 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines })
 
         {/* Contact Information */}
         <UniversityContact formData={formData} setFormData={setFormData} />
-
-        {/* Disciplines Selection */}
-        <UniversityDisciplines formData={formData} setFormData={setFormData} allDisciplines={allDisciplines} />
 
         {/* About & Additional Information */}
         <UniversityAbout formData={formData} setFormData={setFormData} />

@@ -7,13 +7,13 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django.conf import settings
 from core.pagination import StandardResultsSetPagination
 from core.filters import DestinationFilter
 from .models import Destination
 from .serializers import StudyDestinationSerializer
-from django.conf import settings
 
-# Publicly Accessible List of Destinations with Pagination & Filtering
+# ✅ Publicly Accessible List of Destinations with Pagination & Filtering
 class DestinationListView(ListAPIView):
     queryset = Destination.objects.all()
     serializer_class = StudyDestinationSerializer
@@ -28,7 +28,7 @@ class DestinationListView(ListAPIView):
         return {'request': self.request}
 
 
-# Publicly Accessible Single Destination View
+# ✅ Publicly Accessible Single Destination View
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_destination(request, slug):
@@ -40,31 +40,35 @@ def get_destination(request, slug):
         return Response({"error": "Destination not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Publicly Accessible: Create a New Destination (Handles Image Uploads)
+# ✅ Publicly Accessible: Create a New Destination (Handles Image Uploads)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 def create_destination(request):
-    """Create a new destination and properly handle file uploads"""
+    """Creates a new destination and properly handles file uploads."""
+    print("📤 Creating Destination: Received data", request.data)  # Debugging log
+
     serializer = StudyDestinationSerializer(data=request.data, context={'request': request})
     
     if serializer.is_valid():
         destination = serializer.save()
 
-        # Handle file uploads explicitly
+        # ✅ Handle file uploads explicitly
         if "country_logo" in request.FILES:
             destination.country_logo = request.FILES["country_logo"]
         if "cover_page" in request.FILES:
             destination.cover_page = request.FILES["cover_page"]
 
         destination.save()
+        print("✅ Destination created successfully!")  # Debugging log
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+    print("❌ Destination creation failed:", serializer.errors)  # Debugging log
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Publicly Accessible: Update an Existing Destination (Handles Image Uploads)
+# ✅ Publicly Accessible: Update an Existing Destination (Handles Image Uploads)
 @api_view(['PUT', 'PATCH'])
 @permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
@@ -72,50 +76,55 @@ def update_destination(request, slug):
     """ ✅ Updates destination data and handles image updates properly """
     try:
         destination = Destination.objects.get(slug=slug)
+        print("🔄 Updating Destination:", destination.title)  # Debugging log
 
-        # Make a copy of the incoming data, as the original data may not have image fields
+        # ✅ Prevent overwriting images with None
         updated_data = request.data.copy()
 
-        # Handle the country_logo and cover_page fields properly
-        if 'country_logo' not in updated_data and not request.FILES.get('country_logo'):
-            updated_data['country_logo'] = destination.country_logo
+        if "country_logo" not in request.FILES:
+            updated_data.pop("country_logo", None)  # Remove from validated_data if not provided
 
-        if 'cover_page' not in updated_data and not request.FILES.get('cover_page'):
-            updated_data['cover_page'] = destination.cover_page
+        if "cover_page" not in request.FILES:
+            updated_data.pop("cover_page", None)
 
         serializer = StudyDestinationSerializer(destination, data=updated_data, partial=True, context={'request': request})
 
         if serializer.is_valid():
             destination = serializer.save()
 
-            # Handle image updates (Only update if a new file is provided)
+            # ✅ Handle image updates (Only update if a new file is provided)
             if "country_logo" in request.FILES:
                 if destination.country_logo:
-                    destination.country_logo.delete()  # Delete old image if exists
+                    destination.country_logo.delete(save=False)  # Delete old image
                 destination.country_logo = request.FILES["country_logo"]
 
             if "cover_page" in request.FILES:
                 if destination.cover_page:
-                    destination.cover_page.delete()  # Delete old image if exists
+                    destination.cover_page.delete(save=False)  # Delete old image
                 destination.cover_page = request.FILES["cover_page"]
 
             destination.save()
+            print("✅ Destination updated successfully!")  # Debugging log
             return Response(serializer.data, status=status.HTTP_200_OK)
 
+        print("❌ Destination update failed:", serializer.errors)  # Debugging log
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except Destination.DoesNotExist:
         return Response({"error": "Destination not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# Publicly Accessible: Delete a Destination
-@api_view(['DELETE'])
+
+# ✅ Publicly Accessible: Delete a Destination
+@api_view(['DELETE'])  # ✅ Ensure DELETE is allowed
+@permission_classes([AllowAny])  # ✅ Ensure it's accessible
 def delete_destination(request, slug):
-    """Deletes a destination and removes associated image files"""
+    """Deletes a destination and removes associated image files."""
     try:
         destination = Destination.objects.get(slug=slug)
+        print("🗑️ Deleting Destination:", destination.title)  # Debugging log
         
-        # Delete images from storage if they exist
+        # ✅ Delete images from storage if they exist
         def delete_file(file_field):
             if file_field:
                 file_path = os.path.join(settings.MEDIA_ROOT, str(file_field))
@@ -126,6 +135,7 @@ def delete_destination(request, slug):
         delete_file(destination.cover_page)
 
         destination.delete()
+        print("✅ Destination deleted successfully!")  # Debugging log
         return Response({"message": "Destination deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
     
     except Destination.DoesNotExist:

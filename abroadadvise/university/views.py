@@ -10,9 +10,8 @@ from rest_framework.renderers import JSONRenderer
 from core.pagination import StandardResultsSetPagination
 from core.filters import UniversityFilter
 from .models import University
-from core.models import Discipline  # ✅ Added Discipline Model Import
 from .serializers import UniversitySerializer
-import json  # ✅ Added missing import
+import json
 
 # ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
@@ -27,28 +26,62 @@ class UniversityListView(ListAPIView):
     def get_queryset(self):
         return University.objects.prefetch_related("disciplines").order_by("priority", "-id")
 
-# ✅ Create University (Handles Disciplines)
+
+# ✅ Helper Function: Extract and Validate Discipline IDs
+def extract_disciplines(data):
+    """Extracts, validates, and converts disciplines to a list of valid integer IDs."""
+    disciplines = []
+    if "disciplines" in data:
+        try:
+            disciplines_raw = data["disciplines"]
+
+            # ✅ Parse JSON if it's a string
+            if isinstance(disciplines_raw, str):
+                disciplines_raw = json.loads(disciplines_raw)
+
+            # ✅ Ensure all values are valid integers
+            if isinstance(disciplines_raw, list):
+                disciplines = [int(d) for d in disciplines_raw if isinstance(d, (int, str)) and str(d).isdigit()]
+        except (json.JSONDecodeError, ValueError, TypeError):
+            return None, Response({"error": "Invalid disciplines format. Must be an array of integers."}, status=status.HTTP_400_BAD_REQUEST)
+
+    return disciplines, None
+
+
+# ✅ Create University (Handles File Uploads & Disciplines)
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 def create_university(request):
-    """ ✅ Creates a new university, handling disciplines """
-    data = request.data.copy()
+    """ ✅ Creates a new university including file uploads and disciplines """
+    data = request.data.copy()  # ✅ Make mutable copy of request data
 
-    # ✅ Convert JSON string to list for disciplines
-    disciplines = json.loads(data.get("disciplines", "[]"))
-    disciplines = [int(d) for d in disciplines if str(d).isdigit()]  # ✅ Ensure all IDs are integers
+    # ✅ Extract disciplines safely
+    disciplines, error_response = extract_disciplines(data)
+    if error_response:
+        return error_response  # Return error if disciplines parsing fails
 
     serializer = UniversitySerializer(data=data)
+
     if serializer.is_valid():
         university = serializer.save()
 
-        # ✅ Assign disciplines using IDs
-        university.disciplines.set(Discipline.objects.filter(id__in=disciplines))
-        university.save()
+        # ✅ Handle file uploads (Only save if provided)
+        if "logo" in request.FILES:
+            university.logo = request.FILES["logo"]
+        if "cover_photo" in request.FILES:
+            university.cover_photo = request.FILES["cover_photo"]
+        if "brochure" in request.FILES:
+            university.brochure = request.FILES["brochure"]
 
+        # ✅ Set disciplines after saving (ManyToMany field handling)
+        if disciplines:
+            university.disciplines.set(disciplines)
+
+        university.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ✅ Get Single University (Public)
 @api_view(['GET'])
@@ -61,40 +94,64 @@ def get_university(request, slug):
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Update University (Handles Disciplines)
+
+# ✅ Update University (Handles File Uploads & Disciplines)
 @api_view(['PUT', 'PATCH'])
 @parser_classes([MultiPartParser, FormParser])
 def update_university(request, slug):
-    """ ✅ Updates an existing university, handling disciplines """
+    """ ✅ Updates an existing university including file uploads and disciplines """
     try:
         university = University.objects.prefetch_related("disciplines").get(slug=slug)
-        data = request.data.copy()
+        data = request.data.copy()  # ✅ Make mutable copy of request data
 
-        # ✅ Convert JSON string to list for disciplines
-        disciplines = json.loads(data.get("disciplines", "[]"))
-        disciplines = [int(d) for d in disciplines if str(d).isdigit()]  # ✅ Ensure all IDs are integers
+        # ✅ Extract disciplines safely
+        disciplines, error_response = extract_disciplines(data)
+        if error_response:
+            return error_response  # Return error if disciplines parsing fails
 
         serializer = UniversitySerializer(university, data=data, partial=True)
+
         if serializer.is_valid():
-            university = serializer.save()
+            updated_university = serializer.save()
 
-            # ✅ Assign disciplines using IDs
-            university.disciplines.set(Discipline.objects.filter(id__in=disciplines))
-            university.save()
+            # ✅ Handle file updates (Only save if new file is provided)
+            if "logo" in request.FILES:
+                updated_university.logo = request.FILES["logo"]
+            if "cover_photo" in request.FILES:
+                updated_university.cover_photo = request.FILES["cover_photo"]
+            if "brochure" in request.FILES:
+                updated_university.brochure = request.FILES["brochure"]
 
+            # ✅ Update disciplines if provided
+            if disciplines:
+                updated_university.disciplines.set(disciplines)
+
+            updated_university.save()
             return Response(serializer.data)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)
+
 
 # ✅ Delete University
 @api_view(['DELETE'])
 def delete_university(request, slug):
-    """ ✅ Deletes an existing university """
+    """ ✅ Deletes an existing university including file cleanup """
     try:
         university = University.objects.get(slug=slug)
+
+        # ✅ Delete associated files (if they exist)
+        if university.logo:
+            university.logo.delete(save=False)
+        if university.cover_photo:
+            university.cover_photo.delete(save=False)
+        if university.brochure:
+            university.brochure.delete(save=False)
+
         university.delete()
         return Response({"message": "University deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)

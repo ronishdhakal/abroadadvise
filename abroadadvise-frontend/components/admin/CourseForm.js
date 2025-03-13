@@ -67,16 +67,24 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
     setLoading(true);
     setError("");
     setSuccess("");
-
+  
     const submissionData = new FormData();
-
-    // ✅ Append all form fields correctly (Handle file uploads)
+  
+    // ✅ Append all non-file fields
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
+      if (key !== "icon" && key !== "cover_image" && value !== null && value !== undefined) {
         submissionData.append(key, value);
       }
     });
-
+  
+    // ✅ Append image fields only if they are new files
+    if (formData.icon instanceof File) {
+      submissionData.append("icon", formData.icon);
+    }
+    if (formData.cover_image instanceof File) {
+      submissionData.append("cover_image", formData.cover_image);
+    }
+  
     try {
       if (isEditing) {
         await updateCourse(courseSlug, submissionData);
@@ -93,7 +101,7 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-2xl font-bold mb-4">{isEditing ? "Edit Course" : "Create Course"}</h2>

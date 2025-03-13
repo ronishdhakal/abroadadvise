@@ -283,6 +283,33 @@ export const deleteConsultancy = async (slug) => {
 };
 
 
+// ✅ Utility function to ensure proper JSON conversion
+// const convertToJson = (formData, key) => {
+//   let value = formData.get(key);
+//   if (typeof value === "string") {
+//     try {
+//       value = JSON.parse(value);
+//     } catch {
+//       value = [];
+//     }
+//   }
+//   if (!Array.isArray(value)) {
+//     value = [];
+//   }
+//   const convertedArray = value.map((item) => {
+//     if (typeof item === "string") {
+//       const parsedItem = parseInt(item, 10);
+//       return isNaN(parsedItem) ? item : parsedItem;
+//     } else {
+//       return item;
+//     }
+//   }).filter((item) => typeof item === 'number' || typeof item === 'string');
+
+//   formData.set(key, JSON.stringify(convertedArray));
+// };
+
+// ... (Other API functions - I'm omitting those that are not related to the university to avoid redundancy)
+
 // ✅ Create University (Handles FormData & File Uploads)
 export const createUniversity = async (formData) => {
   try {
@@ -292,7 +319,10 @@ export const createUniversity = async (formData) => {
     }
 
     // ✅ Ensure disciplines are converted to JSON
-    convertArrayToJson(formData, "disciplines");
+    convertToJson(formData, "disciplines");
+
+    // Ensure that faqs are properly converted.
+    convertToJson(formData, "faqs");
 
     const response = await fetch(`${API_BASE_URL}/university/create/`, {
       method: "POST",
@@ -322,17 +352,29 @@ export const updateUniversity = async (slug, formData) => {
     }
 
     // ✅ Ensure disciplines are converted to JSON
-    convertArrayToJson(formData, "disciplines");
+    convertToJson(formData, "disciplines");
 
-    const response = await fetch(`${API_BASE_URL}/university/${slug}/update/`, {
-      method: "PATCH",
-      headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
-      body: formData,
-    });
+    // Ensure that faqs are properly converted.
+    convertToJson(formData, "faqs");
+
+    const response = await fetch(
+      `${API_BASE_URL}/university/${slug}/update/`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
+        body: formData,
+      }
+    );
+
+    // ✅ Logging the full response object
+    console.log("Response:", response);
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Update University API Error:", errorData);
+      const errorData = await response.json().catch(() => ({ detail: "Failed to parse JSON error" })); // Attempt to parse error JSON, even if it fails
+      console.error("❌ Update University API Error:");
+      console.error("Status:", response.status); // Log status code
+      console.error("Headers:", response.headers); // Log headers
+      console.error("Error Data:", errorData); // Log error data
       throw new Error(errorData.detail || "Failed to update university");
     }
 
@@ -342,7 +384,6 @@ export const updateUniversity = async (slug, formData) => {
     throw error;
   }
 };
-
 
 
 
@@ -429,16 +470,19 @@ export const updateCourse = async (slug, formData) => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
+    console.log("🖼️ Icon File:", formData.get("icon"));
+    console.log("🖼️ Cover Image File:", formData.get("cover_image"));
+
     const response = await fetch(`${API_BASE_URL}/course/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
+      headers: getAuthHeaders(), // ⚠️ Do NOT manually set "Content-Type"
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Update Course API Error:", errorData);
-      throw new Error(errorData.detail || "Failed to update course");
+      const errorText = await response.text(); // Debug raw response
+      console.error("❌ Update Course API Error:", errorText);
+      throw new Error("Failed to update course");
     }
 
     return await response.json();
@@ -528,15 +572,17 @@ const prepareFormData = (formData) => {
   return formData;
 };
 
+/**
+ * ✅ Create a New Destination (Handles FormData & File Uploads)
+ * @param {FormData} formData - New Destination data
+ * @returns {Promise} - API response
+ */
 export const createDestination = async (formData) => {
   try {
     console.log("📤 Sending Destination FormData:");
     for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]); // ✅ Logs all form data values
     }
-
-    // ✅ Ensure FormData is correctly formatted before sending
-    formData = prepareFormData(formData);
 
     const response = await fetch(`${API_BASE_URL}/destination/create/`, {
       method: "POST",
@@ -559,7 +605,6 @@ export const createDestination = async (formData) => {
 
 
 /**
-/**
  * ✅ Update an Existing Destination (Handles FormData & File Uploads)
  * @param {string} slug - Destination slug
  * @param {FormData} formData - Updated Destination data
@@ -572,16 +617,18 @@ export const updateDestination = async (slug, formData) => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
-    // Ensure FormData is correctly formatted before sending
-    formData = prepareFormData(formData);
+    // ✅ Only send files if they are changed
+    if (!formData.get("country_logo")) {
+      formData.delete("country_logo");
+    }
+    if (!formData.get("cover_page")) {
+      formData.delete("cover_page");
+    }
 
     const response = await fetch(`${API_BASE_URL}/destination/${slug}/update/`, {
       method: "PATCH",
-      headers: {
-        ...getAuthHeaders(),
-        "Accept": "application/json",
-      },
-      body: formData,  // Sending FormData as the request body
+      headers: getAuthHeaders(), // ✅ No need for "Content-Type" for FormData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -605,10 +652,12 @@ export const updateDestination = async (slug, formData) => {
  */
 export const deleteDestination = async (slug) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/destination/${slug}/`, {
+    console.log(`🗑️ Deleting Destination: ${slug}`);
+
+    const response = await fetch(`${API_BASE_URL}/destination/${slug}/delete/`, {
       method: "DELETE",
       headers: {
-        ...getAuthHeaders(),  // ✅ Add authentication headers if needed
+        ...getAuthHeaders(), // ✅ Include authentication if needed
         "Accept": "application/json",
       },
     });
@@ -619,6 +668,7 @@ export const deleteDestination = async (slug) => {
       throw new Error(errorData.detail || "Failed to delete destination");
     }
 
+    console.log("✅ Destination deleted successfully!");
     return { success: true, message: "✅ Destination deleted successfully!" };
   } catch (error) {
     console.error("❌ Error deleting destination:", error);

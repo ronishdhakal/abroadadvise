@@ -42,10 +42,13 @@ class CourseListView(ListAPIView):
 @api_view(["POST"])
 @parser_classes([MultiPartParser, FormParser])
 def create_course(request):
+    print("Create course request received")  # Debugging log
     serializer = CourseSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
+        print("Course created successfully")  # Debugging log
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    print("Serializer errors:", serializer.errors)  # Debugging log
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -64,23 +67,40 @@ def get_course(request, slug):
 @api_view(["PUT", "PATCH"])
 @parser_classes([MultiPartParser, FormParser])
 def update_course(request, slug):
+    print(f"Updating course with slug: {slug}")  # Debugging log
     try:
         course = Course.objects.select_related("university", "destination").get(slug=slug)
+        print("Course found:", course.name)  # Debugging log
+        
+        # Ensure we allow partial updates
         serializer = CourseSerializer(course, data=request.data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
+            print("Course updated successfully")  # Debugging log
             return Response(serializer.data)
+        
+        print("Serializer errors:", serializer.errors)  # Debugging log
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except Course.DoesNotExist:
+        print("Course not found!")  # Debugging log
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    except Exception as e:
+        print("Unexpected error:", str(e))  # Debugging log
+        return Response({"error": "An unexpected error occurred"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ✅ Delete Course (Now Publicly Accessible)
 @api_view(["DELETE"])
 def delete_course(request, slug):
+    print(f"Deleting course with slug: {slug}")  # Debugging log
     try:
         course = Course.objects.get(slug=slug)
         course.delete()
+        print("Course deleted successfully")  # Debugging log
         return Response({"message": "Course deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
     except Course.DoesNotExist:
+        print("Course not found!")  # Debugging log
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
