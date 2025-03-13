@@ -1,4 +1,6 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+import axios from "axios";
+
 
 // ✅ Helper Function: Get Auth Headers
 const getAuthHeaders = () => {
@@ -191,22 +193,28 @@ export const fetchConsultancyDetails = async (slug) => {
 
 
 
-// ✅ Utility function to ensure proper JSON conversion
+// ✅ Utility function to ensure proper JSON conversion for arrays
 const convertToJson = (formData, key) => {
-    let value = formData.get(key);
-    if (typeof value === "string") {
-        try {
-            value = JSON.parse(value);
-        } catch {
-            value = [];
-        }
-    }
-    if (!Array.isArray(value)) {
-        value = [];
-    }
-    const intArray = value.map((item) => parseInt(item, 10)).filter((id) => !isNaN(id));
-    formData.set(key, JSON.stringify(intArray));
+  let value = formData.get(key);
+
+  if (typeof value === "string") {
+      try {
+          value = JSON.parse(value);
+      } catch {
+          value = [];
+      }
+  }
+
+  if (!Array.isArray(value)) {
+      value = [];
+  }
+
+  // ✅ Convert values to integers, filter NaN values
+  const intArray = value.map((item) => parseInt(item, 10)).filter((id) => !isNaN(id));
+
+  formData.set(key, JSON.stringify(intArray)); // ✅ Store as JSON string in FormData
 };
+
 
 // ✅ Create Consultancy
 export const createConsultancy = async (formData) => {
@@ -803,5 +811,489 @@ export const deleteExam = async (slug) => {
   } catch (error) {
     console.error("❌ Error deleting exam:", error);
     throw error;
+  }
+};
+
+
+
+// Event
+
+/**
+ * ✅ Fetch Events with Pagination & Search
+ * @param {number} page - Page number for pagination
+ * @param {string} search - Search query for event names
+ * @returns {Promise} - API response
+ */
+export const fetchEvents = async (page = 1, search = "") => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/event/?page=${page}&search=${search}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to fetch events");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error fetching events:", error);
+      throw error;
+  }
+};
+
+/**
+* ✅ Fetch Single Event Details
+* @param {string} slug - Event slug
+* @returns {Promise} - Event details
+*/
+export const fetchEventDetails = async (slug) => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to fetch event details");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error fetching event details:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Convert Array of Slugs to JSON
+ * @param {FormData} formData - FormData object
+ * @param {string} key - Key for array fields
+ */
+/**
+ * ✅ Convert Array of Slugs to JSON String for FormData
+ * @param {FormData} formData
+ * @param {string} key - The field name to convert (e.g., "targeted_destinations")
+ */
+const convertToSlugJson = (formData, key) => {
+  let value = formData.get(key);
+
+  if (typeof value === "string") {
+      try {
+          value = JSON.parse(value); // Parse if already in JSON format
+      } catch {
+          value = []; // If parsing fails, fallback to an empty array
+      }
+  }
+
+  if (!Array.isArray(value)) {
+      value = [];
+  }
+
+  formData.set(key, JSON.stringify(value)); // Save as JSON string
+};
+
+
+/**
+ * ✅ Create Event (Handles FormData & File Uploads)
+ * @param {FormData} formData - Event data
+ * @returns {Promise} - API response
+ */
+export const createEvent = async (formData) => {
+  try {
+      console.log("📤 Sending Event FormData:");
+      for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      // ✅ Convert slug-based fields to JSON
+      convertToSlugJson(formData, "targeted_destinations");
+      convertToSlugJson(formData, "related_universities");
+      convertToSlugJson(formData, "related_consultancies");
+
+      // ✅ Ensure organizer slug & type are strings
+      formData.set("organizer_slug", formData.get("organizer_slug") || "");
+      formData.set("organizer_type", formData.get("organizer_type") || "");
+
+      const response = await fetch(`${API_BASE_URL}/event/create/`, {
+          method: "POST",
+          headers: getAuthHeaders(), // ✅ No "Content-Type" needed for FormData
+          body: formData,
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Create Event API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to create event");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error creating event:", error);
+      throw error;
+  }
+};
+
+/**
+* ✅ Update Event (Handles FormData & File Uploads)
+* @param {string} slug - Event slug
+* @param {FormData} formData - Updated event data
+* @returns {Promise} - API response
+*/
+export const updateEvent = async (slug, formData) => {
+  try {
+      console.log("📤 Updating Event FormData:");
+      for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      // ✅ Convert slug-based fields to JSON
+      convertToSlugJson(formData, "targeted_destinations");
+      convertToSlugJson(formData, "related_universities");
+      convertToSlugJson(formData, "related_consultancies");
+
+      // ✅ Ensure organizer slug & type are strings
+      formData.set("organizer_slug", formData.get("organizer_slug") || "");
+      formData.set("organizer_type", formData.get("organizer_type") || "");
+
+      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
+          method: "PATCH",
+          body: formData, // ✅ No headers for FormData
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Update Event API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to update event");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error updating event:", error);
+      throw error;
+  }
+};
+
+/**
+* ✅ Delete Event
+* @param {string} slug - Event slug
+* @returns {Promise} - API response
+*/
+export const deleteEvent = async (slug) => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
+          method: "DELETE",
+          headers: getAuthHeaders(), // ✅ Keep authentication headers
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Delete Event API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to delete event");
+      }
+
+      return { success: true, message: "✅ Event deleted successfully!" };
+  } catch (error) {
+      console.error("❌ Error deleting event:", error);
+      throw error;
+  }
+};
+
+
+/**
+ * ✅ Fetch Blog List with Filtering, Pagination, and Search
+ * @param {Object} params - Optional filters (e.g., { search: "study", category: "scholarships" })
+ * @returns {Promise} - API response
+ */
+export const getBlogs = async (params = {}) => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/blog/`, { params });
+      return response.data;
+  } catch (error) {
+      console.error("❌ Error fetching blogs:", error);
+      throw error;
+  }
+};
+
+/**
+* ✅ Fetch Single Blog by Slug
+* @param {string} slug - Blog post slug
+* @returns {Promise} - API response
+*/
+export const getBlogBySlug = async (slug) => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/blog/${slug}/`);
+      return response.data;
+  } catch (error) {
+      console.error("❌ Error fetching blog post:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Create Blog Post (Handles FormData & File Uploads)
+ * @param {FormData} formData - Blog post form data (title, content, image, etc.)
+ * @returns {Promise} - API response
+ */
+export const createBlog = async (formData) => {
+  try {
+      console.log("📤 Sending Blog FormData:");
+      for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/blog/create/`, {
+          method: "POST",
+          body: formData, // ✅ No headers needed for FormData
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Create Blog API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to create blog");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error creating blog:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Update Blog Post (Handles FormData & File Uploads)
+ * @param {string} slug - Blog post slug
+ * @param {FormData} formData - Updated blog post data
+ * @returns {Promise} - API response
+ */
+export const updateBlog = async (slug, formData) => {
+  try {
+      console.log("📤 Updating Blog FormData:");
+      for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      // ✅ Corrected API endpoint (Ensure slug placement is correct)
+      const response = await fetch(`${API_BASE_URL}/blog/${slug}/update/`, {
+          method: "PATCH",
+          body: formData, // ✅ No headers for FormData
+      });
+
+      if (!response.ok) {
+          const errorText = await response.text();  // ✅ Capture error response
+          console.error("❌ Update Blog API Error:", errorText);
+          throw new Error(`Failed to update blog: ${errorText}`);
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error updating blog:", error);
+      throw error;
+  }
+};
+
+/**
+* ✅ Delete Blog Post (Ensures image deletion)
+* @param {string} slug - Blog post slug
+* @returns {Promise} - API response
+*/
+export const deleteBlog = async (slug) => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/blog/${slug}/delete/`, {
+          method: "DELETE",
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Delete Blog API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to delete blog");
+      }
+
+      return { success: true, message: "✅ Blog post deleted successfully!" };
+  } catch (error) {
+      console.error("❌ Error deleting blog:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Fetch Blog Categories
+ * @returns {Promise} - List of categories
+ */
+export const getBlogCategories = async () => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/blog/categories/`);
+      if (!response.ok) {
+          throw new Error("Failed to fetch blog categories");
+      }
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error fetching blog categories:", error);
+      throw error;
+  }
+};
+
+// News
+/**
+ * ✅ Create News (Handles FormData & File Uploads)
+ * @param {FormData} formData - News form data (title, detail, image, etc.)
+ * @returns {Promise} - API response
+ */
+export const createNews = async (formData) => {
+  try {
+    console.log("📤 Sending News FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/news/create/`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text(); // ✅ Capture error as text
+      console.error("❌ Create News API Error:", errorText);
+      throw new Error(`Failed to create news: ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating news:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * ✅ Update News (Handles FormData & File Uploads)
+ * @param {string} slug - News post slug
+ * @param {FormData} formData - Updated news post data
+ * @returns {Promise} - API response
+ */
+export const updateNews = async (slug, formData) => {
+  try {
+      console.log("📤 Updating News FormData:");
+      for (let pair of formData.entries()) {
+          console.log(`${pair[0]}:`, pair[1]);
+      }
+
+      // ✅ Corrected API endpoint (Ensure slug placement is correct)
+      const response = await fetch(`${API_BASE_URL}/news/${slug}/update/`, {
+          method: "PATCH",
+          body: formData, // ✅ No headers for FormData
+      });
+
+      if (!response.ok) {
+          const errorText = await response.text();  // ✅ Capture error response
+          console.error("❌ Update News API Error:", errorText);
+          throw new Error(`Failed to update news: ${errorText}`);
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("❌ Error updating news:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Delete News Post (Ensures image deletion)
+ * @param {string} slug - News post slug
+ * @returns {Promise} - API response
+ */
+export const deleteNews = async (slug) => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/news/${slug}/delete/`, {
+          method: "DELETE",
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Delete News API Error:", errorData);
+          throw new Error(errorData.detail || "Failed to delete news");
+      }
+
+      return { success: true, message: "✅ News post deleted successfully!" };
+  } catch (error) {
+      console.error("❌ Error deleting news:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Fetch News List with Filtering, Pagination, and Search
+ * @param {Object} params - Optional filters (e.g., { search: "scholarships", category: "education" })
+ * @returns {Promise} - API response
+ */
+export const getNewsList = async (params = {}) => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/news/`, { params });
+      return response.data;
+  } catch (error) {
+      console.error("❌ Error fetching news:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Fetch Single News by Slug
+ * @param {string} slug - News post slug
+ * @returns {Promise} - API response
+ */
+export const getNewsBySlug = async (slug) => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/news/${slug}/`);
+      return response.data;
+  } catch (error) {
+      console.error("❌ Error fetching news post:", error);
+      throw error;
+  }
+};
+
+/**
+ * ✅ Fetch News Categories
+ * @returns {Promise} - List of categories
+ */
+export const getNewsCategories = async () => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/news/categories/`);
+      return response.data;
+  } catch (error) {
+      console.error("❌ Error fetching news categories:", error);
+      throw error;
+  }
+};
+
+
+
+
+
+/**
+ * ✅ Fetch all inquiries with pagination
+ * @param {number} page - Current page number
+ */
+export const getAllInquiries = async (page = 1) => {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/inquiry/admin/all/?page=${page}`);
+        return response.data; // ✅ Returns { results: [], count: 20, next: 'URL', previous: 'URL' }
+    } catch (error) {
+        console.error("❌ Error fetching inquiries:", error);
+        throw error;
+    }
+};
+
+/**
+* ✅ Fetch a single inquiry by ID
+* @param {number} id - Inquiry ID
+* @returns {Promise} - Inquiry details
+*/
+export const getInquiryById = async (id) => {
+  try {
+      const response = await axios.get(`${API_BASE_URL}/admin/${id}/`);
+      return response.data;
+  } catch (error) {
+      console.error(`❌ Error fetching inquiry ${id}:`, error);
+      throw error;
   }
 };

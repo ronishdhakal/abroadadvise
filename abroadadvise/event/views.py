@@ -1,44 +1,37 @@
-from rest_framework import generics, permissions, status
+from django.db.models import F
+from django.utils.timezone import now
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, parser_classes, permission_classes
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F
-from django.utils.timezone import now  # ✅ Import timezone for date filtering
 from core.pagination import StandardResultsSetPagination
 from core.filters import EventFilter
-from authentication.permissions import IsAdminUser
-from .models import Event, EventGallery
-from .serializers import EventSerializer, EventGallerySerializer
+from .models import Event
+from university.models import University
+from consultancy.models import Consultancy
+from destination.models import Destination
+from .serializers import EventSerializer
 
 
 # ✅ List Events with Pagination, Search, and Filtering (Public Access)
 class EventListView(generics.ListAPIView):
-    """
-    Retrieve a paginated list of events with filtering and search.
-    """
     serializer_class = EventSerializer
-    permission_classes = [permissions.AllowAny]  # Publicly accessible
+    permission_classes = []  # ✅ Publicly accessible
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
     search_fields = ['name', 'event_type', 'registration_type', 'location']
 
     def get_queryset(self):
-        """
-        Get the queryset sorted by priority, then latest date.
-        """
         return Event.objects.all().order_by(F('priority').asc(nulls_last=True), '-date', '-id')
 
 
-# ✅ List Active Events (Only Future Events)
+# ✅ List Active (Future) Events
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([])  # ✅ Public access
 def active_events(request):
-    """
-    Fetch all active events (future events only).
-    """
     today = now().date()
     events = Event.objects.filter(date__gte=today).order_by(F('priority').asc(nulls_last=True), 'date')
     serializer = EventSerializer(events, many=True, context={'request': request})
@@ -47,75 +40,116 @@ def active_events(request):
 
 # ✅ List All Events (No Pagination) - For Dropdowns
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([])  # ✅ Public access
 def all_events(request):
-    """
-    Fetch all events without pagination for frontend dropdowns.
-    """
     events = Event.objects.all().order_by('-date')
     serializer = EventSerializer(events, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# ✅ Create Event (Admin Only)
+# ✅ Create Event (Using Slugs Instead of IDs)
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
+@permission_classes([])  # ✅ Public access
 def create_event(request):
-    """
-    Create a new event (Admin Only).
-    """
-    serializer = EventSerializer(data=request.data, context={'request': request})
+    data = request.data.copy()
+
+    # ✅ Extract ManyToMany Fields (Expecting slugs)
+    related_universities_slugs = data.pop("related_universities", [])
+    related_consultancies_slugs = data.pop("related_consultancies", [])
+    targeted_destinations_slugs = data.pop("targeted_destinations", [])
+
+    # ✅ Handle Organizer Using Slug
+    organizer_slug = data.pop("organizer_slug", None)
+    organizer_type = data.pop("organizer_type", None)
+
+    serializer = EventSerializer(data=data, context={'request': request})
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        event = serializer.save()
+
+        # ✅ Save ManyToMany Relationships Using Slugs
+        event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
+        event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
+        event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+
+        # ✅ Assign Organizer
+        if organizer_slug and organizer_type == "university":
+            event.organizer = University.objects.filter(slug=organizer_slug).first()
+        elif organizer_slug and organizer_type == "consultancy":
+            event.organizer = Consultancy.objects.filter(slug=organizer_slug).first()
+        event.save()
+
+        return Response(EventSerializer(event, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # ✅ Get Single Event by Slug (Public Access)
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([])  # ✅ Public access
 def get_event(request, slug):
-    """
-    Retrieve a single event by its slug.
-    """
     try:
-        event = Event.objects.prefetch_related("related_universities", "related_consultancies").get(slug__iexact=slug)
+        event = Event.objects.prefetch_related("related_universities", "related_consultancies", "targeted_destinations").get(slug__iexact=slug)
         serializer = EventSerializer(event, context={'request': request})
         return Response(serializer.data)
     except Event.DoesNotExist:
         return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Update Event (Admin Only)
+# ✅ Update Event (Using Slugs Instead of IDs)
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
+@permission_classes([])  # ✅ Public access
 def update_event(request, slug):
-    """
-    Update an existing event (Admin Only).
-    """
     try:
         event = Event.objects.get(slug=slug)
-        serializer = EventSerializer(event, data=request.data, partial=True, context={'request': request})
+        data = request.data.copy()
+
+        # ✅ Extract ManyToMany Fields (Expecting slugs)
+        related_universities_slugs = data.pop("related_universities", [])
+        related_consultancies_slugs = data.pop("related_consultancies", [])
+        targeted_destinations_slugs = data.pop("targeted_destinations", [])
+
+        # ✅ Handle Organizer Using Slug
+        organizer_slug = data.pop("organizer_slug", None)
+        organizer_type = data.pop("organizer_type", None)
+
+        serializer = EventSerializer(event, data=data, partial=True, context={'request': request})
+
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
+            event = serializer.save()
+
+            # ✅ Save ManyToMany Relationships Using Slugs
+            if related_universities_slugs:
+                event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
+            if related_consultancies_slugs:
+                event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
+            if targeted_destinations_slugs:
+                event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+
+            # ✅ Assign Organizer
+            if organizer_slug and organizer_type == "university":
+                event.organizer = University.objects.filter(slug=organizer_slug).first()
+            elif organizer_slug and organizer_type == "consultancy":
+                event.organizer = Consultancy.objects.filter(slug=organizer_slug).first()
+            event.save()
+
+            return Response(EventSerializer(event, context={'request': request}).data)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except Event.DoesNotExist:
         return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
-# ✅ Delete Event (Admin Only)
+# ✅ Delete Event (Now Publicly Accessible)
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
+@permission_classes([])  # ✅ Public access
 def delete_event(request, slug):
-    """
-    Delete an event (Admin Only).
-    """
     try:
         event = Event.objects.get(slug=slug)
         event.delete()
         return Response({"message": "Event deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
     except Event.DoesNotExist:
         return Response({"error": "Event not found"}, status=status.HTTP_404_NOT_FOUND)

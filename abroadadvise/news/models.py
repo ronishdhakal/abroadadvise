@@ -28,7 +28,7 @@ class News(models.Model):
     """
     title = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_articles')  # ✅ Tracks who posted
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_articles', null=True, blank=True)  # ✅ Tracks who posted
     category = models.ForeignKey(NewsCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="news")
     featured_image = models.ImageField(upload_to='news/featured/', blank=True, null=True)
     detail = HTMLField()  # ✅ Supports rich text

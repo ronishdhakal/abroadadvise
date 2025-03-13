@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import News, NewsComment, NewsCategory
-from django.contrib.auth.models import User  # ✅ Ensure User model is imported
 
 class NewsCategorySerializer(serializers.ModelSerializer):
     """
@@ -24,15 +23,6 @@ class NewsCommentSerializer(serializers.ModelSerializer):
         fields = ['id', 'post', 'user', 'comment', 'created_at', 'is_approved']
         extra_kwargs = {'post': {'write_only': True}, 'is_approved': {'read_only': True}}
 
-    def create(self, validated_data):
-        """
-        Ensure that the comment is linked to the correct user.
-        """
-        request = self.context.get('request')
-        if request and hasattr(request, "user"):
-            validated_data["user"] = request.user  # ✅ Assign logged-in user
-        return super().create(validated_data)
-
 class NewsSerializer(serializers.ModelSerializer):
     """
     Serializer for News Articles.
@@ -40,17 +30,17 @@ class NewsSerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()
     category = NewsCategorySerializer(read_only=True)  # ✅ Include category details in response
     category_id = serializers.PrimaryKeyRelatedField(
-        queryset=NewsCategory.objects.all(), source='category', write_only=True
+        queryset=NewsCategory.objects.all(), source='category', write_only=True,
+        required=False  # ✅ Make category_id optional
     )
     featured_image_url = serializers.SerializerMethodField()
-    comments = serializers.SerializerMethodField()  # ✅ Include approved comments only in detail view
     comment_count = serializers.IntegerField(source="comments.count", read_only=True)  # ✅ Optimized count
 
     class Meta:
         model = News
         fields = [
             'id', 'title', 'slug', 'date', 'author', 'category', 'category_id',
-            'featured_image', 'featured_image_url', 'detail', 'comments', 'comment_count'
+            'featured_image', 'featured_image_url', 'detail', 'comment_count'
         ]  # ✅ Ensure all necessary fields are included
 
     def get_featured_image_url(self, obj):
@@ -62,16 +52,6 @@ class NewsSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.featured_image.url) if request else obj.featured_image.url
         return None
 
-    def get_comments(self, obj):
-        """
-        Returns a list of approved comments only in the detail view.
-        """
-        request = self.context.get('request')
-        if request and request.parser_context.get('kwargs', {}).get('slug'):  # ✅ Fetch comments in detail view only
-            comments = obj.comments.filter(is_approved=True).order_by('-created_at')
-            return NewsCommentSerializer(comments, many=True).data
-        return []  # ✅ Return empty list in news list view
-
 class NewsDetailSerializer(NewsSerializer):
     """
     Extends NewsSerializer to include comments for detail views.
@@ -82,5 +62,8 @@ class NewsDetailSerializer(NewsSerializer):
         fields = NewsSerializer.Meta.fields + ['comments']
 
     def get_comments(self, obj):
+        """
+        Returns a list of approved comments only in the detail view.
+        """
         comments = obj.comments.filter(is_approved=True).order_by('-created_at')
         return NewsCommentSerializer(comments, many=True).data

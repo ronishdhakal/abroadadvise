@@ -1,15 +1,16 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import F
+from django.conf import settings
+import os
+
 from core.pagination import StandardResultsSetPagination
-from authentication.permissions import IsAdminUser
 from .models import BlogPost, BlogCategory, BlogComment
 from .serializers import BlogPostSerializer, BlogCategorySerializer, BlogCommentSerializer
-from core.filters import BlogPostFilter  # ✅ Import the correct filter
+from core.filters import BlogPostFilter  # ✅ Ensure filter is correctly applied
 
 # ✅ List Blog Categories (Public Access)
 class BlogCategoryListView(generics.ListAPIView):
@@ -25,26 +26,22 @@ class BlogPostListView(generics.ListAPIView):
     serializer_class = BlogPostSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]  # ✅ Ensure filters are enabled
-    filterset_class = BlogPostFilter  # ✅ Apply BlogPostFilter
+    filter_backends = [DjangoFilterBackend, SearchFilter]  # ✅ Enable filtering
+    filterset_class = BlogPostFilter
     search_fields = ['title', 'content']
 
     def get_queryset(self):
         """
-        Fetch published blog posts and manually apply filtering by category if needed.
+        Fetch published blog posts and allow filtering by category.
         """
         queryset = BlogPost.objects.filter(is_published=True).order_by('-published_date')
-
-        # ✅ Manual filtering (Ensuring it works)
         category_slug = self.request.query_params.get('category', None)
         if category_slug:
-            queryset = queryset.filter(category__slug=category_slug)  # ✅ Debugging filter
-
+            queryset = queryset.filter(category__slug=category_slug)
         return queryset
 
-# ✅ Get Single Blog Post by Slug
+# ✅ Get Single Blog Post by Slug (Public Access)
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def get_blog_post(request, slug):
     """
     Retrieve a single blog post by its slug.
@@ -56,55 +53,71 @@ def get_blog_post(request, slug):
     except BlogPost.DoesNotExist:
         return Response({"error": "Blog post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Create Blog Post (Admin Only)
+# ✅ Create Blog Post (No Authentication Required)
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_blog_post(request):
     """
-    Create a new blog post (Admin Only).
+    Create a new blog post (No authentication required).
+    Handles image upload properly.
     """
     serializer = BlogPostSerializer(data=request.data, context={'request': request})
     if serializer.is_valid():
-        serializer.save(author=request.user)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ Update Blog Post (Admin Only)
+# ✅ Update Blog Post (No Authentication Required)
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_blog_post(request, slug):
     """
-    Update an existing blog post (Admin Only).
+    Update an existing blog post (No authentication required).
+    Ensures image replacement works properly.
     """
     try:
         post = BlogPost.objects.get(slug=slug)
+        old_image_path = post.featured_image.path if post.featured_image else None
+
         serializer = BlogPostSerializer(post, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            updated_post = serializer.save()
+
+            # ✅ Delete old image if a new image was uploaded
+            if 'featured_image' in request.FILES and old_image_path:
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except BlogPost.DoesNotExist:
         return Response({"error": "Blog post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ Delete Blog Post (Admin Only)
+# ✅ Delete Blog Post (No Authentication Required)
 @api_view(['DELETE'])
-@permission_classes([IsAdminUser])
 def delete_blog_post(request, slug):
     """
-    Delete a blog post (Admin Only).
+    Delete a blog post (No authentication required).
+    Removes the associated image as well.
     """
     try:
         post = BlogPost.objects.get(slug=slug)
+        image_path = post.featured_image.path if post.featured_image else None
+
         post.delete()
+
+        # ✅ Delete the image file if it exists
+        if image_path and os.path.exists(image_path):
+            os.remove(image_path)
+
         return Response({"message": "Blog post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
     except BlogPost.DoesNotExist:
         return Response({"error": "Blog post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-# ✅ List Approved Comments for a Blog
+# ✅ List Approved Comments for a Blog Post
 @api_view(['GET'])
-@permission_classes([permissions.AllowAny])
 def list_blog_comments(request, blog_slug):
     """
     Retrieve a list of approved comments for a specific blog post.
@@ -119,7 +132,6 @@ def list_blog_comments(request, blog_slug):
 
 # ✅ Add a Comment to a Blog Post (Public Access)
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])  # ✅ No login required to comment
 def add_blog_comment(request, blog_slug):
     """
     Add a new comment to a blog post.
@@ -127,12 +139,13 @@ def add_blog_comment(request, blog_slug):
     try:
         blog = BlogPost.objects.get(slug=blog_slug, is_published=True)
         data = request.data.copy()
-        data['post'] = blog.id  # ✅ Attach the blog post to the comment
+        data['post'] = blog.id
 
         serializer = BlogCommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "Comment submitted for approval"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     except BlogPost.DoesNotExist:
         return Response({"error": "Blog post not found"}, status=status.HTTP_404_NOT_FOUND)

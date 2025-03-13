@@ -1,36 +1,42 @@
 from rest_framework import serializers
-from .models import Event, EventGallery
+from .models import Event
 from university.models import University
 from consultancy.models import Consultancy
 from destination.models import Destination
 
-class EventGallerySerializer(serializers.ModelSerializer):
-    """
-    Serializer for Event Gallery images.
-    """
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = EventGallery
-        fields = ['id', 'image_url', 'uploaded_at']
-
-    def get_image_url(self, obj):
-        """
-        Returns the absolute URL for the event gallery image.
-        """
-        request = self.context.get('request')
-        return request.build_absolute_uri(obj.image.url) if obj.image else None
 
 class EventSerializer(serializers.ModelSerializer):
     """
-    Serializer for the Event model with related fields.
+    Serializer for the Event model with related fields using SLUGS instead of IDs.
     """
     slug = serializers.ReadOnlyField()
     featured_image = serializers.SerializerMethodField()
-    gallery_images = EventGallerySerializer(many=True, read_only=True)
-    related_universities = serializers.SerializerMethodField()
-    related_consultancies = serializers.SerializerMethodField()
-    targeted_destinations = serializers.SerializerMethodField()
+
+    # ✅ Allow Saving Related ManyToMany Fields (Using Slugs)
+    related_universities = serializers.SlugRelatedField(
+        queryset=University.objects.all(),
+        many=True,
+        slug_field="slug",
+        required=False
+    )
+    related_consultancies = serializers.SlugRelatedField(
+        queryset=Consultancy.objects.all(),
+        many=True,
+        slug_field="slug",
+        required=False
+    )
+    targeted_destinations = serializers.SlugRelatedField(
+        queryset=Destination.objects.all(),
+        many=True,
+        slug_field="slug",
+        required=False
+    )
+
+    # ✅ Organizer Handling (Using Slugs)
+    organizer_slug = serializers.CharField(required=False, allow_null=True, write_only=True)
+    organizer_type = serializers.ChoiceField(
+        choices=["university", "consultancy"], required=False, write_only=True
+    )
     organizer = serializers.SerializerMethodField()
 
     class Meta:
@@ -38,39 +44,105 @@ class EventSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_featured_image(self, obj):
+        """Returns full URL for the featured image."""
         request = self.context.get('request')
         return request.build_absolute_uri(obj.featured_image.url) if obj.featured_image else None
 
-    def get_related_universities(self, obj):
-        """Returns related universities with slugs for linking."""
-        return [
-            {"id": uni.id, "name": uni.name, "slug": uni.slug}
-            for uni in obj.related_universities.all()
-        ]
-
-    def get_related_consultancies(self, obj):
-        """Returns related consultancies with slugs for linking."""
-        return [
-            {"id": cons.id, "name": cons.name, "slug": cons.slug}
-            for cons in obj.related_consultancies.all()
-        ]
-
-    def get_targeted_destinations(self, obj):
-        """Returns targeted destinations with slugs for linking."""
-        return [
-            {"id": dest.id, "title": dest.title, "slug": dest.slug}
-            for dest in obj.targeted_destinations.all()
-        ]
-
     def get_organizer(self, obj):
-        """Returns organizer details with correct type (consultancy/university) for linking."""
+        """Returns organizer details dynamically based on type using SLUG instead of ID."""
         if obj.organizer:
-            organizer_type = "consultancy" if isinstance(obj.organizer, Consultancy) else "university"
+            org_type = "university" if isinstance(obj.organizer, University) else "consultancy"
             return {
-                "id": obj.organizer.id,
-                "name": obj.organizer.name,
                 "slug": obj.organizer.slug,
-                "type": organizer_type  # ✅ Added organizer type for routing
+                "name": obj.organizer.name,
+                "type": org_type
             }
         return None
 
+    def to_representation(self, instance):
+        """Customize the output format for related fields & organizer using SLUGS."""
+        data = super().to_representation(instance)
+
+        # ✅ Format related_universities
+        data["related_universities"] = [
+            {"slug": uni.slug, "name": uni.name}
+            for uni in instance.related_universities.all()
+        ]
+
+        # ✅ Format related_consultancies
+        data["related_consultancies"] = [
+            {"slug": cons.slug, "name": cons.name}
+            for cons in instance.related_consultancies.all()
+        ]
+
+        # ✅ Format targeted_destinations
+        data["targeted_destinations"] = [
+            {"slug": dest.slug, "title": dest.title}
+            for dest in instance.targeted_destinations.all()
+        ]
+
+        return data
+
+    def create(self, validated_data):
+        """
+        Custom create method to handle ManyToMany relationships & dynamic organizer selection.
+        """
+        related_universities = validated_data.pop("related_universities", [])
+        related_consultancies = validated_data.pop("related_consultancies", [])
+        targeted_destinations = validated_data.pop("targeted_destinations", [])
+
+        # ✅ Handle Organizer Type Using SLUG
+        organizer_slug = validated_data.pop("organizer_slug", None)
+        organizer_type = validated_data.pop("organizer_type", None)
+
+        if organizer_slug and organizer_type == "university":
+            validated_data["organizer"] = University.objects.get(slug=organizer_slug)
+        elif organizer_slug and organizer_type == "consultancy":
+            validated_data["organizer"] = Consultancy.objects.get(slug=organizer_slug)
+        else:
+            validated_data["organizer"] = None
+
+        # ✅ Save Event
+        event = Event.objects.create(**validated_data)
+
+        # ✅ Assign ManyToMany Fields
+        event.related_universities.set(related_universities)
+        event.related_consultancies.set(related_consultancies)
+        event.targeted_destinations.set(targeted_destinations)
+
+        return event
+
+    def update(self, instance, validated_data):
+        """
+        Custom update method to handle ManyToMany updates & dynamic organizer selection.
+        """
+        related_universities = validated_data.pop("related_universities", None)
+        related_consultancies = validated_data.pop("related_consultancies", None)
+        targeted_destinations = validated_data.pop("targeted_destinations", None)
+
+        # ✅ Handle Organizer Type Using SLUG
+        organizer_slug = validated_data.pop("organizer_slug", None)
+        organizer_type = validated_data.pop("organizer_type", None)
+
+        if organizer_slug and organizer_type == "university":
+            instance.organizer = University.objects.get(slug=organizer_slug)
+        elif organizer_slug and organizer_type == "consultancy":
+            instance.organizer = Consultancy.objects.get(slug=organizer_slug)
+        else:
+            instance.organizer = None
+
+        # ✅ Update Normal Fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+
+        # ✅ Update ManyToMany Fields (Only if provided)
+        if related_universities is not None:
+            instance.related_universities.set(related_universities)
+        if related_consultancies is not None:
+            instance.related_consultancies.set(related_consultancies)
+        if targeted_destinations is not None:
+            instance.targeted_destinations.set(targeted_destinations)
+
+        return instance

@@ -22,7 +22,7 @@ def create_category_slug(sender, instance, **kwargs):
 class BlogPost(models.Model):
     title = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts', blank=True, null=True)
     category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")
     featured_image = models.ImageField(upload_to='blog/featured/', blank=True, null=True)
     content = HTMLField()  # ✅ Supports rich text
