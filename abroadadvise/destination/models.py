@@ -11,17 +11,22 @@ class Destination(models.Model):
     cover_page = models.ImageField(upload_to='cover_pages/', blank=True, null=True)
 
     why_choose = HTMLField(blank=True, null=True)
+    scholarships = HTMLField(blank=True, null=True)
     requirements = HTMLField(blank=True, null=True)
     documents_required = HTMLField(blank=True, null=True)
-
-    courses_to_study = models.ManyToManyField('course.Course', related_name='destinations', blank=True)
-    universities = models.ManyToManyField('university.University', related_name='destinations', blank=True)
-    consultancies = models.ManyToManyField('consultancy.Consultancy', related_name='destination_consultancies', blank=True)
-
-    scholarships = HTMLField(blank=True, null=True)
     more_information = HTMLField(blank=True, null=True)
     faqs = HTMLField(blank=True, null=True)
-    other_destinations = HTMLField(blank=True, null=True)
+
+    # Keeping relationships optional
+    courses_to_study = models.ManyToManyField(
+        'course.Course', related_name='destinations', blank=True
+    )
+    universities = models.ManyToManyField(
+        'university.University', related_name='destinations', blank=True
+    )
+    consultancies = models.ManyToManyField(
+        'consultancy.Consultancy', related_name='destination_consultancies', blank=True
+    )
 
     def __str__(self):
         return self.title
@@ -29,4 +34,12 @@ class Destination(models.Model):
 @receiver(pre_save, sender=Destination)
 def create_slug(sender, instance, **kwargs):
     if not instance.slug:
-        instance.slug = slugify(instance.title)
+        base_slug = slugify(instance.title)
+        slug = base_slug
+        counter = 1
+
+        while Destination.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+
+        instance.slug = slug

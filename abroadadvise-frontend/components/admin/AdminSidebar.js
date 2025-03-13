@@ -11,6 +11,7 @@ const AdminSidebar = () => {
     { name: "Consultancies", path: "/admin/consultancies" },
     { name: "Universities", path: "/admin/universities" },
     { name: "Courses", path: "/admin/courses" },
+    { name: "Destination", path: "/admin/destinations" },
     { name: "Exams", path: "/admin/exams" },
     { name: "Events", path: "/admin/events" },
     { name: "News", path: "/admin/news" },

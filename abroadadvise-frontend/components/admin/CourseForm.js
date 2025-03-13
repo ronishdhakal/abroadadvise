@@ -51,7 +51,7 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
     }
   }, [courseSlug]);
 
-  // ✅ Automatically generate slug only if empty
+  // ✅ Handle Slug (Auto-generate but allow manual edit)
   useEffect(() => {
     if (formData.name && !formData.slug) {
       setFormData((prev) => ({
@@ -61,7 +61,7 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
     }
   }, [formData.name]);
 
-  // ✅ Handle form submission
+  // ✅ Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -70,7 +70,7 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
 
     const submissionData = new FormData();
 
-    // ✅ Append all form fields correctly
+    // ✅ Append all form fields correctly (Handle file uploads)
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
         submissionData.append(key, value);
@@ -110,10 +110,17 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
 
         {/* ✅ Submit & Cancel Buttons */}
         <div className="flex gap-4 mt-6">
-          <button type="submit" className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition">
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition"
+          >
             {loading ? "Saving..." : isEditing ? "Update" : "Create"}
           </button>
-          <button type="button" className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition" onClick={onCancel}>
+          <button
+            type="button"
+            className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition"
+            onClick={onCancel}
+          >
             Cancel
           </button>
         </div>

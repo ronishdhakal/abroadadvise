@@ -8,6 +8,7 @@ const UniversityHeader = ({ formData, setFormData }) => {
   const [coverPreview, setCoverPreview] = useState(null);
   const [brochureName, setBrochureName] = useState(null);
 
+  // ✅ Load existing images if they exist
   useEffect(() => {
     if (formData.logo && typeof formData.logo === "string") {
       setLogoPreview(formData.logo);
@@ -20,6 +21,7 @@ const UniversityHeader = ({ formData, setFormData }) => {
     }
   }, [formData]);
 
+  // ✅ Revoke previous object URLs to prevent memory leaks
   useEffect(() => {
     return () => {
       if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
@@ -45,7 +47,7 @@ const UniversityHeader = ({ formData, setFormData }) => {
 
       setFormData((prev) => ({
         ...prev,
-        [name]: file,
+        [name]: file, // ✅ Store file in formData
       }));
     }
   };
@@ -103,31 +105,55 @@ const UniversityHeader = ({ formData, setFormData }) => {
         />
       </div>
 
+      {/* University Logo Upload */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">University Logo</label>
         <input type="file" name="logo" accept="image/*" onChange={handleFileChange} className="hidden" id="logo-upload" />
         <label htmlFor="logo-upload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
           <Upload className="w-5 h-5 mr-2" /> Upload Logo
         </label>
-        {logoPreview && <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain mt-2 border rounded-lg" />}
+        {logoPreview && (
+          <div className="flex items-center mt-2">
+            <img src={logoPreview} alt="Logo Preview" className="w-16 h-16 object-contain border rounded-lg mr-2" />
+            <button onClick={() => handleRemoveFile("logo")} className="text-red-600 hover:text-red-800">
+              <Trash className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Cover Photo Upload */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Cover Photo</label>
         <input type="file" name="cover_photo" accept="image/*" onChange={handleFileChange} className="hidden" id="cover-upload" />
         <label htmlFor="cover-upload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
           <Image className="w-5 h-5 mr-2" /> Upload Cover
         </label>
-        {coverPreview && <img src={coverPreview} alt="Cover Preview" className="w-24 h-16 object-cover mt-2 border rounded-lg" />}
+        {coverPreview && (
+          <div className="flex items-center mt-2">
+            <img src={coverPreview} alt="Cover Preview" className="w-24 h-16 object-cover border rounded-lg mr-2" />
+            <button onClick={() => handleRemoveFile("cover_photo")} className="text-red-600 hover:text-red-800">
+              <Trash className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Brochure Upload */}
       <div>
         <label className="block text-gray-700 font-medium mb-1">Brochure (PDF)</label>
         <input type="file" name="brochure" accept="application/pdf" onChange={handleFileChange} className="hidden" id="brochure-upload" />
         <label htmlFor="brochure-upload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
           <FileText className="w-5 h-5 mr-2" /> Upload Brochure
         </label>
-        {brochureName && <span className="text-gray-600 text-sm mt-2">{brochureName}</span>}
+        {brochureName && (
+          <div className="flex items-center mt-2">
+            <span className="text-gray-600 text-sm mr-2">{brochureName}</span>
+            <button onClick={() => handleRemoveFile("brochure")} className="text-red-600 hover:text-red-800">
+              <Trash className="w-5 h-5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

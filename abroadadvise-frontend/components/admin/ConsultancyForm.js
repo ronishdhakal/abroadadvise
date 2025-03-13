@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  createConsultancy, 
-  updateConsultancy, 
-  fetchConsultancyDetails, 
-  toggleConsultancyVerification 
+import {
+  createConsultancy,
+  updateConsultancy,
+  fetchConsultancyDetails,
+  toggleConsultancyVerification,
 } from "@/utils/api";
 
 import ConsultancyHeader from "./consultancy/ConsultancyHeader";
@@ -17,7 +17,15 @@ import ConsultancyGallery from "./consultancy/ConsultancyGallery";
 import ConsultancyUniversities from "./consultancy/ConsultancyUniversities";
 import ConsultancyAbout from "./consultancy/ConsultancyAbout";
 
-const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations, allExams, allUniversities, allDistricts }) => {
+const ConsultancyForm = ({
+  consultancySlug,
+  onSuccess,
+  onCancel,
+  allDestinations,
+  allExams,
+  allUniversities,
+  allDistricts,
+}) => {
   const isEditing = !!consultancySlug;
 
   // ✅ Define initial form state
@@ -44,6 +52,7 @@ const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations
     logo: null,
     brochure: null,
     cover_photo: null,
+    deleted_gallery_images:[],
   });
 
   const [loading, setLoading] = useState(false);
@@ -67,7 +76,11 @@ const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations
             partner_universities: data.partner_universities?.map((u) => u.id) || [],
             districts: data.districts?.map((d) => d.id) || [],
             branches: data.branches || [],
-            gallery_images: data.gallery_images || [],
+            gallery_images: data.gallery_images.map(img => ({ // make it so that all the gallery_images have the same structure
+              ...img,
+              image: img.image || img,
+              isNew: false,
+            })) || [],
             logo: data.logo || prev.logo,
             cover_photo: data.cover_photo || prev.cover_photo,
             brochure: data.brochure || prev.brochure,
@@ -91,7 +104,7 @@ const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations
   // ✅ Handle verification toggle
   const handleVerificationChange = async () => {
     const newStatus = !formData.is_verified;
-    
+
     // ✅ Optimistically update UI before API call
     setFormData((prev) => ({
       ...prev,
@@ -127,36 +140,39 @@ const ConsultancyForm = ({ consultancySlug, onSuccess, onCancel, allDestinations
 
     const submissionData = new FormData();
 
-    // ✅ Ensure disciplines are sent as an array of numbers
-    if (formData.disciplines.length > 0) {
-        submissionData.append("disciplines", JSON.stringify(formData.disciplines.map(Number))); // ✅ Convert to numbers
-    } else {
-        submissionData.append("disciplines", JSON.stringify([])); // ✅ Ensure empty array is sent
-    }
-
-    // ✅ Append all other fields correctly
+    // ✅ Append all form fields correctly
     Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && key !== "disciplines") {
-            submissionData.append(key, value);
+      if (value !== null && value !== undefined) {
+        if (["branches", "districts", "study_abroad_destinations", "test_preparation", "partner_universities", "deleted_gallery_images"].includes(key)) {
+          submissionData.append(key, JSON.stringify(value)); // Serialize arrays to JSON
+        } else if (key === "gallery_images") {
+          value.forEach((item) => {
+            if (item.file) { // add the new images
+              submissionData.append("gallery_images", item.file);
+            }
+          });
+        } else {
+          submissionData.append(key, value);
         }
+      }
     });
 
     try {
-        if (isEditing) {
-            await updateCourse(courseSlug, submissionData);
-            setSuccess("✅ Course updated successfully!");
-        } else {
-            await createCourse(submissionData);
-            setSuccess("✅ Course created successfully!");
-        }
-        onSuccess();
+      if (isEditing) {
+        await updateConsultancy(consultancySlug, submissionData);
+        setSuccess("Consultancy updated successfully!");
+      } else {
+        await createConsultancy(submissionData);
+        setSuccess("Consultancy created successfully!");
+      }
+      onSuccess();
     } catch (err) {
-        console.error("❌ API Error:", err);
-        setError(err.message || "❌ Failed to save course.");
+      console.error("API Error:", err);
+      setError(err.message || "Failed to save consultancy.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">

@@ -1,7 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-
-// ✅ Helper Function: Get Auth Headers
 // ✅ Helper Function: Get Auth Headers
 const getAuthHeaders = () => {
   if (typeof window !== "undefined") {  // ✅ Ensure running in browser
@@ -50,8 +48,6 @@ export const fetchDestinations = async () => {
   }
 };
 
-
-
 // ✅ Fetch Disciplines (Needed for University Form Dropdowns)
 export const fetchDisciplines = async () => {
   try {
@@ -70,7 +66,6 @@ export const fetchDisciplines = async () => {
     throw error;
   }
 };
-
 
 // ✅ Fetch Test Preparation Exams
 export const fetchExams = async () => {
@@ -196,163 +191,98 @@ export const fetchConsultancyDetails = async (slug) => {
 
 
 
-// ✅ Create Consultancy (Handles FormData & File Uploads)
+// ✅ Utility function to ensure proper JSON conversion
+const convertToJson = (formData, key) => {
+    let value = formData.get(key);
+    if (typeof value === "string") {
+        try {
+            value = JSON.parse(value);
+        } catch {
+            value = [];
+        }
+    }
+    if (!Array.isArray(value)) {
+        value = [];
+    }
+    const intArray = value.map((item) => parseInt(item, 10)).filter((id) => !isNaN(id));
+    formData.set(key, JSON.stringify(intArray));
+};
+
+// ✅ Create Consultancy
 export const createConsultancy = async (formData) => {
-  try {
-    console.log("Submitting Consultancy FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]); // Logs all fields
-    }
+    // ✅ Convert boolean fields correctly
+    formData.set("moe_certified", formData.get("moe_certified") === "true");
+    formData.set("is_verified", formData.get("is_verified") === "true");
 
-    // ✅ Convert boolean values correctly
-    if (formData.has("moe_certified")) {
-      formData.set("moe_certified", formData.get("moe_certified") === "true");
-    }
-
-    if (formData.has("is_verified")) {
-      formData.set("is_verified", formData.get("is_verified") === "true");
-    }
-
-    // ✅ Convert arrays to JSON
-    convertArrayToJson(formData, "branches");
-    convertArrayToJson(formData, "study_abroad_destinations");
-    convertArrayToJson(formData, "test_preparation");
-    convertArrayToJson(formData, "partner_universities");
-    convertArrayToJson(formData, "districts");
+    // ✅ Convert JSON fields before sending
+    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
+        convertToJson(formData, key);
+    });
 
     const response = await fetch(`${API_BASE_URL}/consultancy/create/`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: formData,
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Create Consultancy API Error:", errorData);
-      throw new Error(errorData.error || "Failed to create consultancy");
+        const errorData = await response.json();
+        console.error("API Response Error:", errorData);
+        throw new Error(errorData.error || "Failed to create consultancy");
     }
 
     return await response.json();
-  } catch (error) {
-    console.error("Error creating consultancy:", error);
-    throw error;
-  }
 };
 
-// ✅ Update Consultancy (Handles FormData & File Uploads)
+// ✅ Update Consultancy
 export const updateConsultancy = async (slug, formData) => {
-  try {
-    console.log("Updating Consultancy FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Convert boolean values correctly
-    if (formData.has("moe_certified")) {
-      formData.set("moe_certified", formData.get("moe_certified") === "true");
-    }
-
-    if (formData.has("is_verified")) {
-      formData.set("is_verified", formData.get("is_verified") === "true");
-    }
-
-    // ✅ Convert arrays to JSON
-    convertArrayToJson(formData, "branches");
-    convertArrayToJson(formData, "study_abroad_destinations");
-    convertArrayToJson(formData, "test_preparation");
-    convertArrayToJson(formData, "partner_universities");
-    convertArrayToJson(formData, "districts");
-
-    // ✅ Handle gallery images properly (Keep old + Add new ones)
-    const galleryImages = formData.getAll("gallery_images");
-    formData.delete("gallery_images");
-
-    galleryImages.forEach((file) => {
-      if (file instanceof File) {
-        formData.append("gallery_images", file); // Append only new files
-      }
+    // ✅ Convert JSON fields before sending
+    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
+        convertToJson(formData, key);
     });
 
     const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      body: formData,
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Response Error:", errorData);
-      throw new Error(errorData.error || "Failed to update consultancy");
+        const errorData = await response.json();
+        console.error("API Response Error:", errorData);
+        throw new Error(errorData.error || "Failed to update consultancy");
     }
 
     return await response.json();
-  } catch (error) {
-    console.error("Error updating consultancy:", error);
-    throw error;
-  }
 };
+
 
 // ✅ Delete Consultancy
 export const deleteConsultancy = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/delete/`, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      headers: {
+        "Content-Type": "application/json", // ✅ JSON request
+        ...getAuthHeaders(),
+      },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Backend Delete Error:", errorData);
-      throw new Error(errorData.message || "Failed to delete consultancy");
+      console.error("❌ Delete Consultancy API Error:", errorData);
+
+      throw new Error(errorData.detail || "Failed to delete consultancy");
     }
 
-    console.log("✅ Consultancy deleted successfully!");
-    return { success: true, message: "Consultancy deleted successfully!" };
+    return { success: true, message: "✅ Consultancy deleted successfully!" };
   } catch (error) {
     console.error("❌ Error deleting consultancy:", error);
-    throw new Error(error.message || "An error occurred while deleting the consultancy.");
-  }
-};
-// ✅ Convert Array to JSON Before Sending to Backend (Ensures Integers)
-export const convertArrayToJson = (formData, key) => {
-  if (formData.has(key)) {
-    try {
-      let value = formData.get(key);
-
-      // ✅ If value is empty, set an empty array
-      if (!value || value === "null" || value === "undefined") {
-        console.warn(`⚠️ Empty ${key} detected. Setting to an empty array.`);
-        formData.set(key, JSON.stringify([]));
-        return;
-      }
-
-      // ✅ Ensure value is parsed correctly
-      if (typeof value === "string") {
-        try {
-          value = JSON.parse(value);
-        } catch (parseError) {
-          console.warn(`⚠️ Skipping JSON parse for ${key}: Already a valid string.`);
-        }
-      }
-
-      // ✅ Convert all values to Integers (Fix PK issue)
-      if (Array.isArray(value)) {
-        const integerArray = value
-          .map((item) => parseInt(item, 10)) // Force integer conversion
-          .filter((id) => !isNaN(id)); // Remove invalid values
-
-        formData.set(key, JSON.stringify(integerArray));
-      } else {
-        console.warn(`⚠️ Expected an array for ${key}, but got:`, value);
-        formData.set(key, JSON.stringify([])); // Default to empty array
-      }
-    } catch (error) {
-      console.error(`❌ Error processing ${key} data:`, error);
-    }
+    throw error;
   }
 };
 
-// ✅ Create University (Handles FormData & File Uploads)
+
 // ✅ Create University (Handles FormData & File Uploads)
 export const createUniversity = async (formData) => {
   try {
@@ -360,6 +290,9 @@ export const createUniversity = async (formData) => {
     for (let pair of formData.entries()) {
       console.log(`${pair[0]}:`, pair[1]);
     }
+
+    // ✅ Ensure disciplines are converted to JSON
+    convertArrayToJson(formData, "disciplines");
 
     const response = await fetch(`${API_BASE_URL}/university/create/`, {
       method: "POST",
@@ -388,6 +321,9 @@ export const updateUniversity = async (slug, formData) => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
+    // ✅ Ensure disciplines are converted to JSON
+    convertArrayToJson(formData, "disciplines");
+
     const response = await fetch(`${API_BASE_URL}/university/${slug}/update/`, {
       method: "PATCH",
       headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
@@ -406,6 +342,7 @@ export const updateUniversity = async (slug, formData) => {
     throw error;
   }
 };
+
 
 
 
@@ -532,6 +469,159 @@ export const deleteCourse = async (slug) => {
     return { success: true, message: "✅ Course deleted successfully!" };
   } catch (error) {
     console.error("❌ Error deleting course:", error);
+    throw error;
+  }
+};
+
+// Destination
+
+/**
+ * ✅ Fetch Single Destination Details
+ * @param {string} slug - Destination slug
+ * @returns {Promise} - API response
+ */
+export const fetchDestinationDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/destination/${slug}/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch destination details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching destination details:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Formats FormData before sending (Handles JSON conversion & boolean values)
+ * @param {FormData} formData - The form data object
+ * @returns {FormData} - FormData with properly formatted values
+ */
+const prepareFormData = (formData) => {
+  // ✅ Convert boolean values to "true" or "false" (String format)
+  if (formData.has("moe_certified")) {
+    formData.set("moe_certified", formData.get("moe_certified") === "true");
+  }
+
+  // ✅ Convert JSON fields to strings before sending (For related courses, universities, consultancies)
+  const jsonFields = ["courses_to_study", "universities", "consultancies"];
+  jsonFields.forEach((field) => {
+    if (formData.has(field)) {
+      let value = formData.get(field);
+      if (typeof value === "string") {
+        try {
+          value = JSON.parse(value); // Ensure it's an array
+        } catch (e) {
+          console.warn(`⚠️ Skipping JSON parse for ${field}: Already a valid string.`);
+        }
+      }
+      formData.set(field, JSON.stringify(value || [])); // Store as JSON string
+    }
+  });
+
+  return formData;
+};
+
+export const createDestination = async (formData) => {
+  try {
+    console.log("📤 Sending Destination FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]); // ✅ Logs all form data values
+    }
+
+    // ✅ Ensure FormData is correctly formatted before sending
+    formData = prepareFormData(formData);
+
+    const response = await fetch(`${API_BASE_URL}/destination/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(), // ✅ Include Auth Headers if needed
+      body: formData, // ✅ No "Content-Type" needed (auto-set for FormData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create Destination API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create destination");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating destination:", error);
+    throw error;
+  }
+};
+
+
+/**
+/**
+ * ✅ Update an Existing Destination (Handles FormData & File Uploads)
+ * @param {string} slug - Destination slug
+ * @param {FormData} formData - Updated Destination data
+ * @returns {Promise} - API response
+ */
+export const updateDestination = async (slug, formData) => {
+  try {
+    console.log("📤 Updating Destination FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    // Ensure FormData is correctly formatted before sending
+    formData = prepareFormData(formData);
+
+    const response = await fetch(`${API_BASE_URL}/destination/${slug}/update/`, {
+      method: "PATCH",
+      headers: {
+        ...getAuthHeaders(),
+        "Accept": "application/json",
+      },
+      body: formData,  // Sending FormData as the request body
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Update Destination API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to update destination");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error updating destination:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * ✅ Delete a Destination
+ * @param {string} slug - Destination slug
+ * @returns {Promise} - API response
+ */
+export const deleteDestination = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/destination/${slug}/`, {
+      method: "DELETE",
+      headers: {
+        ...getAuthHeaders(),  // ✅ Add authentication headers if needed
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Destination API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete destination");
+    }
+
+    return { success: true, message: "✅ Destination deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting destination:", error);
     throw error;
   }
 };

@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Head from "next/head"; // ✅ SEO optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import UniversityForm from "@/components/admin/UniversityForm";
-import { fetchUniversities, deleteUniversity, fetchUniversityDetails } from "@/utils/api";
+import { fetchUniversities, deleteUniversity, fetchUniversityDetails, fetchDisciplines } from "@/utils/api";
 
-const UniversitiesPage = ({ initialUniversities }) => {
+const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
   const [universities, setUniversities] = useState(initialUniversities);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -128,6 +128,7 @@ const UniversitiesPage = ({ initialUniversities }) => {
         <UniversityForm
           universitySlug={editingSlug}
           universityData={editingData}
+          allDisciplines={allDisciplines} // ✅ Pass disciplines
           onSuccess={handleSuccess}
           onCancel={() => {
             setShowForm(false);
@@ -182,20 +183,23 @@ const UniversitiesPage = ({ initialUniversities }) => {
   );
 };
 
-// ✅ Server-Side Rendering (Best for SEO & Dynamic Content)
+// ✅ Server-Side Rendering (Ensures fresh data on each request)
 export async function getServerSideProps() {
   try {
     const universities = await fetchUniversities();
+    const disciplines = await fetchDisciplines(); // ✅ Fetch disciplines
 
     return {
       props: {
         initialUniversities: universities.results || [],
+        allDisciplines: disciplines.results || [],
       },
     };
   } catch (error) {
     return {
       props: {
         initialUniversities: [],
+        allDisciplines: [],
       },
     };
   }

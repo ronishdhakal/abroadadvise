@@ -6,11 +6,12 @@ import { createUniversity, updateUniversity, fetchUniversityDetails } from "@/ut
 import UniversityHeader from "./university/UniversityHeader";
 import UniversityContact from "./university/UniversityContact";
 import UniversityAbout from "./university/UniversityAbout";
+import UniversityDisciplines from "./university/UniversityDisciplines"; // ✅ Import Disciplines Component
 
-const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
+const UniversityForm = ({ universitySlug, onSuccess, onCancel, allDisciplines }) => {
   const isEditing = !!universitySlug;
 
-  // ✅ Define initial form state (Removed disciplines)
+  // ✅ Define initial form state (Includes disciplines)
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -30,13 +31,14 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
     brochure: null,
     cover_photo: null,
     type: "",
+    disciplines: [],
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  // ✅ Load university data if editing (Removed disciplines)
+  // ✅ Load university data if editing (Now includes disciplines)
   useEffect(() => {
     if (isEditing) {
       setLoading(true);
@@ -47,6 +49,7 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
           setFormData((prev) => ({
             ...prev,
             ...data,
+            disciplines: data.disciplines?.map((d) => d.id) || [],
             logo: data.logo || prev.logo,
             cover_photo: data.cover_photo || prev.cover_photo,
             brochure: data.brochure || prev.brochure,
@@ -55,7 +58,7 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
         .catch(() => setError("❌ Failed to load university details"))
         .finally(() => setLoading(false));
     }
-  }, [isEditing, universitySlug]); // ✅ Added dependencies
+  }, [isEditing, universitySlug]);
 
   // ✅ Automatically generate slug only if empty
   useEffect(() => {
@@ -75,27 +78,18 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
 
     try {
       const submissionData = new FormData();
-      submissionData.append("name", formData.name);
-      submissionData.append("email", formData.email);
-      submissionData.append("website", formData.website);
-      submissionData.append("phone", formData.phone);
-      submissionData.append("address", formData.address);
-      submissionData.append("country", formData.country);
-      submissionData.append("priority", formData.priority);
-      submissionData.append("eligibility", formData.eligibility);
-      submissionData.append("facilities_features", formData.facilities_features);
-      submissionData.append("scholarship", formData.scholarship);
-      submissionData.append("tuition_fees", formData.tuition_fees);
-      submissionData.append("about", formData.about);
-      submissionData.append("faqs", formData.faqs);
+      
+      // ✅ Append all text fields
+      ["name", "email", "website", "phone", "address", "country", "priority", 
+       "eligibility", "facilities_features", "scholarship", "tuition_fees", "about", "faqs", "type"]
+        .forEach((field) => {
+          if (formData[field]) submissionData.append(field, formData[field]);
+        });
 
-      if (formData.type) {
-        submissionData.append("type", formData.type);
-      } else {
-        throw new Error("❌ University type is required!");
-      }
+      // ✅ Convert disciplines to JSON before appending
+      submissionData.append("disciplines", JSON.stringify(formData.disciplines));
 
-      // ✅ Handle Logo, Brochure & Cover Image
+      // ✅ Handle Logo, Brochure & Cover Image Uploads
       if (formData.logo instanceof File) submissionData.append("logo", formData.logo);
       if (formData.cover_photo instanceof File) submissionData.append("cover_photo", formData.cover_photo);
       if (formData.brochure instanceof File) submissionData.append("brochure", formData.brochure);
@@ -131,6 +125,9 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
 
         {/* Contact Information */}
         <UniversityContact formData={formData} setFormData={setFormData} />
+
+        {/* Disciplines Selection */}
+        <UniversityDisciplines formData={formData} setFormData={setFormData} allDisciplines={allDisciplines} />
 
         {/* About & Additional Information */}
         <UniversityAbout formData={formData} setFormData={setFormData} />
