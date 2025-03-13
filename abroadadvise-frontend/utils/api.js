@@ -675,3 +675,133 @@ export const deleteDestination = async (slug) => {
     throw error;
   }
 };
+
+
+/**
+ * ✅ Fetch Single Exam by Slug (Detail Page)
+ * @param {string} slug - Exam slug
+ * @returns {Promise} - API response
+ */
+export const fetchExamDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/exam/${slug}/`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Get Exam API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to fetch exam details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching exam details:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Create a New Exam (Handles FormData & File Uploads)
+ * @param {FormData} formData - New Exam data
+ * @returns {Promise} - API response
+ */
+export const createExam = async (formData) => {
+  try {
+    console.log("📤 Creating Exam with FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]); // ✅ Logs all form data values
+    }
+
+    const response = await fetch(`${API_BASE_URL}/exam/create/`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json", // ✅ Accept JSON response
+      },
+      body: formData, // ✅ Do NOT set "Content-Type", it is auto-set for FormData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create Exam API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create exam");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating exam:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Update an Existing Exam (Handles FormData & File Uploads)
+ * @param {string} slug - Exam slug
+ * @param {FormData} formData - Updated Exam data
+ * @returns {Promise} - API response
+ */
+export const updateExam = async (slug, formData) => {
+  try {
+    console.log("📤 Updating Exam with FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+
+    // ✅ Ensure we do not send empty fields (avoids overwriting with null)
+    if (!formData.get("icon")) {
+      formData.delete("icon");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/exam/${slug}/update/`, {
+      method: "PATCH",
+      headers: {
+        "Accept": "application/json",
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Update Exam API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to update exam");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error updating exam:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Delete an Exam
+ * @param {string} slug - Exam slug
+ * @returns {Promise} - API response
+ */
+export const deleteExam = async (slug) => {
+  try {
+    console.log(`🗑️ Deleting Exam: ${slug}`);
+
+    const response = await fetch(`${API_BASE_URL}/exam/${slug}/delete/`, {
+      method: "DELETE",
+      headers: {
+        "Accept": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Exam API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete exam");
+    }
+
+    console.log("✅ Exam deleted successfully!");
+    return { success: true, message: "✅ Exam deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting exam:", error);
+    throw error;
+  }
+};

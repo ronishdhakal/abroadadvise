@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from .models import Exam
-from consultancy.models import Consultancy  # Import Consultancy for related field
+from consultancy.models import Consultancy
 
 class ExamSerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()
-    icon = serializers.SerializerMethodField()  # ✅ Fix Image Handling
+    icon = serializers.ImageField(required=False, allow_null=True)  # ✅ Ensure correct image handling
     preparation_classes = serializers.SerializerMethodField()
     similar_exams = serializers.SerializerMethodField()
 
@@ -12,15 +12,41 @@ class ExamSerializer(serializers.ModelSerializer):
         model = Exam
         fields = '__all__'
 
+    def update(self, instance, validated_data):
+        """
+        ✅ Custom update method to:
+        - Correctly handle image updates
+        - Prevent overwriting existing images with `None`
+        - Update other fields normally
+        """
+
+        print("🔄 Updating Exam:", instance.name)  # Debugging log
+
+        # ✅ Handle image updates correctly
+        if "icon" in validated_data:
+            icon = validated_data.pop("icon", None)
+            if icon:
+                instance.icon.delete(save=False)  # Delete old image
+                instance.icon = icon
+            # If no new image is uploaded, keep the existing one.
+
+        # ✅ Update all other fields normally
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        print("✅ Exam updated successfully!")  # Debugging log
+        return instance
+
     def get_icon(self, obj):
-        """Ensure the correct URL format for the exam icon."""
+        """✅ Ensure the correct URL format for the exam icon."""
         request = self.context.get("request")
         if obj.icon:
             return request.build_absolute_uri(obj.icon.url) if request else obj.icon.url
-        return None  # ✅ Prevent errors if no image
+        return None  # ✅ Prevents errors if no image
 
     def get_preparation_classes(self, obj):
-        """Retrieve preparation classes with name, slug, logo, and address."""
+        """✅ Retrieve preparation classes with name, slug, logo, and address."""
         request = self.context.get("request")  # ✅ Ensure proper image URL handling
         return [
             {
@@ -33,7 +59,7 @@ class ExamSerializer(serializers.ModelSerializer):
         ]
 
     def get_similar_exams(self, obj):
-        """Retrieve similar exams with name, slug, and icon."""
+        """✅ Retrieve similar exams with name, slug, and icon."""
         request = self.context.get("request")
         similar_exams = obj.similar_exams.all()
 

@@ -5,7 +5,6 @@ import {
   createConsultancy,
   updateConsultancy,
   fetchConsultancyDetails,
-  toggleConsultancyVerification,
 } from "@/utils/api";
 
 import ConsultancyHeader from "./consultancy/ConsultancyHeader";
@@ -42,7 +41,6 @@ const ConsultancyForm = ({
     about: "",
     priority: "",
     moe_certified: false,
-    is_verified: false, // ✅ Added verification toggle
     districts: [],
     study_abroad_destinations: [],
     test_preparation: [],
@@ -52,7 +50,7 @@ const ConsultancyForm = ({
     logo: null,
     brochure: null,
     cover_photo: null,
-    deleted_gallery_images:[],
+    deleted_gallery_images: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -70,13 +68,12 @@ const ConsultancyForm = ({
           setFormData((prev) => ({
             ...prev,
             ...data,
-            is_verified: data.is_verified ?? prev.is_verified, // ✅ Preserve toggle state
             study_abroad_destinations: data.study_abroad_destinations?.map((d) => d.id) || [],
             test_preparation: data.test_preparation?.map((e) => e.id) || [],
             partner_universities: data.partner_universities?.map((u) => u.id) || [],
             districts: data.districts?.map((d) => d.id) || [],
             branches: data.branches || [],
-            gallery_images: data.gallery_images.map(img => ({ // make it so that all the gallery_images have the same structure
+            gallery_images: data.gallery_images.map((img) => ({
               ...img,
               image: img.image || img,
               isNew: false,
@@ -100,36 +97,6 @@ const ConsultancyForm = ({
       }));
     }
   }, [formData.name]);
-
-  // ✅ Handle verification toggle
-  const handleVerificationChange = async () => {
-    const newStatus = !formData.is_verified;
-
-    // ✅ Optimistically update UI before API call
-    setFormData((prev) => ({
-      ...prev,
-      is_verified: newStatus,
-    }));
-
-    try {
-      const updatedData = await toggleConsultancyVerification(formData.slug, newStatus);
-      console.log("✅ API Response after toggle:", updatedData);
-
-      // ✅ Ensure UI reflects the API response properly
-      setFormData((prev) => ({
-        ...prev,
-        is_verified: updatedData.is_verified,
-      }));
-    } catch (error) {
-      console.error("❌ Toggle failed:", error);
-
-      // ❌ Revert UI state if API fails
-      setFormData((prev) => ({
-        ...prev,
-        is_verified: !newStatus,
-      }));
-    }
-  };
 
   // ✅ Handle form submission
   const handleSubmit = async (e) => {
@@ -205,19 +172,6 @@ const ConsultancyForm = ({
 
         {/* About & Services */}
         <ConsultancyAbout formData={formData} setFormData={setFormData} />
-
-        {/* Verification Toggle */}
-        <div className="mt-4">
-          <label className="flex items-center text-gray-700 font-medium">
-            <input
-              type="checkbox"
-              checked={formData.is_verified}
-              onChange={handleVerificationChange} // ✅ Toggle on change
-              className="h-5 w-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <span className="ml-2">Verified Consultancy</span>
-          </label>
-        </div>
 
         {/* Submit & Cancel Buttons */}
         <div className="flex gap-4 mt-6">
