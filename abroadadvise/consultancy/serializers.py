@@ -1,9 +1,14 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import Consultancy, ConsultancyGallery, ConsultancyBranch
 from core.models import District, VerifiedItem
 from destination.models import Destination
 from exam.models import Exam
 from university.models import University
+from inquiry.models import Inquiry  # Import Inquiry model
+from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
+
+User = get_user_model()
 
 # ✅ Destination Serializer
 class DestinationSerializer(serializers.ModelSerializer):
@@ -52,7 +57,7 @@ class ConsultancyGallerySerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.image.url) if request and obj.image else None
 
-# ✅ District Serializer (Now Including Slug)
+# ✅ District Serializer
 class DistrictSerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()
 
@@ -66,28 +71,34 @@ class ConsultancyBranchSerializer(serializers.ModelSerializer):
         model = ConsultancyBranch
         fields = ["id", "branch_name", "location", "phone", "email"]
 
-# ✅ Consultancy Serializer (FULL)
+# ✅ Consultancy Serializer
 class ConsultancySerializer(serializers.ModelSerializer):
-    slug = serializers.CharField(required=False, allow_blank=True)  # ✅ Allow slug updates
+    user_email = serializers.EmailField(source="user.email", read_only=True)
+    slug = serializers.CharField(required=False, allow_blank=True)
     logo = serializers.SerializerMethodField()
     cover_photo = serializers.SerializerMethodField()
     brochure = serializers.SerializerMethodField()
     gallery_images = ConsultancyGallerySerializer(many=True, read_only=True)
-    districts = DistrictSerializer(many=True, read_only=True)  # ✅ Added Districts with Slug
-    study_abroad_destinations = DestinationSerializer(many=True, read_only=True)  # ✅ Study Destinations
-    test_preparation = ExamSerializer(many=True, read_only=True)  # ✅ Exams
-    partner_universities = UniversitySerializer(many=True, read_only=True)  # ✅ Universities
+    districts = DistrictSerializer(many=True, read_only=True)
+    study_abroad_destinations = DestinationSerializer(many=True, read_only=True)
+    test_preparation = ExamSerializer(many=True, read_only=True)
+    partner_universities = UniversitySerializer(many=True, read_only=True)
     branches = ConsultancyBranchSerializer(many=True, required=False)
     is_verified = serializers.SerializerMethodField()
+    inquiries = serializers.SerializerMethodField()
+
+    # ✅ Added user creation fields for manual assignment
+    user_email_input = serializers.EmailField(write_only=True, required=True)
+    user_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = Consultancy
         fields = [
-            "id", "user", "name", "slug", "brochure", "logo", "cover_photo", "districts",
-            "verified", "is_verified", "address", "latitude", "longitude", "establishment_date", "website",
-            "email", "phone", "moe_certified", "about", "priority", "google_map_url", "services",
-            "has_branches", "branches", "gallery_images", "study_abroad_destinations",
-            "test_preparation", "partner_universities",
+            "id", "user_email", "user_email_input", "user_password", "name", "slug", "brochure",
+            "logo", "cover_photo", "districts", "verified", "is_verified", "address", "latitude",
+            "longitude", "establishment_date", "website", "email", "phone", "moe_certified",
+            "about", "priority", "google_map_url", "services", "has_branches", "branches",
+            "gallery_images", "study_abroad_destinations", "test_preparation", "partner_universities",'inquiries',
         ]
 
     def get_logo(self, obj):
@@ -104,21 +115,48 @@ class ConsultancySerializer(serializers.ModelSerializer):
 
     def get_is_verified(self, obj):
         return obj.verified.verified if obj.verified else False
+    
+    def get_inquiries(self, obj):
+        """
+        Retrieve all inquiries related to the consultancy.
+        This can be filtered based on the consultancy ID.
+        """
+        inquiries = Inquiry.objects.filter(consultancy=obj)
+        return InquirySerializer(inquiries, many=True).data  # Serialize and return inquiries
 
     def create(self, validated_data):
+        # ✅ Extract user data
+        user_email = validated_data.pop("user_email_input")
+        user_password = validated_data.pop("user_password")
+
+        # ✅ Extract related fields
         study_abroad_destinations = validated_data.pop("study_abroad_destinations", [])
         test_preparation = validated_data.pop("test_preparation", [])
         partner_universities = validated_data.pop("partner_universities", [])
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
+        # ✅ Create Consultancy
         consultancy = Consultancy.objects.create(**validated_data)
 
+        # ✅ Assign the user manually
+        username = user_email.split("@")[0]
+        user, created = User.objects.get_or_create(username=username, email=user_email)
+        if created:
+            user.set_password(user_password)
+            user.save()
+        
+        # ✅ Assign the user to consultancy
+        consultancy.user = user
+        consultancy.save(update_fields=["user"])
+
+        # ✅ Assign many-to-many fields
         consultancy.study_abroad_destinations.set(study_abroad_destinations)
         consultancy.test_preparation.set(test_preparation)
         consultancy.partner_universities.set(partner_universities)
         consultancy.districts.set(districts)
 
+        # ✅ Assign branches
         for branch in branches_data:
             ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
 
@@ -131,6 +169,10 @@ class ConsultancySerializer(serializers.ModelSerializer):
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
+        # ✅ Prevent modifying the user account
+        validated_data.pop("user_email_input", None)
+        validated_data.pop("user_password", None)
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -140,6 +182,7 @@ class ConsultancySerializer(serializers.ModelSerializer):
         instance.partner_universities.set(partner_universities)
         instance.districts.set(districts)
 
+        # ✅ Update branches
         instance.branches.all().delete()
         for branch in branches_data:
             ConsultancyBranch.objects.create(consultancy=instance, **branch)

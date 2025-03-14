@@ -35,7 +35,7 @@ const LoginPage = () => {
 
   return (
     <div className="login-container">
-      <h2>Admin Login</h2>
+      <h2>Admin Page Login</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleLogin}>
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />

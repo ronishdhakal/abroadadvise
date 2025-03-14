@@ -1297,3 +1297,78 @@ export const getInquiryById = async (id) => {
       throw error;
   }
 };
+
+// For Profile
+
+export const fetchConsultancyProfile = async (token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/dashboard/consultancy-profile/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching consultancy profile:", error);
+    throw error;
+  }
+};
+
+// For Constulancy Dashboard
+
+// ✅ Fetch Consultancy Dashboard Data for Logged-in Consultancy User
+export const fetchConsultancyDashboard = async () => {
+  const token = localStorage.getItem("accessToken");
+
+  if (!token) {
+      throw new Error("User not logged in");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/`, {
+      method: "GET",
+      headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+      },
+  });
+
+  if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Consultancy API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to fetch consultancy profile");
+  }
+
+  const data = await response.json();
+  
+  // 🔍 Debugging Log: Check if districts are returned
+  console.log("✅ Consultancy Dashboard Response:", data);
+  
+  return data;
+};
+
+
+
+// ✅ Update Consultancy Profile for Consultancy Users
+// ✅ Update Consultancy Profile for Consultancy Users (Only send relevant fields)
+export const updateConsultancyDashboard = async (updateData) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+      throw new Error("User not logged in");
+  }
+
+  const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/update/`, {
+      method: "PATCH",
+      headers: {
+          Authorization: `Bearer ${token}`
+      },
+      body: updateData, // ✅ Only send relevant fields, NOT entire formData
+  });
+
+  if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API Response Error:", errorData);
+      throw new Error(errorData.error || "Failed to update consultancy profile");
+  }
+
+  return await response.json();
+};

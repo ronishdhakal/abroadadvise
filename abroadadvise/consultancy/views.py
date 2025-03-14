@@ -1,5 +1,6 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -55,10 +56,15 @@ def dashboard_consultancy_list(request):
 
 # ✅ Create Consultancy
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])  # ✅ User must be logged in
 @parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
-    """ ✅ Creates a new consultancy (Handles Districts, Branches, Study Destinations, Test Prep, Universities, File Uploads, and Gallery) """
-    
+    """ ✅ Creates a new consultancy and associates it with the logged-in user. """
+    user = request.user  # ✅ Get the logged-in user
+
+    if not user:
+        return Response({"error": "User authentication failed."}, status=status.HTTP_401_UNAUTHORIZED)
+
     data = request.data.copy()
 
     # ✅ Convert JSON string to lists
@@ -78,10 +84,13 @@ def create_consultancy(request):
         slug = f"{original_slug}-{counter}"
         counter += 1
     data["slug"] = slug
+    
+    # ✅ Set the user ID explicitly
+    data["user"] = user.id  # ✅ This ensures the consultancy is linked to the user
 
     serializer = ConsultancySerializer(data=data)
     if serializer.is_valid():
-        consultancy = serializer.save()
+        consultancy = serializer.save(user=user)  # ✅ Explicitly link user to consultancy
 
         # ✅ Assign ManyToMany Fields
         consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
@@ -110,6 +119,7 @@ def create_consultancy(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ✅ Update Consultancy
 @api_view(["PUT", "PATCH"])
@@ -209,3 +219,80 @@ def delete_consultancy(request, slug):
     consultancy.delete()
 
     return Response({"message": "Consultancy deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+# ✅ Dashboard - Fetch Logged-in User's Consultancy Profile
+@api_view(["GET"])
+def consultancy_dashboard_view(request):
+    """ ✅ Fetch the consultancy profile linked to the logged-in user. """
+    user = request.user
+
+    # Debugging: Print user and token details
+    print("🔹 User:", user)
+    print("🔹 Authenticated:", user.is_authenticated)
+
+    if not user.is_authenticated:
+        return Response({"error": "User authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
+
+    consultancy = Consultancy.objects.filter(id=user.consultancy.id).first()
+    if not consultancy:
+        return Response({"error": "No consultancy is linked to this user."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ConsultancySerializer(consultancy, context={"request": request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# ✅ New Update API for Consultancy Users
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def update_consultancy_dashboard(request):
+    """ ✅ Allows a logged-in consultancy user to update their own profile."""
+    user = request.user
+    
+    if not hasattr(user, "consultancy") or not user.consultancy:
+        return Response({"error": "User is not linked to any consultancy."}, status=status.HTTP_403_FORBIDDEN)
+    
+    consultancy = user.consultancy  # ✅ Get the consultancy linked to the user
+    data = request.data.copy()
+
+    # ✅ Convert JSON string fields to lists
+    branches_data = json.loads(data.get("branches", "[]"))
+    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
+    test_preparation = json.loads(data.get("test_preparation", "[]"))
+    partner_universities = json.loads(data.get("partner_universities", "[]"))
+    districts = json.loads(data.get("districts", "[]"))
+
+    serializer = ConsultancySerializer(consultancy, data=data, partial=True)
+    
+    if serializer.is_valid():
+        consultancy = serializer.save()
+
+        # ✅ Update ManyToMany relationships
+        consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
+        consultancy.test_preparation.set(Exam.objects.filter(id__in=test_preparation))
+        consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
+        consultancy.districts.set(District.objects.filter(id__in=districts))
+
+        # ✅ Handle File Uploads (Update only if a new file is provided)
+        if "logo" in request.FILES:
+            consultancy.logo = request.FILES["logo"]
+        if "cover_photo" in request.FILES:
+            consultancy.cover_photo = request.FILES["cover_photo"]
+        if "brochure" in request.FILES:
+            consultancy.brochure = request.FILES["brochure"]
+
+        consultancy.save()
+
+        # ✅ Update Branches (Delete old ones and create new ones)
+        consultancy.branches.all().delete()
+        for branch in branches_data:
+            ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
+
+        # ✅ Save New Gallery Images (Keep old ones, add new ones)
+        for file in request.FILES.getlist("gallery_images"):
+            ConsultancyGallery.objects.create(consultancy=consultancy, image=file)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

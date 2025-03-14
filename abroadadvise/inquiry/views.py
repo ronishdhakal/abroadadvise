@@ -68,11 +68,19 @@ def submit_inquiry(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ✅ List all inquiries (No authentication required)
+# ✅ List all inquiries (Filtered by consultancy if consultancy_id is provided)
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
-    queryset = Inquiry.objects.all().order_by("-created_at")  # ✅ Show latest first
     pagination_class = InquiryPagination  # ✅ Enable pagination
+
+    def get_queryset(self):
+        queryset = Inquiry.objects.all().order_by("-created_at")  # Show latest first
+
+        consultancy_id = self.request.query_params.get('consultancy_id', None)  # Get consultancy_id from query params
+        if consultancy_id:
+            queryset = queryset.filter(consultancy_id=consultancy_id)  # Filter by consultancy_id if provided
+
+        return queryset
 
 
 # ✅ Retrieve a single inquiry (No authentication required)

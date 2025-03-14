@@ -13,6 +13,7 @@ class InquirySerializer(serializers.ModelSerializer):
     exam_name = serializers.CharField(source="exam.name", read_only=True)
     event_name = serializers.CharField(source="event.name", read_only=True)
     course_name = serializers.CharField(source="course.name", read_only=True)
+    consultancy_id = serializers.IntegerField(source="consultancy.id", read_only=True)  # Add consultancy_id here
 
     class Meta:
         model = Inquiry
@@ -30,5 +31,6 @@ class InquirySerializer(serializers.ModelSerializer):
             "exam_name",
             "event_name",
             "course_name",
+            "consultancy_id",  # Ensure consultancy_id is included
             "created_at",
         ]
