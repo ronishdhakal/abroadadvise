@@ -1,6 +1,8 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from authentication.permissions import IsUniversityUser  # ✅ Correct import path
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
@@ -12,6 +14,9 @@ from core.filters import UniversityFilter
 from .models import University
 from .serializers import UniversitySerializer
 import json
+
+from inquiry.models import Inquiry  # Import Inquiry model
+from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
 
 # ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
@@ -155,3 +160,61 @@ def delete_university(request, slug):
 
     except University.DoesNotExist:
         return Response({"error": "University not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def university_dashboard_view(request):
+    """ ✅ Fetch the university profile linked to the logged-in user. """
+    user = request.user
+
+    # ✅ Corrected: Check if `user.university` exists, not `user.university_id`
+    if not hasattr(user, "university") or not user.university:
+        return Response({"error": "User is not linked to any university."}, status=403)
+
+    university = user.university  # ✅ Corrected: Use `user.university` directly
+    serializer = UniversitySerializer(university, context={"request": request})
+
+    # ✅ Fetch inquiries related to the university
+    inquiries = Inquiry.objects.filter(university=university).order_by("-created_at")
+    inquiry_serializer = InquirySerializer(inquiries, many=True)
+
+    response_data = serializer.data
+    response_data["inquiries"] = inquiry_serializer.data  # Include inquiries in response
+
+    return Response(response_data, status=200)
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated, IsUniversityUser])
+@parser_classes([MultiPartParser, FormParser])
+def update_university_dashboard(request):
+    """ ✅ Allows a logged-in university user to update their own profile."""
+    user = request.user
+
+    # Ensure user is linked to a university
+    if not hasattr(user, "university") or not user.university:
+        return Response({"error": "User is not linked to any university."}, status=status.HTTP_403_FORBIDDEN)
+
+    university = user.university  # ✅ Get the university linked to the user
+    data = request.data.copy()
+
+    serializer = UniversitySerializer(university, data=data, partial=True)
+
+    if serializer.is_valid():
+        university = serializer.save()
+
+        # ✅ Handle File Uploads (Update only if a new file is provided)
+        if "logo" in request.FILES:
+            university.logo = request.FILES["logo"]
+        if "cover_photo" in request.FILES:
+            university.cover_photo = request.FILES["cover_photo"]
+        if "brochure" in request.FILES:
+            university.brochure = request.FILES["brochure"]
+
+        university.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

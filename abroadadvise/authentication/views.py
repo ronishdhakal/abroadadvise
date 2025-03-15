@@ -40,6 +40,7 @@ def register(request):
 
 
 # ✅ User Login with JWT Authentication (Ensures role-based authentication)
+# ✅ User Login with JWT Authentication (Supports University & Consultancy Login)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -57,9 +58,12 @@ def login_view(request):
 
         refresh = RefreshToken.for_user(user)
 
-        # Fetch consultancy_id properly
+        # Fetch consultancy or university ID
         consultancy = Consultancy.objects.filter(user=user).first()
+        university = University.objects.filter(user=user).first()
+
         consultancy_id = consultancy.id if consultancy else None
+        university_id = university.id if university else None
 
         return Response({
             "user": {
@@ -68,6 +72,7 @@ def login_view(request):
                 "role": user.role,
             },
             "consultancy_id": consultancy_id,
+            "university_id": university_id,
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         })
@@ -79,6 +84,7 @@ def login_view(request):
     except Exception as e:
         print("🚨 Server Error:", str(e))  # 🔥 Debug
         return Response({"error": "Something went wrong"}, status=500)
+
 
 
 # ✅ Protected View: Only Consultancy Users Can Access Their Own Consultancy

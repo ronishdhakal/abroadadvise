@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, generics
 from .models import Inquiry
@@ -68,17 +68,23 @@ def submit_inquiry(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# ✅ List all inquiries (Filtered by consultancy if consultancy_id is provided)
+# ✅ Superadmin Inquiry List (Filter by Consultancy or University)
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
     pagination_class = InquiryPagination  # ✅ Enable pagination
+    permission_classes = [IsAuthenticated]  # ✅ Only authenticated users
 
     def get_queryset(self):
+        user = self.request.user  # ✅ Get logged-in user
         queryset = Inquiry.objects.all().order_by("-created_at")  # Show latest first
 
-        consultancy_id = self.request.query_params.get('consultancy_id', None)  # Get consultancy_id from query params
-        if consultancy_id:
-            queryset = queryset.filter(consultancy_id=consultancy_id)  # Filter by consultancy_id if provided
+        # ✅ If the user is a consultancy, filter by consultancy ID
+        if hasattr(user, "consultancy") and user.consultancy:
+            queryset = queryset.filter(consultancy=user.consultancy)
+
+        # ✅ If the user is a university, filter by university ID
+        if hasattr(user, "university") and user.university:
+            queryset = queryset.filter(university=user.university)
 
         return queryset
 
