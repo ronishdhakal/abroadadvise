@@ -12,21 +12,24 @@ import EventAbout from "./EventAbout";
 import EventOther from "./EventOther";
 import InquiryModal from "../../components/InquiryModal"; // ✅ Import Inquiry Modal
 
+// Importing 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
+
 export default function EventDetail() {
   const router = useRouter();
   const { slug } = router.query;
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
   const [event, setEvent] = useState(null);
-  const [error, setError] = useState(null);
   const [otherEvents, setOtherEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState({
     entityType: "event",
     entityId: null,
     entityName: "",
   });
-  const [isLoading, setIsLoading] = useState(true); // ✅ Added Loading State
 
   useEffect(() => {
     if (!router.isReady || !slug) return;
@@ -34,12 +37,16 @@ export default function EventDetail() {
     const fetchEvent = async () => {
       try {
         const res = await fetch(`${API_URL}/event/${slug}/`);
-        if (!res.ok) throw new Error("Event not found.");
+        if (!res.ok) {
+          setIsNotFound(true); // ✅ Mark as 404 instead of throwing an error
+          return;
+        }
+
         const data = await res.json();
         setEvent(data);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError("Failed to load event details.");
+        setIsNotFound(true); // ✅ Mark as 404 if API call fails
       } finally {
         setIsLoading(false);
       }
@@ -69,12 +76,15 @@ export default function EventDetail() {
     setIsModalOpen(true);
   };
 
-  if (isLoading)
+  // ✅ Show loading while fetching
+  if (isLoading) {
     return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
-  if (error)
-    return <p className="text-center text-red-600 font-semibold mt-10">{error}</p>;
-  if (!event)
-    return <p className="text-center text-gray-600 font-semibold mt-10">Event not found.</p>;
+  }
+
+  // ✅ Redirect to 404 if event is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>

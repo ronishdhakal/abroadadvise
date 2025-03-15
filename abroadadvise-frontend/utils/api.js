@@ -1412,3 +1412,81 @@ export const updateConsultancyDashboard = async (updateData) => {
     throw error;
   }
 };
+
+
+// ✅ Fetch University Dashboard
+export const fetchUniversityDashboard = async () => {
+  const token = localStorage.getItem("access_token"); // ✅ Ensure consistency
+  const universityId = localStorage.getItem("university_id");
+
+  console.log("🔍 Checking university_id in localStorage:", universityId);
+
+  if (!token) throw new Error("User not logged in");
+  if (!universityId) throw new Error("University ID is missing. Please log in again.");
+
+  try {
+    const universityResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/university/dashboard/`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!universityResponse.ok) {
+      const errorResponse = await universityResponse.json();
+      console.error("❌ API Error Response:", errorResponse);
+      throw new Error(errorResponse.error || "Failed to fetch university profile");
+    }
+
+    let universityData = await universityResponse.json();
+    console.log("✅ University Dashboard Data:", universityData);
+    return universityData;
+  } catch (error) {
+    console.error("❌ Fetch University Dashboard Failed:", error);
+    throw error;
+  }
+};
+
+// ✅ Update University Dashboard Profile
+export const updateUniversityDashboard = async (updateData) => {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    throw new Error("User not logged in");
+  }
+
+  try {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/university/dashboard/update/`;
+    console.log("📤 Sending Update Request to API:", apiUrl);
+
+    const response = await fetch(apiUrl, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: updateData,
+    });
+
+    // ✅ Check if API response is HTML (Error case)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("text/html")) {
+      throw new Error("❌ API returned HTML instead of JSON. Possible server error.");
+    }
+
+    const responseData = await response.json();
+    console.log("✅ API Response:", responseData);
+
+    if (!response.ok) {
+      throw new Error(responseData.error || "Failed to update university profile");
+    }
+
+    return responseData;
+  } catch (error) {
+    console.error("❌ Update Failed:", error);
+    throw error;
+  }
+};
+

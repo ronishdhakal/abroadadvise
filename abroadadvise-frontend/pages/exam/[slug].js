@@ -16,6 +16,9 @@ import Footer from "../../components/footer";
 import Header from "../../components/header";
 import InquiryModal from "../../components/InquiryModal";
 
+// Importing custom 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
+
 const ExamDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
@@ -23,7 +26,7 @@ const ExamDetailPage = () => {
 
   const [exam, setExam] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState({
     entityType: "exam",
@@ -37,7 +40,11 @@ const ExamDetailPage = () => {
     const fetchExam = async () => {
       try {
         const res = await fetch(`${API_URL}/exam/${slug.toLowerCase()}/`);
-        if (!res.ok) throw new Error("Failed to fetch exam details.");
+        if (!res.ok) {
+          setIsNotFound(true); // ✅ Mark as 404 instead of throwing an error
+          return;
+        }
+
         const data = await res.json();
   
         console.log("✅ Full Exam Data:", data);  // ✅ Debug entire response
@@ -46,7 +53,7 @@ const ExamDetailPage = () => {
         setExam(data);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError("Failed to load exam details.");
+        setIsNotFound(true); // ✅ Mark as 404 if API call fails
       } finally {
         setLoading(false);
       }
@@ -70,9 +77,15 @@ const ExamDetailPage = () => {
     setIsModalOpen(true);
   };
 
-  if (loading) return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
-  if (error) return <p className="text-center text-red-600 font-semibold mt-10">{error}</p>;
-  if (!exam) return <p className="text-center text-gray-600 font-semibold mt-10">Exam not found.</p>;
+  // ✅ Show loading while fetching
+  if (loading) {
+    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  }
+
+  // ✅ Redirect to 404 if exam is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>

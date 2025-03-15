@@ -6,32 +6,52 @@ import Footer from "../../components/footer";
 import BlogHeader from "./BlogHeader";
 import BlogBody from "./BlogBody";
 import BlogComment from "./BlogComment";
+import Custom404 from "../404"; // ✅ Import 404 Page
 
 export default function BlogDetail() {
   const router = useRouter();
   const { slug } = router.query;
   const [blog, setBlog] = useState(null);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
 
   // ✅ Fetch Blog Post by Slug
   useEffect(() => {
-    if (slug) {
-      const fetchBlog = async () => {
-        try {
-          console.log(`Fetching blog from: ${process.env.NEXT_PUBLIC_API_URL}/blog/${slug}/`);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${slug}/`);
-          if (!response.ok) throw new Error("Blog post not found");
-          const data = await response.json();
-          console.log("Fetched Blog Data:", data);
-          setBlog(data);
-        } catch (error) {
-          setError(error.message);
-        }
-      };
+    if (!slug) return;
 
-      fetchBlog();
-    }
+    const fetchBlog = async () => {
+      try {
+        console.log(`Fetching blog from: ${process.env.NEXT_PUBLIC_API_URL}/blog/${slug}/`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${slug}/`);
+
+        if (!response.ok) {
+          setIsNotFound(true); // ✅ Instead of throwing an error, mark as 404
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched Blog Data:", data);
+        setBlog(data);
+      } catch (error) {
+        console.error("Blog Fetch Error:", error);
+        setIsNotFound(true); // ✅ Mark as 404 if API call fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlog();
   }, [slug]);
+
+  // ✅ Show loading while fetching
+  if (loading) {
+    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  }
+
+  // ✅ Show 404 page if the blog is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>
@@ -45,7 +65,6 @@ export default function BlogDetail() {
           
           {/* ✅ Main Content Area */}
           <div className="w-full lg:w-3/4 space-y-8">
-            {error && <p className="text-center text-red-500">Error: {error}</p>}
             {blog && (
               <>
                 <BlogHeader blog={blog} />

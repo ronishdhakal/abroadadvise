@@ -19,41 +19,63 @@ import CourseFeatures from "./CourseFeatures";
 import CourseAbout from "./CourseAbout";
 import CourseConsultancies from "./CourseConsultancies"; // ✅ New Component
 
+// Importing 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
+
 export default function CourseDetail() {
   const router = useRouter();
   const { slug } = router.query;
   const [course, setCourse] = useState(null);
   const [consultancies, setConsultancies] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
 
   useEffect(() => {
-    if (slug) {
-      // ✅ Fetch Course Details
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/${slug}/`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Course not found");
-          }
-          return response.json();
-        })
-        .then(data => {
-          setCourse(data);
-          console.log("Fetched Course Data:", data);
+    if (!slug) return;
 
-          // ✅ Fetch Consultancies (only if university exists)
-          if (data.university) {
-            fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?university=${data.university.slug}`)
-              .then(res => res.json())
-              .then(result => {
-                setConsultancies(result.results || []);
-                console.log("Fetched Consultancies:", result.results);
-              })
-              .catch(err => console.error("Error fetching consultancies:", err));
-          }
-        })
-        .catch(error => setError(error.message));
-    }
+    const fetchCourse = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/${slug}/`);
+
+        if (!response.ok) {
+          setIsNotFound(true); // ✅ Instead of throwing an error, mark as 404
+          return;
+        }
+
+        const data = await response.json();
+        setCourse(data);
+        console.log("Fetched Course Data:", data);
+
+        // ✅ Fetch Consultancies (only if university exists)
+        if (data.university) {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?university=${data.university.slug}`)
+            .then(res => res.json())
+            .then(result => {
+              setConsultancies(result.results || []);
+              console.log("Fetched Consultancies:", result.results);
+            })
+            .catch(err => console.error("Error fetching consultancies:", err));
+        }
+      } catch (error) {
+        console.error("Course Fetch Error:", error);
+        setIsNotFound(true); // ✅ Mark as 404 if API call fails
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
   }, [slug]);
+
+  // ✅ Show loading while fetching
+  if (loading) {
+    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  }
+
+  // ✅ Show 404 page if the course is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>
@@ -64,7 +86,6 @@ export default function CourseDetail() {
 
       {/* ✅ Main Layout */}
       <main className="bg-gray-50 text-black min-h-screen pb-12">
-        {error && <p className="text-center text-red-500">Error: {error}</p>}
         {course && (
           <>
             {/* ✅ Course Header */}

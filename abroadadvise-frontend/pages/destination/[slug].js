@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
-import Header from "@/components/header"; // ✅ Kept absolute import
-import Footer from "@/components/footer"; // ✅ Kept absolute import
-import InquiryModal from "@/components/InquiryModal"; // ✅ Kept absolute import
-import DestinationHeader from "../destination/DestinationHeader"; // ✅ Fixed relative import
-import DestinationOverview from "../destination/DestinationOverview"; 
+import Header from "@/components/header"; // ✅ Absolute import
+import Footer from "@/components/footer"; // ✅ Absolute import
+import InquiryModal from "@/components/InquiryModal"; // ✅ Absolute import
+
+// Importing destination components
+import DestinationHeader from "../destination/DestinationHeader";
+import DestinationOverview from "../destination/DestinationOverview";
 import DestinationConsultancies from "../destination/DestinationConsultancies";
 import DestinationUniversities from "../destination/DestinationUniversities";
 import DestinationCourses from "../destination/DestinationCourses";
@@ -17,6 +19,9 @@ import DestinationDocumentsRequired from "../destination/DestinationDocumentsReq
 import DestinationScholarships from "../destination/DestinationScholarships";
 import DestinationMoreInformation from "../destination/DestinationMoreInformation";
 import DestinationOtherDestinations from "../destination/DestinationOtherDestinations";
+
+// Importing custom 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
 
 const DestinationDetail = () => {
   const router = useRouter();
@@ -28,7 +33,7 @@ const DestinationDetail = () => {
   const [consultancies, setConsultancies] = useState([]);
   const [destinations, setDestinations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
 
   // ✅ Inquiry Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,7 +49,11 @@ const DestinationDetail = () => {
 
         // Fetch destination details
         const destRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/${slug}/`);
-        if (!destRes.ok) throw new Error(`Failed to fetch destination: ${destRes.status}`);
+        if (!destRes.ok) {
+          setIsNotFound(true); // ✅ Mark as 404 instead of throwing an error
+          return;
+        }
+
         const destData = await destRes.json();
         console.log("✅ Destination Data:", destData);
         setDestination(destData);
@@ -79,7 +88,7 @@ const DestinationDetail = () => {
 
       } catch (err) {
         console.error("❌ Error fetching data:", err);
-        setError("Failed to load destination details.");
+        setIsNotFound(true); // ✅ Mark as 404 on error
       } finally {
         setLoading(false);
         console.log("✅ Data fetching complete.");
@@ -89,9 +98,13 @@ const DestinationDetail = () => {
     fetchData();
   }, [slug]);
 
+  // ✅ Show loading while fetching
   if (loading) return <p className="text-center text-gray-600 mt-4">Loading...</p>;
-  if (error) return <p className="text-red-500 text-center mt-4">{error}</p>;
-  if (!destination) return <p className="text-gray-500 text-center mt-4">Destination not found.</p>;
+
+  // ✅ Redirect to 404 if destination is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>

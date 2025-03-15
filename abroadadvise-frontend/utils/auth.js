@@ -12,11 +12,29 @@ export const getRefreshToken = () => {
   return null;
 };
 
-export const setAuthToken = (accessToken, refreshToken) => {
+export const getUserRole = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("user_role") || null;
+  }
+  return null;
+};
+
+export const setAuthToken = (accessToken, refreshToken, role, consultancyId = null, universityId = null) => {
   if (typeof window !== "undefined") {
     localStorage.setItem("access_token", accessToken);
     if (refreshToken) {
       localStorage.setItem("refresh_token", refreshToken);
+    }
+    if (role) {
+      localStorage.setItem("user_role", role);
+    }
+
+    // ✅ Store respective IDs
+    if (role === "consultancy" && consultancyId) {
+      localStorage.setItem("consultancy_id", consultancyId);
+    }
+    if (role === "university" && universityId) {
+      localStorage.setItem("university_id", universityId);
     }
   }
 };
@@ -25,6 +43,9 @@ export const removeAuthToken = () => {
   if (typeof window !== "undefined") {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("consultancy_id");
+    localStorage.removeItem("university_id");
   }
 };
 
@@ -53,7 +74,7 @@ export const refreshAccessToken = async () => {
     }
 
     const data = await response.json();
-    setAuthToken(data.access, refreshToken); // Keep the same refresh token
+    setAuthToken(data.access, refreshToken, getUserRole()); // Keep the same refresh token and role
     return data.access;
   } catch (err) {
     console.error("Error refreshing token:", err);

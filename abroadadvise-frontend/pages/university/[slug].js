@@ -1,5 +1,4 @@
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 import Head from "next/head";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -14,11 +13,16 @@ import UniversityFacilities from "./UniversityFacilities";
 import UniversityScholarship from "./UniversityScholarship";
 import UniversityEligibility from "./UniversityEligibility";
 
+// Importing custom 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
+
 export async function getServerSideProps({ params }) {
   try {
     // ✅ Fetch University Details
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/${params.slug}/`);
-    if (!res.ok) throw new Error("Failed to fetch university data.");
+    if (!res.ok) {
+      return { notFound: true }; // ✅ Return 404 page
+    }
     const university = await res.json();
 
     // ✅ Fetch Consultancies (using university slug)
@@ -38,21 +42,16 @@ export async function getServerSideProps({ params }) {
     };
   } catch (error) {
     console.error("Error fetching data:", error);
-    return {
-      props: {
-        university: null,
-        consultancies: [],
-        courses: [],
-      },
-    };
+    return { notFound: true }; // ✅ Return 404 page on failure
   }
 }
 
 export default function UniversityDetail({ university, consultancies, courses }) {
   const router = useRouter();
 
+  // ✅ Redirect to 404 page if university is not found
   if (!university) {
-    return <p className="text-center text-gray-500">University not found.</p>;
+    return <Custom404 />;
   }
 
   return (

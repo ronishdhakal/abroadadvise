@@ -23,6 +23,9 @@ import InquiryModal from "../../components/InquiryModal"; // ✅ Dynamic Inquiry
 import Footer from "../../components/footer";
 import Header from "../../components/header";
 
+// Import Next.js 404 page
+import Custom404 from "../404"; // ✅ Import 404 page
+
 const ConsultancyDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
@@ -30,7 +33,7 @@ const ConsultancyDetailPage = () => {
 
   const [consultancy, setConsultancy] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState({
     entityType: "consultancy",
@@ -44,12 +47,17 @@ const ConsultancyDetailPage = () => {
     const fetchConsultancy = async () => {
       try {
         const res = await fetch(`${API_URL}/consultancy/${slug}/`);
-        if (!res.ok) throw new Error("Failed to fetch consultancy details.");
+
+        if (!res.ok) {
+          setIsNotFound(true); // ✅ Instead of throwing an error, mark it as 404
+          return;
+        }
+
         const data = await res.json();
         setConsultancy(data);
       } catch (err) {
         console.error("Fetch error:", err);
-        setError("Failed to load consultancy details.");
+        setIsNotFound(true); // ✅ If any error occurs, mark it as 404
       } finally {
         setLoading(false);
       }
@@ -72,12 +80,14 @@ const ConsultancyDetailPage = () => {
     setIsModalOpen(true);
   };
 
+  // ✅ Show loading indicator while fetching data
   if (loading)
     return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
-  if (error)
-    return <p className="text-center text-red-600 font-semibold mt-10">{error}</p>;
-  if (!consultancy)
-    return <p className="text-center text-gray-600 font-semibold mt-10">Consultancy not found.</p>;
+
+  // ✅ Redirect to 404 if consultancy is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>
@@ -105,10 +115,6 @@ const ConsultancyDetailPage = () => {
 
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
-
-
-            
-
             {/* Destinations Section with Apply Now Buttons */}
             <ConsultancyDestinations
               destinations={consultancy.study_abroad_destinations}
@@ -122,7 +128,6 @@ const ConsultancyDetailPage = () => {
             />
 
             {/* Branches */}
-
             <ConsultancyBranches branches={consultancy.branches} />
             <ConsultancyGallery gallery={consultancy.gallery_images} />
 
@@ -135,8 +140,6 @@ const ConsultancyDetailPage = () => {
             {/* About Section */}
             <ConsultancyAbout consultancy={consultancy} />
             <ConsultancyServices consultancy={consultancy} />
-
-            
           </div>
         </div>
       </main>

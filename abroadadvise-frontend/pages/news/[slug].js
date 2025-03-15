@@ -8,50 +8,73 @@ import NewsBody from "./NewsBody";
 import NewsRelated from "./NewsRelated";
 import NewsComment from "./NewsComment";
 
+// Importing custom 404 page
+import Custom404 from "../404"; // ✅ Import 404 Page
+
 export default function NewsDetail() {
   const router = useRouter();
   const { slug } = router.query;
   const [news, setNews] = useState(null);
   const [relatedNews, setRelatedNews] = useState([]);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
 
   useEffect(() => {
-    if (slug) {
-      const fetchNews = async () => {
-        try {
-          console.log(`Fetching news from: ${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
-          if (!response.ok) throw new Error("News not found");
-          const data = await response.json();
-          console.log("Fetched News Data:", data);
-          setNews(data);
-        } catch (error) {
-          setError(error.message);
-        }
-      };
+    if (!slug) return;
 
-      fetchNews();
-    }
+    const fetchNews = async () => {
+      try {
+        console.log(`Fetching news from: ${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
+
+        if (!response.ok) {
+          setIsNotFound(true); // ✅ Mark as 404 instead of throwing an error
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Fetched News Data:", data);
+        setNews(data);
+      } catch (error) {
+        console.error("Error fetching news:", error);
+        setIsNotFound(true); // ✅ Mark as 404 on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNews();
   }, [slug]);
 
   useEffect(() => {
-    if (slug) {
-      const fetchRelatedNews = async () => {
-        try {
-          console.log(`Fetching related news from: ${process.env.NEXT_PUBLIC_API_URL}/news/related/${slug}/`);
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/related/${slug}/`);
-          if (!response.ok) throw new Error("Failed to fetch related news");
-          const data = await response.json();
-          console.log("Fetched Related News Data:", data.results);
-          setRelatedNews(data.results || []);
-        } catch (error) {
-          console.error("Error fetching related news:", error);
-        }
-      };
+    if (!slug) return;
 
-      fetchRelatedNews();
-    }
+    const fetchRelatedNews = async () => {
+      try {
+        console.log(`Fetching related news from: ${process.env.NEXT_PUBLIC_API_URL}/news/related/${slug}/`);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/related/${slug}/`);
+        if (!response.ok) throw new Error("Failed to fetch related news");
+
+        const data = await response.json();
+        console.log("Fetched Related News Data:", data.results);
+        setRelatedNews(data.results || []);
+      } catch (error) {
+        console.error("Error fetching related news:", error);
+      }
+    };
+
+    fetchRelatedNews();
   }, [slug]);
+
+  // ✅ Show loading while fetching
+  if (loading) {
+    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  }
+
+  // ✅ Redirect to 404 if news is not found
+  if (isNotFound) {
+    return <Custom404 />;
+  }
 
   return (
     <>
@@ -65,7 +88,6 @@ export default function NewsDetail() {
           
           {/* ✅ Main Content Area */}
           <div className="w-full lg:w-3/4 space-y-8">
-            {error && <p className="text-center text-red-500">Error: {error}</p>}
             {news && (
               <>
                 <NewsHeader news={news} />
