@@ -41,66 +41,44 @@ def register(request):
 
 # ✅ User Login with JWT Authentication (Ensures role-based authentication)
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Public access allowed
+@permission_classes([AllowAny])
 def login_view(request):
-    email = request.data.get("email")
-    password = request.data.get("password")
-
     try:
+        print("🔍 Received Login Request:", request.data)  # 🔥 Debug log
+
+        email = request.data.get("email")
+        password = request.data.get("password")
+
         user = User.objects.get(email=email)
 
-        # ✅ Check if the password is correct
         if not check_password(password, user.password):
+            print("❌ Invalid Password")  # 🔥 Debug
             return Response({"error": "Invalid credentials"}, status=400)
 
-        # ✅ Ensure user role is set
-        if user.role is None:
-            return Response({"error": "User role not assigned"}, status=400)
+        refresh = RefreshToken.for_user(user)
+
+        # Fetch consultancy_id properly
+        consultancy = Consultancy.objects.filter(user=user).first()
+        consultancy_id = consultancy.id if consultancy else None
+
+        return Response({
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "role": user.role,
+            },
+            "consultancy_id": consultancy_id,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        })
 
     except User.DoesNotExist:
+        print("❌ User Not Found")  # 🔥 Debug
         return Response({"error": "Invalid credentials"}, status=400)
 
-    refresh = RefreshToken.for_user(user)
-
-    # ✅ Fetch consultancy details if user is associated with a consultancy
-    consultancy_data = None
-    if hasattr(user, 'consultancy_id') and user.consultancy_id:
-        consultancy = Consultancy.objects.filter(id=user.consultancy_id).first()
-        if consultancy:
-            consultancy_data = {
-                "id": consultancy.id,
-                "name": consultancy.name,
-                "email": consultancy.email,
-                "phone": consultancy.phone,
-                "address": consultancy.address,
-                "logo": consultancy.logo.url if consultancy.logo else None,
-            }
-
-    # ✅ Fetch university details if user is associated with a university
-    university_data = None
-    if hasattr(user, 'university_id') and user.university_id:
-        university = University.objects.filter(id=user.university_id).first()
-        if university:
-            university_data = {
-                "id": university.id,
-                "name": university.name,
-                "email": university.email,
-                "phone": university.phone,
-                "address": university.address,
-                "logo": university.logo.url if university.logo else None,
-            }
-
-    return Response({
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-        },
-        "consultancy": consultancy_data,  # ✅ Returns consultancy info if applicable
-        "university": university_data,  # ✅ Returns university info if applicable
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-    })
+    except Exception as e:
+        print("🚨 Server Error:", str(e))  # 🔥 Debug
+        return Response({"error": "Something went wrong"}, status=500)
 
 
 # ✅ Protected View: Only Consultancy Users Can Access Their Own Consultancy

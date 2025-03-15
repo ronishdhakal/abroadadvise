@@ -21,6 +21,8 @@ from exam.models import Exam
 from university.models import University
 from core.models import District
 from .serializers import ConsultancySerializer, ConsultancyBranchSerializer
+from inquiry.models import Inquiry  # Import Inquiry model
+from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
 
 User = get_user_model()
 
@@ -225,22 +227,33 @@ def delete_consultancy(request, slug):
 # ✅ Dashboard - Fetch Logged-in User's Consultancy Profile
 @api_view(["GET"])
 def consultancy_dashboard_view(request):
-    """ ✅ Fetch the consultancy profile linked to the logged-in user. """
+    """ ✅ Fetch the consultancy profile linked to the logged-in user and related inquiries. """
     user = request.user
 
-    # Debugging: Print user and token details
-    print("🔹 User:", user)
-    print("🔹 Authenticated:", user.is_authenticated)
-
+    # Check if user is authenticated
     if not user.is_authenticated:
         return Response({"error": "User authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
+    # Fetch the consultancy linked to the user
     consultancy = Consultancy.objects.filter(id=user.consultancy.id).first()
     if not consultancy:
         return Response({"error": "No consultancy is linked to this user."}, status=status.HTTP_404_NOT_FOUND)
 
+    # Fetch inquiries related to the consultancy
+    inquiries = Inquiry.objects.filter(consultancy=consultancy).order_by('-created_at')  # Fetch inquiries for the consultancy
+
+    # Serialize consultancy data
     serializer = ConsultancySerializer(consultancy, context={"request": request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # Serialize inquiries data
+    inquiry_serializer = InquirySerializer(inquiries, many=True)
+
+    # Return consultancy data and related inquiries without modifying the existing return structure
+    response_data = serializer.data  # Original response structure
+    response_data['inquiries'] = inquiry_serializer.data  # Add inquiries to the response
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
 
 # ✅ New Update API for Consultancy Users
 @api_view(["PATCH"])
