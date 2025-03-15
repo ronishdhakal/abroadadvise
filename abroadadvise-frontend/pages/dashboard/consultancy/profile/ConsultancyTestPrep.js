@@ -2,79 +2,78 @@
 
 import { useEffect, useState } from "react";
 import Select from "react-select";
-import { fetchExams, updateConsultancyDashboard } from "@/utils/api";
+import { fetchExams } from "@/utils/api";
 
-const ConsultancyTestPrep = ({ formData, setFormData }) => {
+const ConsultancyTestPrep = ({ formData, setFormData, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [exams, setExams] = useState([]);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
+  const [selectedExams, setSelectedExams] = useState([]);
 
+  // ✅ Load exams from API
   useEffect(() => {
     if (exams.length === 0) {
       setLoading(true);
       fetchExams()
         .then((data) => setExams(data.results || []))
-        .catch((error) => {
-          console.error("Error fetching exams:", error);
-          setError("Failed to load test preparation classes");
-        })
+        .catch((error) => console.error("Error fetching exams:", error))
         .finally(() => setLoading(false));
     }
   }, []);
 
+  // ✅ Prefill selected test preparation exams
+  useEffect(() => {
+    if (formData.test_preparation?.length && exams.length > 0) {
+      const preselected = exams
+        .filter((exam) => formData.test_preparation.includes(exam.id))
+        .map((exam) => ({
+          value: exam.id,
+          label: exam.name,
+        }));
+
+      setSelectedExams(preselected);
+    }
+  }, [formData.test_preparation, exams]);
+
+  // ✅ Handle test preparation selection
   const handleTestPrepChange = (selectedOptions) => {
+    setSelectedExams(selectedOptions);
+    const updatedExams = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
+
     setFormData((prev) => ({
       ...prev,
-      test_preparation: selectedOptions ? selectedOptions.map((opt) => opt.value) : [],
+      test_preparation: updatedExams,
     }));
-  };
-
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-    try {
-      const updateData = new FormData();
-      updateData.append("test_preparation", JSON.stringify(formData.test_preparation || []));
-      await updateConsultancyDashboard(updateData);
-      setSuccessMessage("Test preparation classes updated successfully!");
-    } catch (err) {
-      setError(err.message || "Failed to update test preparation classes");
-    } finally {
-      setLoading(false);
-    }
+    onUpdate({ test_preparation: updatedExams }); // ✅ Pass changes to parent
   };
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Test Preparation</h2>
 
+      {/* Multi-Select Dropdown */}
       <Select
         isMulti
         isLoading={loading}
-        options={exams.map((exam) => ({ value: exam.id, label: exam.name }))}
-        value={formData.test_preparation
-          ?.map((id) => {
-            const exam = exams.find((e) => e.id === id);
-            return exam ? { value: exam.id, label: exam.name } : null;
-          })
-          .filter(Boolean)}
+        options={exams.map((exam) => ({
+          value: exam.id,
+          label: exam.name,
+        }))}
+        value={selectedExams} // ✅ Prefilled correctly
         onChange={handleTestPrepChange}
         className="w-full"
         placeholder="Select test preparation classes..."
       />
 
-      <button
-        onClick={handleUpdate}
-        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
-        disabled={loading}
-      >
-        {loading ? "Updating..." : "Update Test Preparation"}
-      </button>
-
-      {successMessage && <p className="text-green-600 mt-3">{successMessage}</p>}
-      {error && <p className="text-red-600 mt-3">{error}</p>}
+      {/* Display Selected Test Prep Classes */}
+      {selectedExams.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {selectedExams.map((exam) => (
+            <span key={exam.value} className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+              {exam.label}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

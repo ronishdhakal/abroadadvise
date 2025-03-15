@@ -22,16 +22,26 @@ const ConsultancyLogin = () => {
         if (!response.ok) throw new Error("Invalid email or password");
 
         const data = await response.json();
-        
-        // ✅ Store tokens properly
+        console.log("✅ Login Response:", data);
+
+        // ✅ Store tokens
         localStorage.setItem("accessToken", data.access);
         localStorage.setItem("refreshToken", data.refresh);
 
-        router.push("/dashboard/consultancy");  // Redirect after login
+        // ✅ Store consultancy_id
+        if (data.consultancy_id) {
+            localStorage.setItem("consultancy_id", data.consultancy_id);
+            console.log("✅ Stored consultancy_id:", data.consultancy_id);
+        } else {
+            console.error("❌ Consultancy ID is missing in response!");
+        }
+
+        router.push("/dashboard/consultancy");
     } catch (err) {
         setError(err.message || "Login failed");
     }
 };
+
 
   return (
     <div className="login-container">

@@ -2,13 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { X, Upload, Trash } from "lucide-react";
-import { updateConsultancyDashboard } from "@/utils/api";
 
-const ConsultancyGallery = ({ formData, setFormData }) => {
+const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
   const [previewImages, setPreviewImages] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
   // ✅ Load existing images on mount
   useEffect(() => {
@@ -17,7 +13,7 @@ const ConsultancyGallery = ({ formData, setFormData }) => {
         id: img.id || Date.now(),
         image: typeof img === "string" ? img : img.image,
         file: img.file || null,
-        isNew: !img.id,
+        isNew: !img.id, // Track new uploads
       }));
       setPreviewImages(loadedImages);
     }
@@ -41,14 +37,20 @@ const ConsultancyGallery = ({ formData, setFormData }) => {
       id: Date.now() + Math.random(),
       image: URL.createObjectURL(file),
       file,
-      isNew: true,
+      isNew: true, // Mark as new upload
     }));
 
-    setPreviewImages((prev) => [...prev, ...newImages]);
-    setFormData((prev) => ({
-      ...prev,
-      gallery_images: [...prev.gallery_images, ...newImages],
-    }));
+    // ✅ Update local state
+    const updatedImages = [...previewImages, ...newImages];
+    setPreviewImages(updatedImages);
+
+    // ✅ Append new images to formData
+    const updatedFormData = {
+      ...formData,
+      gallery_images: [...(formData.gallery_images || []), ...newImages], // Add new images to formData
+    };
+    setFormData(updatedFormData);
+    onUpdate(updatedFormData);
   };
 
   // ✅ Handle image deletion
@@ -56,48 +58,23 @@ const ConsultancyGallery = ({ formData, setFormData }) => {
     const imageToDelete = previewImages[index];
     let updatedImages = previewImages.filter((_, i) => i !== index);
 
+    // ✅ Track deleted images only if they exist in the backend
     if (!imageToDelete.isNew) {
+      const updatedDeletedImages = [...(formData.deleted_gallery_images || []), imageToDelete.id];
       setFormData((prev) => ({
         ...prev,
-        deleted_gallery_images: [...(prev.deleted_gallery_images || []), imageToDelete.id],
+        deleted_gallery_images: updatedDeletedImages,
       }));
+      onUpdate({ deleted_gallery_images: updatedDeletedImages });
     }
 
+    // ✅ Update local state
     setPreviewImages(updatedImages);
     setFormData((prev) => ({
       ...prev,
-      gallery_images: updatedImages,
+      gallery_images: updatedImages, // Remove from formData
     }));
-  };
-
-  // ✅ Handle update request (ONLY updates gallery)
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-      const updateData = new FormData();
-
-      previewImages.forEach((img) => {
-        if (img.file) {
-          updateData.append("gallery_images", img.file);
-        }
-      });
-
-      if (formData.deleted_gallery_images?.length) {
-        updateData.append("deleted_gallery_images", JSON.stringify(formData.deleted_gallery_images));
-      }
-
-      // ✅ API Call: Only update gallery images
-      await updateConsultancyDashboard(updateData);
-
-      setSuccessMessage("Gallery updated successfully!");
-    } catch (err) {
-      setError(err.message || "Failed to update gallery");
-    } finally {
-      setLoading(false);
-    }
+    onUpdate({ gallery_images: updatedImages });
   };
 
   return (
@@ -131,19 +108,6 @@ const ConsultancyGallery = ({ formData, setFormData }) => {
           ))}
         </div>
       )}
-
-      {/* Update Button */}
-      <button
-        onClick={handleUpdate}
-        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
-        disabled={loading}
-      >
-        {loading ? "Updating..." : "Update Gallery"}
-      </button>
-
-      {/* Success & Error Messages */}
-      {successMessage && <p className="text-green-600 mt-3">{successMessage}</p>}
-      {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>
   );
 };

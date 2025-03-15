@@ -1,5 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; // Fallback in case env is missing
 import axios from "axios";
+
 
 
 // ✅ Helper Function: Get Auth Headers
@@ -1290,13 +1291,14 @@ export const getAllInquiries = async (page = 1) => {
 */
 export const getInquiryById = async (id) => {
   try {
-      const response = await axios.get(`${API_BASE_URL}/admin/${id}/`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/inquiry/admin/?${id}/`);
       return response.data;
   } catch (error) {
       console.error(`❌ Error fetching inquiry ${id}:`, error);
       throw error;
   }
 };
+
 
 // For Profile
 
@@ -1316,59 +1318,97 @@ export const fetchConsultancyProfile = async (token) => {
 
 // For Constulancy Dashboard
 
-// ✅ Fetch Consultancy Dashboard Data for Logged-in Consultancy User
 export const fetchConsultancyDashboard = async () => {
   const token = localStorage.getItem("accessToken");
+  const consultancyId = localStorage.getItem("consultancy_id");
+
+  console.log("🔍 Checking consultancy_id in localStorage:", consultancyId); // 🔥 Debugging
 
   if (!token) {
-      throw new Error("User not logged in");
+    throw new Error("User not logged in");
+  }
+  if (!consultancyId) {
+    throw new Error("Consultancy ID is missing. Please log in again.");
   }
 
-  const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/`, {
+  // ✅ Fetch consultancy profile
+  const consultancyResponse = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/consultancy/dashboard/`,
+    {
       method: "GET",
       headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-  });
+    }
+  );
 
-  if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Consultancy API Error:", errorData);
-      throw new Error(errorData.detail || "Failed to fetch consultancy profile");
+  if (!consultancyResponse.ok) {
+    throw new Error("Failed to fetch consultancy profile");
   }
 
-  const data = await response.json();
-  
-  // 🔍 Debugging Log: Check if districts are returned
-  console.log("✅ Consultancy Dashboard Response:", data);
-  
-  return data;
+  let consultancyData = await consultancyResponse.json();
+
+  // ✅ Normalize empty fields to avoid undefined issues
+  consultancyData = {
+    ...consultancyData,
+    study_abroad_destinations:
+      Array.isArray(consultancyData.study_abroad_destinations) &&
+      consultancyData.study_abroad_destinations.length > 0
+        ? consultancyData.study_abroad_destinations.map((dest) => dest.id)
+        : [],
+
+    test_preparation:
+      Array.isArray(consultancyData.test_preparation) &&
+      consultancyData.test_preparation.length > 0
+        ? consultancyData.test_preparation.map((exam) => exam.id)
+        : [],
+
+    partner_universities:
+      Array.isArray(consultancyData.partner_universities) &&
+      consultancyData.partner_universities.length > 0
+        ? consultancyData.partner_universities.map((uni) => uni.id)
+        : [],
+
+    inquiries: consultancyData.inquiries || [], // Ensure it's an array
+  };
+
+  console.log("✅ Final Consultancy Dashboard Data:", consultancyData);
+
+  return consultancyData;
 };
 
 
-
-// ✅ Update Consultancy Profile for Consultancy Users
-// ✅ Update Consultancy Profile for Consultancy Users (Only send relevant fields)
 export const updateConsultancyDashboard = async (updateData) => {
   const token = localStorage.getItem("accessToken");
   if (!token) {
-      throw new Error("User not logged in");
+    throw new Error("User not logged in");
   }
 
-  const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/update/`, {
+  try {
+    // ✅ Debugging: Log FormData before sending
+    console.log("📤 Sending FormData to API:");
+    for (let [key, value] of updateData.entries()) {
+      console.log(`🔹 ${key}:`, value);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/update/`, {
       method: "PATCH",
       headers: {
-          Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: updateData, // ✅ Only send relevant fields, NOT entire formData
-  });
+      body: updateData, // ✅ Only send relevant fields
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
       const errorData = await response.json();
-      console.error("API Response Error:", errorData);
+      console.error("❌ API Response Error:", errorData); // ✅ Log exact error response
       throw new Error(errorData.error || "Failed to update consultancy profile");
-  }
+    }
 
-  return await response.json();
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Update Failed:", error);
+    throw error;
+  }
 };

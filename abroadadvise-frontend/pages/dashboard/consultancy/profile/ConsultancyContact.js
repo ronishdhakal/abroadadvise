@@ -3,12 +3,8 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { Globe, Mail, Phone, Calendar, MapPin, Tag } from "lucide-react";
-import { updateConsultancyDashboard } from "@/utils/api";
 
-const ConsultancyContact = ({ formData, setFormData, allDistricts = [] }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
+const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = [] }) => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [selectedDistricts, setSelectedDistricts] = useState([]);
 
@@ -44,45 +40,18 @@ const ConsultancyContact = ({ formData, setFormData, allDistricts = [] }) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    onUpdate({ [name]: type === "checkbox" ? checked : value }); // Pass change to parent
   };
 
   // ✅ Handle district selection
   const handleDistrictChange = (selectedOptions) => {
     setSelectedDistricts(selectedOptions);
+    const updatedDistricts = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
     setFormData((prev) => ({
       ...prev,
-      districts: selectedOptions ? selectedOptions.map((opt) => opt.value) : [],
+      districts: updatedDistricts,
     }));
-  };
-
-  // ✅ Handle update request (ONLY updates districts & contact info)
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-      const updateData = new FormData();
-      ["slug", "address", "website", "email", "phone", "google_map_url", "establishment_date", "moe_certified"].forEach((key) => {
-        updateData.append(key, formData[key] || "");
-      });
-      updateData.append("districts", JSON.stringify(formData.districts || []));
-
-      // ✅ API Call: Only update contact info and districts
-      await updateConsultancyDashboard(updateData);
-
-      // ✅ Update local state to reflect changes
-      setFormData((prev) => ({
-        ...prev,
-        districts: formData.districts,
-      }));
-
-      setSuccessMessage("Contact information updated successfully!");
-    } catch (err) {
-      setError(err.message || "Failed to update contact information");
-    } finally {
-      setLoading(false);
-    }
+    onUpdate({ districts: updatedDistricts }); // Pass change to parent
   };
 
   return (
@@ -167,18 +136,6 @@ const ConsultancyContact = ({ formData, setFormData, allDistricts = [] }) => {
           placeholder="Search and select districts..."
         />
       </div>
-
-      {/* Submit Button */}
-      <button
-        onClick={handleUpdate}
-        className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-        disabled={loading}
-      >
-        {loading ? "Updating..." : "Update Contact Info"}
-      </button>
-
-      {successMessage && <p className="text-green-600 mt-3">{successMessage}</p>}
-      {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>
   );
 };

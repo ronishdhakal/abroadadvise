@@ -2,66 +2,40 @@
 
 import { useState, useEffect } from "react";
 import { Trash, Plus } from "lucide-react";
-import { updateConsultancyDashboard } from "@/utils/api";
 
-const ConsultancyBranches = ({ formData, setFormData }) => {
+const ConsultancyBranches = ({ formData, setFormData, onUpdate }) => {
   const [branches, setBranches] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
 
-  // ✅ Load branches from formData on mount
+  // ✅ Load branches from formData when available
   useEffect(() => {
     setBranches(formData.branches || []);
-  }, [formData.branches]);
+  }, [formData]);
 
   // ✅ Add a new branch
   const handleAddBranch = () => {
-    setBranches((prev) => [
-      ...prev,
-      { id: Date.now(), branch_name: "", location: "", phone: "", email: "" },
-    ]);
+    const newBranch = { id: Date.now(), branch_name: "", location: "", phone: "", email: "" };
+    const updatedBranches = [...branches, newBranch];
+
+    setBranches(updatedBranches);
+    onUpdate({ branches: updatedBranches }); // Pass changes to parent
   };
 
   // ✅ Update a specific branch field
   const handleBranchChange = (index, field, value) => {
-    setBranches((prev) =>
-      prev.map((branch, i) =>
-        i === index ? { ...branch, [field]: value } : branch
-      )
+    const updatedBranches = branches.map((branch, i) =>
+      i === index ? { ...branch, [field]: value } : branch
     );
+
+    setBranches(updatedBranches);
+    onUpdate({ branches: updatedBranches }); // Pass changes to parent
   };
 
   // ✅ Delete a branch
   const handleDeleteBranch = (index) => {
-    setBranches((prev) => prev.filter((_, i) => i !== index));
-  };
+    const updatedBranches = branches.filter((_, i) => i !== index);
 
-  // ✅ Handle update (ONLY updates branches)
-  const handleUpdate = async () => {
-    setLoading(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-      const updateData = new FormData();
-      updateData.append("branches", JSON.stringify(branches));
-
-      // ✅ API Call: Only update branches, leaving other fields untouched
-      await updateConsultancyDashboard(updateData);
-
-      // ✅ Update local state to reflect changes
-      setFormData((prev) => ({
-        ...prev,
-        branches: branches,
-      }));
-
-      setSuccessMessage("Branches updated successfully!");
-    } catch (err) {
-      setError(err.message || "Failed to update branches");
-    } finally {
-      setLoading(false);
-    }
+    setBranches(updatedBranches);
+    onUpdate({ branches: updatedBranches }); // Pass changes to parent
   };
 
   return (
@@ -137,17 +111,6 @@ const ConsultancyBranches = ({ formData, setFormData }) => {
         <Plus className="h-5 w-5 mr-2" />
         Add Branch
       </button>
-
-      <button
-        onClick={handleUpdate}
-        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
-        disabled={loading}
-      >
-        {loading ? "Updating..." : "Update Branches"}
-      </button>
-
-      {successMessage && <p className="text-green-600 mt-3">{successMessage}</p>}
-      {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>
   );
 };
