@@ -19,24 +19,25 @@ import Custom404 from "../404"; // ✅ Import 404 Page
 export async function getServerSideProps({ params }) {
   try {
     // ✅ Fetch University Details
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/${params.slug}/`);
-    if (!res.ok) {
+    const universityRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/${params.slug}/`);
+
+    if (!universityRes.ok) {
       return { notFound: true }; // ✅ Return 404 page
     }
-    const university = await res.json();
 
-    // ✅ Fetch Consultancies (using university slug)
-    const consultanciesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/consultancy/?university=${params.slug}`);
-    const consultancies = consultanciesRes.ok ? await consultanciesRes.json() : { results: [] };
+    const university = await universityRes.json();
 
     // ✅ Fetch Courses (using university slug)
-    const coursesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/?university=${params.slug}`);
-    const courses = coursesRes.ok ? await coursesRes.json() : { results: [] };
+    const coursesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/course/?university__slug=${params.slug}`);
+
+    if (!coursesRes.ok) {
+       throw new Error("Failed to fetch courses data");
+    }
+    const courses = await coursesRes.json();
 
     return {
       props: {
         university,
-        consultancies: consultancies.results || [],
         courses: courses.results || [],
       },
     };
@@ -46,7 +47,7 @@ export async function getServerSideProps({ params }) {
   }
 }
 
-export default function UniversityDetail({ university, consultancies, courses }) {
+export default function UniversityDetail({ university, courses }) {
   const router = useRouter();
 
   // ✅ Redirect to 404 page if university is not found
@@ -57,7 +58,57 @@ export default function UniversityDetail({ university, consultancies, courses })
   return (
     <>
       <Head>
-        <title>{university.name} - Abroad Advise</title>
+        <title>{university.name} - Fee, Scholarships, Eligibility, Facilities</title>
+        <meta
+          name="description"
+          content={`Explore ${university.name}, its courses, scholarships, admission eligibility, and facilities. Find top consultancies to assist with your application.`}
+        />
+
+        {/* ✅ Open Graph / Facebook Meta Tags */}
+        <meta property="og:title" content={`${university.name} - Study Details & Scholarships`} />
+        <meta
+          property="og:description"
+          content={`Explore ${university.name}, its fee structure, scholarships, eligibility criteria, and available courses. Find top consultancies to assist with admissions.`}
+        />
+        <meta property="og:image" content={university.logo || "/default-university.jpg"} />
+        <meta property="og:url" content={`https://abroadadvise.com/university/${university.slug}`} />
+        <meta property="og:type" content="article" />
+
+        {/* ✅ Twitter Meta Tags */}
+        <meta name="twitter:title" content={`${university.name} - Admission Details & Scholarships`} />
+        <meta
+          name="twitter:description"
+          content={`Get complete details about ${university.name}, including tuition fees, scholarships, and top programs.`}
+        />
+        <meta name="twitter:image" content={university.logo || "/default-university.jpg"} />
+        <meta name="twitter:card" content="summary_large_image" />
+
+        {/* ✅ Structured Data (Schema.org) for SEO */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollegeOrUniversity",
+            "name": university.name,
+            "url": `https://abroadadvise.com/university/${university.slug}`,
+            "logo": university.logo || "/default-university.jpg",
+            "description": university.about || `Study at ${university.name}, offering top programs, scholarships, and global opportunities.`,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": university.country || "N/A",
+              "addressRegion": university.city || "N/A",
+              "addressCountry": university.country || "N/A",
+            },
+            "offers": {
+              "@type": "EducationalOccupationalCredential",
+              "name": "Degree Programs",
+              "educationalProgramMode": "Full-time",
+              "provider": {
+                "@type": "CollegeOrUniversity",
+                "name": university.name,
+              },
+            },
+          })}
+        </script>
       </Head>
 
       <Header />
@@ -78,7 +129,7 @@ export default function UniversityDetail({ university, consultancies, courses })
           {/* Left Sidebar - Contact & Consultancies */}
           <div className="space-y-6 md:col-span-1">
             <UniversityContact university={university} />
-            <UniversityConsultancies consultancies={consultancies} />
+            <UniversityConsultancies university={university} />
           </div>
 
           {/* Right Section - Main Content */}

@@ -94,10 +94,10 @@ const DestinationForm = ({ destinationSlug, destinationData, onSuccess, onCancel
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Destination Header */}
       <DestinationHeader formData={formData} onChange={handleChange} onFileChange={handleFileChange} />
-
-      {/* Destination About */}
-      <DestinationAbout formData={formData} onChange={handleChange} />
-
+  
+      {/* Destination About (FIXED: Passed setFormData) */}
+      <DestinationAbout formData={formData} setFormData={setFormData} />
+  
       {/* Submit & Cancel Buttons */}
       <div className="flex gap-4">
         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded" disabled={loading}>
@@ -107,11 +107,12 @@ const DestinationForm = ({ destinationSlug, destinationData, onSuccess, onCancel
           Cancel
         </button>
       </div>
-
+  
       {/* Error Message */}
       {error && <p className="text-red-500">{error}</p>}
     </form>
   );
+  
 };
 
 export default DestinationForm;
