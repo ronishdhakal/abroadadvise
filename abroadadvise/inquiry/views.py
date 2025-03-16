@@ -72,12 +72,16 @@ def submit_inquiry(request):
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
     pagination_class = InquiryPagination  # ✅ Enable pagination
-    permission_classes = [IsAuthenticated]  # ✅ Only authenticated users
+    permission_classes = [AllowAny]  # ✅ Allow any users
 
     def get_queryset(self):
         user = self.request.user  # ✅ Get logged-in user
         queryset = Inquiry.objects.all().order_by("-created_at")  # Show latest first
 
+        # ✅ If the user is a Superadmin, show ALL inquiries
+        if hasattr(user, "is_superuser") and user.is_superuser:
+            logger.info(f"✅ Superadmin viewing ALL inquiries")
+            return queryset
         # ✅ If the user is a consultancy, filter by consultancy ID
         if hasattr(user, "consultancy") and user.consultancy:
             queryset = queryset.filter(consultancy=user.consultancy)

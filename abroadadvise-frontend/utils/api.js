@@ -1274,14 +1274,25 @@ export const getNewsCategories = async () => {
  * ✅ Fetch all inquiries with pagination
  * @param {number} page - Current page number
  */
-export const getAllInquiries = async (page = 1) => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/inquiry/admin/all/?page=${page}`);
-        return response.data; // ✅ Returns { results: [], count: 20, next: 'URL', previous: 'URL' }
-    } catch (error) {
-        console.error("❌ Error fetching inquiries:", error);
-        throw error;
-    }
+import { getAuthToken } from "./auth";
+// ...
+
+// ✅ Fetch ALL Inquiries (No authentication)
+export const getAllInquiries = async () => {
+  try {
+      const response = await fetch(`${API_BASE_URL}/inquiry/admin/all/`, {
+          headers: getAuthHeaders(),// ✅ Add the headers
+      });
+      if (!response.ok) {
+          throw new Error(`Failed to fetch inquiries: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("🟢 Inquiries Fetched:", data);
+      return data; // ✅ Return ALL inquiries
+  } catch (err) {
+      console.error("❌ Error fetching inquiries:", err);
+      throw err;
+  }
 };
 
 /**
