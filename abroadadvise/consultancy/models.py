@@ -1,8 +1,7 @@
 from django.db import models
-from django.apps import apps
 from django.conf import settings
 from django.utils.text import slugify
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from tinymce.models import HTMLField
 from django.contrib.auth import get_user_model
@@ -22,14 +21,7 @@ class Consultancy(models.Model):
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
     districts = models.ManyToManyField('core.District', blank=True)
-
-    verified = models.ForeignKey(
-        'core.VerifiedItem', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True
-    )
-
+    verified = models.ForeignKey('core.VerifiedItem', on_delete=models.SET_NULL, null=True, blank=True)
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
@@ -39,46 +31,22 @@ class Consultancy(models.Model):
     phone = models.CharField(max_length=20, unique=True, blank=True, null=True)
     moe_certified = models.BooleanField(default=False)
     about = HTMLField(blank=True, null=True)
-
-    priority = models.PositiveIntegerField(
-        null=True, 
-        blank=True, 
-        default=None, 
-        help_text="Lower the number, higher the priority"
-    )
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
     google_map_url = models.URLField(blank=True, null=True)
     services = HTMLField(blank=True, null=True)
     has_branches = models.BooleanField(default=False)
-
+    
     # ManyToMany Relationships
-    study_abroad_destinations = models.ManyToManyField(
-        'destination.Destination', 
-        related_name='consultancy_destinations', 
-        blank=True
-    )
-    test_preparation = models.ManyToManyField(
-        'exam.Exam', 
-        related_name='consultancies', 
-        blank=True
-    )
-    partner_universities = models.ManyToManyField(
-        'university.University', 
-        related_name='consultancies', 
-        blank=True
-    )
-
+    study_abroad_destinations = models.ManyToManyField('destination.Destination', related_name='consultancy_destinations', blank=True)
+    test_preparation = models.ManyToManyField('exam.Exam', related_name='consultancies', blank=True)
+    partner_universities = models.ManyToManyField('university.University', related_name='consultancies', blank=True)
+    
     def __str__(self):
         return self.name
-
-    def get_district(self):
-        return self.districts.all()
-
-    def get_verified_item(self):
-        return self.verified
-
+    
     def assign_user(self, email, phone, name, password):
         """
-        Manually create and assign a user to this consultancy.
+        ✅ Manually create and assign a user to this consultancy.
         """
         if not self.user:
             username = email.split('@')[0] if email else f"consultancy_{self.id}"
@@ -86,11 +54,23 @@ class Consultancy(models.Model):
             if created:
                 user.set_password(password)
                 user.first_name = name
+                user.role = "consultancy"  # ✅ Explicitly set role to "consultancy"
                 user.save()
             self.user = user
             self.save(update_fields=["user"])
 
-# ✅ FIXED: Ensure a user is created only when a consultancy is created, without infinite loops.
+@receiver(pre_save, sender=Consultancy)
+def create_slug(sender, instance, **kwargs):
+    if not instance.slug:
+        base_slug = slugify(instance.name)
+        slug = base_slug
+        counter = 1
+        while Consultancy.objects.filter(slug=slug).exclude(id=instance.id).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        instance.slug = slug
+
+# ✅ Automatically Create a User for Each Consultancy
 @receiver(post_save, sender=Consultancy)
 def create_consultancy_user(sender, instance, created, **kwargs):
     if created and not instance.user:
@@ -104,10 +84,13 @@ def create_consultancy_user(sender, instance, created, **kwargs):
             username = f"consultancy_{instance.id}"
             user, user_created = User.objects.get_or_create(username=username)
         
+        # ✅ Set role explicitly to "consultancy"
+        if user_created:
+            user.role = "consultancy"
+            user.save()
+        
         instance.user = user
-        instance.save(update_fields=["user"])  # ✅ Prevents infinite loop
-
-
+        instance.save(update_fields=["user"])  # ✅ Prevents infinite loops
 
 class ConsultancyBranch(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='branches', on_delete=models.CASCADE)

@@ -58,27 +58,29 @@ def dashboard_consultancy_list(request):
 
 # ✅ Create Consultancy
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])  # ✅ User must be logged in
-@parser_classes([MultiPartParser, FormParser])
+@parser_classes([MultiPartParser, FormParser])  # ✅ Support file uploads
 def create_consultancy(request):
-    """ ✅ Creates a new consultancy and associates it with the logged-in user. """
-    user = request.user  # ✅ Get the logged-in user
+    """ ✅ Creates a new consultancy without authentication. """
 
-    if not user:
-        return Response({"error": "User authentication failed."}, status=status.HTTP_401_UNAUTHORIZED)
+    data = request.data.copy()  # ✅ Make a mutable copy of request data
 
-    data = request.data.copy()
+    # ✅ Convert JSON string fields into Python lists
+    try:
+        branches_data = json.loads(data.get("branches", "[]"))
+        study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
+        test_preparation = json.loads(data.get("test_preparation", "[]"))
+        partner_universities = json.loads(data.get("partner_universities", "[]"))
+        districts = json.loads(data.get("districts", "[]"))
+    except json.JSONDecodeError:
+        return Response({"error": "Invalid JSON format in fields."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Convert JSON string to lists
-    branches_data = json.loads(data.get("branches", "[]"))
-    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
-    test_preparation = json.loads(data.get("test_preparation", "[]"))
-    partner_universities = json.loads(data.get("partner_universities", "[]"))
-    districts = json.loads(data.get("districts", "[]"))
+    # ✅ Required Fields Check
+    required_fields = ["name", "districts"]
+    missing_fields = [field for field in required_fields if not data.get(field)]
+    if missing_fields:
+        return Response({"error": f"Missing required fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-    data["branches"] = branches_data
-
-    # ✅ Auto-generate a unique slug if not provided
+    # ✅ Generate unique slug
     slug = data.get("slug") or slugify(data.get("name", ""))
     original_slug = slug
     counter = 1
@@ -86,13 +88,11 @@ def create_consultancy(request):
         slug = f"{original_slug}-{counter}"
         counter += 1
     data["slug"] = slug
-    
-    # ✅ Set the user ID explicitly
-    data["user"] = user.id  # ✅ This ensures the consultancy is linked to the user
 
+    # ✅ Serialize and validate data
     serializer = ConsultancySerializer(data=data)
     if serializer.is_valid():
-        consultancy = serializer.save(user=user)  # ✅ Explicitly link user to consultancy
+        consultancy = serializer.save()  # ✅ Save consultancy (no user required)
 
         # ✅ Assign ManyToMany Fields
         consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
@@ -100,7 +100,7 @@ def create_consultancy(request):
         consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
         consultancy.districts.set(District.objects.filter(id__in=districts))
 
-        # ✅ Handle File Uploads
+        # ✅ Handle File Uploads (Logo, Cover Photo, Brochure)
         if "logo" in request.FILES:
             consultancy.logo = request.FILES["logo"]
         if "cover_photo" in request.FILES:
@@ -120,6 +120,7 @@ def create_consultancy(request):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    print("❌ Validation Errors:", serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

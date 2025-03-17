@@ -87,14 +87,15 @@ class ConsultancySerializer(serializers.ModelSerializer):
     is_verified = serializers.SerializerMethodField()
     inquiries = serializers.SerializerMethodField()
 
-    # ✅ Added user creation fields for manual assignment
-    user_email_input = serializers.EmailField(write_only=True, required=True)
-    user_password = serializers.CharField(write_only=True, required=True)
+    #Remove this line as we want user creation automatic
+    # user_email_input = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    # user_password = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
+
 
     class Meta:
         model = Consultancy
         fields = [
-            "id", "user_email", "user_email_input", "user_password", "name", "slug", "brochure",
+            "id", "user_email",  "name", "slug", "brochure",
             "logo", "cover_photo", "districts", "verified", "is_verified", "address", "latitude",
             "longitude", "establishment_date", "website", "email", "phone", "moe_certified",
             "about", "priority", "google_map_url", "services", "has_branches", "branches",
@@ -125,9 +126,6 @@ class ConsultancySerializer(serializers.ModelSerializer):
         return InquirySerializer(inquiries, many=True).data  # Serialize and return inquiries
 
     def create(self, validated_data):
-        # ✅ Extract user data
-        user_email = validated_data.pop("user_email_input")
-        user_password = validated_data.pop("user_password")
 
         # ✅ Extract related fields
         study_abroad_destinations = validated_data.pop("study_abroad_destinations", [])
@@ -139,16 +137,17 @@ class ConsultancySerializer(serializers.ModelSerializer):
         # ✅ Create Consultancy
         consultancy = Consultancy.objects.create(**validated_data)
 
-        # ✅ Assign the user manually
-        username = user_email.split("@")[0]
-        user, created = User.objects.get_or_create(username=username, email=user_email)
-        if created:
-            user.set_password(user_password)
-            user.save()
-        
-        # ✅ Assign the user to consultancy
-        consultancy.user = user
-        consultancy.save(update_fields=["user"])
+        # ✅ Create user automatically - similar to the University model
+        if consultancy.email:  # Check if email exists
+            username = consultancy.email.split('@')[0]
+            user, user_created = User.objects.get_or_create(username=username, email=consultancy.email)
+
+            # set role if user is created
+            if user_created:
+                user.role = "consultancy"
+                user.save()
+            consultancy.user = user
+            consultancy.save(update_fields=["user"])
 
         # ✅ Assign many-to-many fields
         consultancy.study_abroad_destinations.set(study_abroad_destinations)
@@ -169,9 +168,9 @@ class ConsultancySerializer(serializers.ModelSerializer):
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
-        # ✅ Prevent modifying the user account
-        validated_data.pop("user_email_input", None)
-        validated_data.pop("user_password", None)
+        # ✅ Prevent modifying the user account directly, since user is created automatically
+        validated_data.pop("user_email", None)
+        #validated_data.pop("user_password", None) this was not here, so i have deleted it as well.
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

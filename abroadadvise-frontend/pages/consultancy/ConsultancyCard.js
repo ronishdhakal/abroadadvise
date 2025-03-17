@@ -1,40 +1,71 @@
+"use client";
+
 import Link from "next/link";
-import { Award, MapPin } from "lucide-react";
+import { MapPin, BadgeCheck } from "lucide-react";
 
 const ConsultancyCard = ({ consultancy }) => {
   return (
-    <Link href={`/consultancy/${consultancy.slug}`} passHref>
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all transform hover:-translate-y-1 p-5 cursor-pointer">
-        <div className="relative">
-          {/* 🏆 MOE Certified Badge */}
-          {consultancy.moe_certified && (
-            <div className="absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full flex items-center shadow-md">
-              <Award className="h-3 w-3 mr-1" />
-              MOE Certified
-            </div>
-          )}
-
-          {/* 🖼 Consultancy Logo / Image */}
-          <div className="w-full h-40 flex items-center justify-center bg-gray-100 rounded-lg overflow-hidden">
-            {consultancy.logo ? (
+    <Link href={`/consultancy/${consultancy.slug}`} className="block h-full max-w-[100%] sm:max-w-none">
+      <div className="h-full rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white border border-gray-100 flex flex-col group">
+        
+        {/* 📌 Mobile: Show Cover Photo | Desktop: Show Logo */}
+        <div className="relative w-full overflow-hidden">
+          {/* ✅ Mobile View: Show Cover Photo */}
+          <div className="block sm:hidden w-full h-40 bg-gray-100">
+            {consultancy.cover_photo ? (
               <img
-                src={consultancy.logo}
-                alt={consultancy.name}
-                className="w-full h-full object-cover rounded-lg"
+                src={consultancy.cover_photo}
+                alt="Cover"
+                className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-gray-400">No Image Available</span>
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-slate-100 to-slate-200">
+                <span className="text-gray-400 text-sm font-medium">No Cover Photo</span>
+              </div>
             )}
           </div>
 
-          {/* 🏢 Consultancy Name */}
-          <h2 className="mt-4 text-xl font-semibold text-center text-gray-900">{consultancy.name}</h2>
+          {/* ✅ Desktop View: Show Logo */}
+          <div className="hidden sm:block w-full h-36 sm:h-48 md:h-44 lg:h-40 xl:h-36 overflow-hidden">
+            {consultancy.logo ? (
+              <div className="w-full h-full relative">
+                <img
+                  src={consultancy.logo || "/placeholder.svg"}
+                  alt={consultancy.name}
+                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                <span className="text-gray-400 text-sm font-medium">No Logo</span>
+              </div>
+            )}
+          </div>
 
-          {/* 📍 Address */}
-          <p className="text-gray-600 text-center mt-2 flex items-center justify-center">
-            <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-            {consultancy.address}
-          </p>
+          {/* ✅ MOE Certified Badge (Appears on both Mobile & Desktop) */}
+          {consultancy.moe_certified && (
+            <div className="absolute top-3 right-3 z-10">
+              <div className="bg-white/95 backdrop-blur-sm text-green-600 text-xs font-medium px-2 py-0.5 rounded-full flex items-center shadow-sm border border-green-100 transition-transform duration-300 group-hover:scale-105">
+                <BadgeCheck className="h-4 w-4 mr-1 text-green-600" />
+                <span className="mt-px">MOE Certified</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 📌 Info Section - Left aligned */}
+        <div className="p-4 flex-grow flex flex-col justify-center text-left">
+          {/* ✅ Title - Slightly increased size */}
+          <h2 className="text-lg sm:text-xl md:text-xl font-semibold text-gray-800 line-clamp-1">
+            {consultancy.name}
+          </h2>
+
+          {/* ✅ Location */}
+          <div className="flex items-center text-gray-500 mt-2">
+            <MapPin className="h-3.5 w-3.5 mr-1.5 flex-shrink-0 text-gray-400" />
+            <span className="text-xs sm:text-sm line-clamp-1">{consultancy.address}</span>
+          </div>
         </div>
       </div>
     </Link>
