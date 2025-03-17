@@ -1,59 +1,53 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model
 from .models import Consultancy, ConsultancyGallery, ConsultancyBranch
-
-User = get_user_model()
-
-class ConsultancyGalleryInline(admin.TabularInline):
-    model = ConsultancyGallery
-    extra = 1
 
 class ConsultancyBranchInline(admin.TabularInline):
     model = ConsultancyBranch
     extra = 1
 
-@admin.register(Consultancy)
+class ConsultancyGalleryInline(admin.TabularInline):
+    model = ConsultancyGallery
+    extra = 1
+    readonly_fields = ['image_preview'] # add image preview
+
+    def image_preview(self, obj):
+        from django.utils.html import format_html
+        if obj.image:
+            return format_html('<img src="{}" width="150" height="auto" />', obj.image.url)
+        else:
+            return '(No image)'
+
+    image_preview.short_description = 'Image Preview'
+
 class ConsultancyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'website', 'priority', 'verified', 'has_branches', 'user')
-    search_fields = ('name', 'email', 'phone')
-    list_filter = ('verified', 'has_branches', 'priority')
-    inlines = [ConsultancyGalleryInline, ConsultancyBranchInline]
+    list_display = ['name', 'email', 'phone', 'verified', 'moe_certified']  # Display the 'verified' field and moe_certified
+    list_filter = ['verified', 'moe_certified']  # Add filters for verified and moe_certified
+    search_fields = ['name', 'email', 'phone']
+    inlines = [ConsultancyBranchInline, ConsultancyGalleryInline]
 
-    fieldsets = (
-        ('Consultancy Info', {
-            'fields': ('name', 'slug', 'address', 'latitude', 'longitude', 'establishment_date', 
-                       'website', 'email', 'phone', 'moe_certified', 'about', 'services', 'verified')
-        }),
-        ('Media', {
-            'fields': ('logo', 'cover_photo', 'brochure')
-        }),
-        ('Priority & Settings', {
-            'fields': ('priority', 'google_map_url', 'has_branches', 'study_abroad_destinations', 
-                       'test_preparation', 'partner_universities')
-        }),
-        ('Assign User Manually', {
-            'fields': ('user',)
-        }),
-    )
+    fieldsets = [
+        ("Basic Info", {"fields": ["name", "slug", "verified", "moe_certified"]}),
+        ("Contact", {"fields": ["email", "phone", "website"]}),
+        ("About", {"fields": ["about", "services"]}),
+        (
+            "Location",
+            {"fields": ["districts", "address", "latitude", "longitude"]},
+        ),
+        ("Media", {"fields": ["logo", "cover_photo", "brochure"]}),
+        ("Priority", {"fields": ["priority"]}),
+         (
+            "Other",
+            {"fields": ["establishment_date", "google_map_url", "has_branches"]},
+        ),
+         (
+            "Study",
+            {"fields": ["study_abroad_destinations", "test_preparation", "partner_universities"]},
+        ),
+    ]
 
-    def save_model(self, request, obj, form, change):
-        """
-        Ensure a user is manually assigned before saving the consultancy.
-        Assigns the 'consultancy' role to the user.
-        """
-        if not obj.user and obj.email:
-            username = obj.email.split('@')[0]
-            user, created = User.objects.get_or_create(username=username, email=obj.email)
-            if created:
-                user.set_password("defaultpassword123")  # Admin must manually set the password later
-            
-            # ✅ Assign the "consultancy" role to the user (Modify if using a different role system)
-            if hasattr(user, 'role'):  
-                user.role = "consultancy"  # Ensure the user role is set
-                user.save()
+    prepopulated_fields = {"slug": ("name",)}
+    filter_horizontal = ("districts", "study_abroad_destinations", "test_preparation", "partner_universities")
 
-            obj.user = user
-        super().save_model(request, obj, form, change)
-
-admin.site.register(ConsultancyGallery)
-admin.site.register(ConsultancyBranch)
+admin.site.register(Consultancy, ConsultancyAdmin)
+# admin.site.register(ConsultancyGallery) # now gallery is inline
+# admin.site.register(ConsultancyBranch) # now branch is inline

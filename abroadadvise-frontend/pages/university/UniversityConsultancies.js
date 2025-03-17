@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import InquiryModal from "@/components/InquiryModal";
+import { BadgeCheck } from "lucide-react"; // Import BadgeCheck
 
 const UniversityConsultancies = ({ university }) => {
   const [allConsultancies, setAllConsultancies] = useState([]); // All consultancies
@@ -38,9 +39,7 @@ const UniversityConsultancies = ({ university }) => {
       const universityConsultancies = allConsultancies.filter((consultancy) => {
         return (
           Array.isArray(consultancy.partner_universities) &&
-          consultancy.partner_universities.some(
-            (uni) => uni.id === universityId
-          )
+          consultancy.partner_universities.some((uni) => uni.id === universityId)
         );
       });
       setFilteredConsultancies(universityConsultancies);
@@ -75,9 +74,7 @@ const UniversityConsultancies = ({ university }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
-        Apply Through
-      </h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Apply Through</h2>
 
       {/* Debugging: Display API Response */}
       {/* <pre className="text-xs text-gray-500 bg-gray-200 p-2 rounded">
@@ -106,9 +103,15 @@ const UniversityConsultancies = ({ university }) => {
                   <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
                 )}
 
-                <p className="text-sm font-medium text-gray-800 hover:text-blue-600">
-                  {consultancy.name}
-                </p>
+               <div className="flex items-center gap-1">
+                  {/* Name and tick here */}
+                    <span className="text-sm font-medium text-gray-800 hover:text-blue-600 flex items-center">
+                      {consultancy.name}
+                      {consultancy.verified && (
+                        <BadgeCheck className="h-4 w-4 text-blue-500 ml-1" />
+                      )}
+                    </span>
+                </div>
               </a>
 
               {/* ✅ Apply Now Button */}

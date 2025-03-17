@@ -36,14 +36,14 @@ class ConsultancyListView(ListAPIView):
 
     def get_queryset(self):
         return Consultancy.objects.prefetch_related(
-            "districts", "study_abroad_destinations", "test_preparation", 
+            "districts", "study_abroad_destinations", "test_preparation",
             "partner_universities", "gallery_images", "branches"
         ).order_by("priority", "-id").distinct()
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
     queryset = Consultancy.objects.prefetch_related(
-        "districts", "study_abroad_destinations", "test_preparation", 
+        "districts", "study_abroad_destinations", "test_preparation",
         "gallery_images", "branches", "partner_universities"
     )
     serializer_class = ConsultancySerializer
@@ -129,7 +129,7 @@ def create_consultancy(request):
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
     """ ✅ Fully updates a consultancy, ensuring pre-filled data updates correctly. """
-    
+
     consultancy = get_object_or_404(Consultancy, slug=slug)
     data = request.data.copy()
 
@@ -141,7 +141,7 @@ def update_consultancy(request, slug):
     districts = json.loads(data.get("districts", "[]"))
 
     serializer = ConsultancySerializer(consultancy, data=data, partial=True)
-    
+
     if serializer.is_valid():
         consultancy = serializer.save()
 
@@ -174,15 +174,6 @@ def update_consultancy(request, slug):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ Delete Consultancy (Handles Deleting Files & Related Data)
-# ✅ Dashboard - Get Consultancies
-@api_view(["GET"])
-def dashboard_consultancy_list(request):
-    consultancies = Consultancy.objects.all()
-    serializer = ConsultancySerializer(consultancies, many=True, context={"request": request})
-    return Response(serializer.data)
-
-# ✅ Delete Consultancy (Ensures Complete Data & File Removal)
 # ✅ Delete Consultancy (Handles Deleting Files & Related Data)
 @api_view(["DELETE"])
 def delete_consultancy(request, slug):
@@ -245,7 +236,7 @@ def consultancy_dashboard_view(request):
 
     # Serialize consultancy data
     serializer = ConsultancySerializer(consultancy, context={"request": request})
-    
+
     # Serialize inquiries data
     inquiry_serializer = InquirySerializer(inquiries, many=True)
 
@@ -263,10 +254,10 @@ def consultancy_dashboard_view(request):
 def update_consultancy_dashboard(request):
     """ ✅ Allows a logged-in consultancy user to update their own profile."""
     user = request.user
-    
+
     if not hasattr(user, "consultancy") or not user.consultancy:
         return Response({"error": "User is not linked to any consultancy."}, status=status.HTTP_403_FORBIDDEN)
-    
+
     consultancy = user.consultancy  # ✅ Get the consultancy linked to the user
     data = request.data.copy()
 
@@ -278,7 +269,7 @@ def update_consultancy_dashboard(request):
     districts = json.loads(data.get("districts", "[]"))
 
     serializer = ConsultancySerializer(consultancy, data=data, partial=True)
-    
+
     if serializer.is_valid():
         consultancy = serializer.save()
 
@@ -308,5 +299,5 @@ def update_consultancy_dashboard(request):
             ConsultancyGallery.objects.create(consultancy=consultancy, image=file)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

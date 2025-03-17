@@ -62,7 +62,7 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           <div className="flex-1 pt-2 sm:pt-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center flex-wrap">
               {consultancy.name}
-              {consultancy.is_verified && (
+              {consultancy.verified && (  // ✅ Changed from is_verified to verified
                 <span className="inline-flex ml-2 items-center" title="Verified Consultancy">
                   <BadgeCheck className="h-6 w-6 md:h-7 md:w-7 text-blue-500" />
                 </span>
@@ -75,13 +75,16 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           </div>
         </div>
 
-        <button
-          onClick={handleInquiry}
-          className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          <MessageSquare className="h-5 w-5 mr-2" />
-          <span className="font-semibold">Ask a Question</span>
-        </button>
+        {/* ✅ Show the "Ask a Question" button **only if the consultancy is verified** */}
+        {consultancy.verified && (
+          <button
+            onClick={handleInquiry}
+            className="w-full sm:w-auto px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            <MessageSquare className="h-5 w-5 mr-2" />
+            <span className="font-semibold">Ask a Question</span>
+          </button>
+        )}
       </div>
     </div>
   );

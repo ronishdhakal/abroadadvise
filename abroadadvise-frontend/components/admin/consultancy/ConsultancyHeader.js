@@ -64,10 +64,10 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
 
   // ✅ Handle input changes
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target; // ✅ Destructure type and checked
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value, // ✅ Handle checkbox case
     }));
   };
 
@@ -103,6 +103,21 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
           required
           className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
         />
+      </div>
+
+        {/* Verified Checkbox */}
+      <div className="mb-4 flex items-center">
+        <input
+          type="checkbox"
+          id="verified"
+          name="verified"
+          checked={formData.verified || false} // Default to false if not set
+          onChange={handleInputChange}
+          className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border border-gray-300 rounded"
+        />
+        <label htmlFor="verified" className="text-gray-700 font-medium">
+          Verified
+        </label>
       </div>
 
       {/* Logo Upload */}

@@ -67,7 +67,7 @@ const ConsultancyDetailPage = () => {
   }, [router.isReady, slug, API_URL]);
 
   // ✅ Open Inquiry Modal Dynamically
-  const openInquiryModal = (entityType, entityId, entityName) => {
+  const openInquiryModal = (entityType, entityId, entityName, consultancyId, consultancyName) => { //add consultancyId and consultancyName
     if (!entityType || !entityId) {
       console.error("❌ Missing entityType or entityId:", { entityType, entityId });
       alert("Something went wrong! Missing entity type or ID.");
@@ -76,7 +76,7 @@ const ConsultancyDetailPage = () => {
 
     console.log("✅ Opening Inquiry Modal for:", { entityType, entityId, entityName });
 
-    setSelectedEntity({ entityType, entityId, entityName });
+    setSelectedEntity({ entityType, entityId, entityName, consultancyId, consultancyName }); // add consultancyId and consultancyName
     setIsModalOpen(true);
   };
 
@@ -116,15 +116,23 @@ const ConsultancyDetailPage = () => {
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
             {/* Destinations Section with Apply Now Buttons */}
+            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyDestinations
               destinations={consultancy.study_abroad_destinations}
               openInquiryModal={openInquiryModal}
+              consultancyId={consultancy.id} // ✅ Pass the id
+              consultancyName={consultancy.name} // ✅ Pass the name
+              verified={consultancy.verified} // ✅ Pass the verified prop here
             />
 
             {/* Exams Section with Apply Now Buttons */}
+            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyExams
               exams={consultancy.test_preparation}
               openInquiryModal={openInquiryModal}
+              consultancyId={consultancy.id} // ✅ Pass the id
+              consultancyName={consultancy.name} // ✅ Pass the name
+              verified={consultancy.verified} // ✅ Pass the verified prop here
             />
 
             {/* Branches */}
@@ -132,9 +140,13 @@ const ConsultancyDetailPage = () => {
             <ConsultancyGallery gallery={consultancy.gallery_images} />
 
             {/* Universities Section with Apply Now Buttons */}
+            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyUniversities
               universities={consultancy.partner_universities}
               openInquiryModal={openInquiryModal}
+              consultancyId={consultancy.id} // ✅ Pass the id
+              consultancyName={consultancy.name} // ✅ Pass the name
+              verified={consultancy.verified} // ✅ Pass the verified prop here
             />
 
             {/* About Section */}
@@ -149,8 +161,8 @@ const ConsultancyDetailPage = () => {
       {/* Dynamic Inquiry Modal */}
       {isModalOpen && (
         <InquiryModal
-          consultancyId={consultancy?.id ?? null}
-          consultancyName={consultancy?.name ?? ""}
+          consultancyId={selectedEntity?.consultancyId ?? null} //add consultancy id
+          consultancyName={selectedEntity?.consultancyName ?? ""} // add consultancy name
           entityType={selectedEntity.entityType}
           entityId={selectedEntity.entityId}
           entityName={selectedEntity.entityName}

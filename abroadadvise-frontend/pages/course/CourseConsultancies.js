@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import InquiryModal from "@/components/InquiryModal";
+import InquiryModal from "@/components/InquiryModal"; // ✅ Corrected Import Path
+import { BadgeCheck } from "lucide-react"; // ✅ Import BadgeCheck icon
 
 const CourseConsultancies = ({ course }) => {
   const [allConsultancies, setAllConsultancies] = useState([]); // All consultancies
@@ -106,9 +107,16 @@ const CourseConsultancies = ({ course }) => {
                   <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
                 )}
 
-                <p className="text-sm font-medium text-gray-800 hover:text-blue-600">
-                  {consultancy.name}
-                </p>
+                {/* Container for name and tick */}
+                <div className="flex items-center gap-1">
+                  {/* Name and tick here */}
+                  <span className="text-sm font-medium text-gray-800 hover:text-blue-600 flex items-center">
+                    {consultancy.name}
+                    {consultancy.verified && (
+                      <BadgeCheck className="h-4 w-4 text-blue-500 ml-1" />
+                    )}
+                  </span>
+                </div>
               </a>
 
               {/* ✅ Apply Now Button */}

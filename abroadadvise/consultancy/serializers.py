@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Consultancy, ConsultancyGallery, ConsultancyBranch
-from core.models import District, VerifiedItem
+from core.models import District  # Removed VerifiedItem import
 from destination.models import Destination
 from exam.models import Exam
 from university.models import University
@@ -84,19 +84,13 @@ class ConsultancySerializer(serializers.ModelSerializer):
     test_preparation = ExamSerializer(many=True, read_only=True)
     partner_universities = UniversitySerializer(many=True, read_only=True)
     branches = ConsultancyBranchSerializer(many=True, required=False)
-    is_verified = serializers.SerializerMethodField()
     inquiries = serializers.SerializerMethodField()
-
-    #Remove this line as we want user creation automatic
-    # user_email_input = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
-    # user_password = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
-
 
     class Meta:
         model = Consultancy
         fields = [
             "id", "user_email",  "name", "slug", "brochure",
-            "logo", "cover_photo", "districts", "verified", "is_verified", "address", "latitude",
+            "logo", "cover_photo", "districts", "verified", "address", "latitude",
             "longitude", "establishment_date", "website", "email", "phone", "moe_certified",
             "about", "priority", "google_map_url", "services", "has_branches", "branches",
             "gallery_images", "study_abroad_destinations", "test_preparation", "partner_universities",'inquiries',
@@ -114,9 +108,6 @@ class ConsultancySerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         return request.build_absolute_uri(obj.brochure.url) if request and obj.brochure else None
 
-    def get_is_verified(self, obj):
-        return obj.verified.verified if obj.verified else False
-    
     def get_inquiries(self, obj):
         """
         Retrieve all inquiries related to the consultancy.
@@ -170,7 +161,6 @@ class ConsultancySerializer(serializers.ModelSerializer):
 
         # ✅ Prevent modifying the user account directly, since user is created automatically
         validated_data.pop("user_email", None)
-        #validated_data.pop("user_password", None) this was not here, so i have deleted it as well.
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete # Import post_delete signal
 from django.dispatch import receiver
 from tinymce.models import HTMLField
 from django.contrib.auth import get_user_model
@@ -10,9 +10,9 @@ User = get_user_model()
 
 class Consultancy(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        null=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
         blank=True
     )
     name = models.CharField(max_length=255, unique=True)
@@ -21,7 +21,8 @@ class Consultancy(models.Model):
     logo = models.ImageField(upload_to='logo/', blank=True, null=True)
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
     districts = models.ManyToManyField('core.District', blank=True)
-    verified = models.ForeignKey('core.VerifiedItem', on_delete=models.SET_NULL, null=True, blank=True)
+    # verified = models.ForeignKey('core.VerifiedItem', on_delete=models.SET_NULL, null=True, blank=True) # Removed
+    verified = models.BooleanField(default=False)  # Added
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
@@ -35,15 +36,15 @@ class Consultancy(models.Model):
     google_map_url = models.URLField(blank=True, null=True)
     services = HTMLField(blank=True, null=True)
     has_branches = models.BooleanField(default=False)
-    
+
     # ManyToMany Relationships
     study_abroad_destinations = models.ManyToManyField('destination.Destination', related_name='consultancy_destinations', blank=True)
     test_preparation = models.ManyToManyField('exam.Exam', related_name='consultancies', blank=True)
     partner_universities = models.ManyToManyField('university.University', related_name='consultancies', blank=True)
-    
+
     def __str__(self):
         return self.name
-    
+
     def assign_user(self, email, phone, name, password):
         """
         ✅ Manually create and assign a user to this consultancy.
@@ -75,7 +76,7 @@ def create_slug(sender, instance, **kwargs):
 def create_consultancy_user(sender, instance, created, **kwargs):
     if created and not instance.user:
         User = get_user_model()
-        
+
         # ✅ Ensure email exists before creating a user
         if instance.email:
             user, user_created = User.objects.get_or_create(username=instance.email.split('@')[0], email=instance.email)
@@ -83,14 +84,20 @@ def create_consultancy_user(sender, instance, created, **kwargs):
             # ✅ If no email, create a generic user but ensure uniqueness
             username = f"consultancy_{instance.id}"
             user, user_created = User.objects.get_or_create(username=username)
-        
+
         # ✅ Set role explicitly to "consultancy"
         if user_created:
             user.role = "consultancy"
             user.save()
-        
+
         instance.user = user
         instance.save(update_fields=["user"])  # ✅ Prevents infinite loops
+
+# Add post delete signal
+@receiver(post_delete, sender=Consultancy)
+def delete_user_on_consultancy_delete(sender, instance, **kwargs):
+    if instance.user:
+        instance.user.delete()
 
 class ConsultancyBranch(models.Model):
     consultancy = models.ForeignKey(Consultancy, related_name='branches', on_delete=models.CASCADE)
@@ -109,3 +116,4 @@ class ConsultancyGallery(models.Model):
 
     def __str__(self):
         return f"{self.consultancy.name} - {self.image}"
+

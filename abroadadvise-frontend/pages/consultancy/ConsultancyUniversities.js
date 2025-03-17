@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-const ConsultancyUniversities = ({ universities, openInquiryModal }) => {
+const ConsultancyUniversities = ({ universities, openInquiryModal, consultancyId, consultancyName, verified }) => { // ✅ Add verified prop
   const [showAll, setShowAll] = useState(false);
 
   if (!universities || universities.length === 0) return null;
@@ -18,8 +18,8 @@ const ConsultancyUniversities = ({ universities, openInquiryModal }) => {
       {/* Universities Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {visibleUniversities.map((university) => (
-          <div 
-            key={university.id} 
+          <div
+            key={university.id}
             className="flex flex-col items-center p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
           >
             {/* University Logo */}
@@ -35,13 +35,15 @@ const ConsultancyUniversities = ({ universities, openInquiryModal }) => {
               </div>
             </Link>
 
-            {/* Apply Now Button */}
-            <button
-              onClick={() => openInquiryModal("university", university.id, university.name)}
-              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
-            >
-              Apply Now
-            </button>
+            {/* Apply Now Button (Conditional Display) */}
+            {verified && ( // ✅ Show only if consultancy is verified
+              <button
+                onClick={() => openInquiryModal("university", university.id, university.name, consultancyId, consultancyName)}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+              >
+                Apply Now
+              </button>
+            )}
           </div>
         ))}
       </div>

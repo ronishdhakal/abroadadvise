@@ -219,77 +219,78 @@ const convertToJson = (formData, key) => {
 
 // ✅ Create Consultancy
 export const createConsultancy = async (formData) => {
-    // ✅ Convert boolean fields correctly
-    formData.set("moe_certified", formData.get("moe_certified") === "true");
-    formData.set("is_verified", formData.get("is_verified") === "true");
+  // ✅ Convert boolean fields correctly
+  formData.set("moe_certified", formData.get("moe_certified") === "true");
+  formData.set("verified", formData.get("verified") === "true"); // Corrected line
 
-    // ✅ Convert JSON fields before sending
-    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
-        convertToJson(formData, key);
-    });
+  // ✅ Convert JSON fields before sending
+  ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
+      convertToJson(formData, key);
+  });
 
-    const response = await fetch(`${API_BASE_URL}/consultancy/create/`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: formData,
-    });
+  const response = await fetch(`${API_BASE_URL}/consultancy/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: formData,
+  });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Response Error:", errorData);
-        throw new Error(errorData.error || "Failed to create consultancy");
-    }
+  if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API Response Error:", errorData);
+      throw new Error(errorData.error || "Failed to create consultancy");
+  }
 
-    return await response.json();
+  return await response.json();
 };
 
 // ✅ Update Consultancy
 export const updateConsultancy = async (slug, formData) => {
-    // ✅ Convert JSON fields before sending
-    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
-        convertToJson(formData, key);
-    });
+  // ✅ Convert JSON fields before sending
+  ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
+      convertToJson(formData, key);
+  });
 
-    const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: formData,
-    });
+  const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: formData,
+  });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Response Error:", errorData);
-        throw new Error(errorData.error || "Failed to update consultancy");
-    }
+  if (!response.ok) {
+      const errorData = await response.json();
+      console.error("API Response Error:", errorData);
+      throw new Error(errorData.error || "Failed to update consultancy");
+  }
 
-    return await response.json();
+  return await response.json();
 };
 
 
 // ✅ Delete Consultancy
 export const deleteConsultancy = async (slug) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/delete/`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json", // ✅ JSON request
-        ...getAuthHeaders(),
-      },
-    });
+try {
+  const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/delete/`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json", // ✅ JSON request
+      ...getAuthHeaders(),
+    },
+  });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Delete Consultancy API Error:", errorData);
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Delete Consultancy API Error:", errorData);
 
-      throw new Error(errorData.detail || "Failed to delete consultancy");
-    }
-
-    return { success: true, message: "✅ Consultancy deleted successfully!" };
-  } catch (error) {
-    console.error("❌ Error deleting consultancy:", error);
-    throw error;
+    throw new Error(errorData.detail || "Failed to delete consultancy");
   }
+
+  return { success: true, message: "✅ Consultancy deleted successfully!" };
+} catch (error) {
+  console.error("❌ Error deleting consultancy:", error);
+  throw error;
+}
 };
+
 
 
 // ✅ Utility function to ensure proper JSON conversion

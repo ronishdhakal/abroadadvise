@@ -69,11 +69,12 @@ export default function FeaturedConsultancies() {
                 {/* ✅ Name now links to detail page */}
                 <Link href={`/consultancy/${consultancy.slug}`} className="hover:underline flex items-center">
                   <h3 className="text-lg font-semibold text-gray-900">{consultancy.name}</h3>
-                  {consultancy.verified && (
-                    <span className="ml-2 text-blue-500" title="Verified Consultancy">
-                      <BadgeCheck className="h-5 w-5" />
-                    </span>
-                  )}
+                  {consultancy.verified && (  // ✅ Changed from is_verified to verified
+  <span className="ml-2 text-blue-500" title="Verified Consultancy">
+    <BadgeCheck className="h-5 w-5" />
+  </span>
+)}
+
                 </Link>
                 <p className="text-gray-600 text-sm flex items-center">
                   <MapPin className="w-4 h-4 mr-1 text-gray-500" />
