@@ -6,11 +6,12 @@ import { createUniversity, updateUniversity, fetchUniversityDetails } from "@/ut
 import UniversityHeader from "./university/UniversityHeader";
 import UniversityContact from "./university/UniversityContact";
 import UniversityAbout from "./university/UniversityAbout";
+import UniversityDisciplines from "./university/UniversityDisciplines";
 
 const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
   const isEditing = !!universitySlug;
 
-  // ✅ Define initial form state (Discipline Removed)
+  // ✅ Define initial form state (Disciplines Array Added)
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -25,11 +26,12 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
     scholarship: "",
     tuition_fees: "",
     about: "",
-    faqs: "",
+    faqs: [], // ✅ Correct
     logo: null,
     brochure: null,
     cover_photo: null,
     type: "",
+    disciplines: [], // ✅ Initialize disciplines as an empty array
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,8 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
             logo: data.logo || prev.logo,
             cover_photo: data.cover_photo || prev.cover_photo,
             brochure: data.brochure || prev.brochure,
+            disciplines: data.disciplines?.map((item) => Number(item.id)) || [], // updated code
+            faqs: Array.isArray(data.faqs) ? data.faqs : [], // ✅ Ensure `faqs` is an array
           }));
         })
         .catch(() => setError("❌ Failed to load university details"))
@@ -66,6 +70,30 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
       }));
     }
   }, [formData.name]);
+
+  // Handle add faqs
+  const handleAddFaq = () => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      faqs: [...prevFormData.faqs, { question: "", answer: "" }],
+    }));
+  };
+  // Handle faqs data
+  const handleFaqChange = (index, key, value) => {
+    setFormData((prevFormData) => {
+      const newFaqs = [...prevFormData.faqs];
+      newFaqs[index][key] = value;
+      return { ...prevFormData, faqs: newFaqs };
+    });
+  };
+
+  // Remove faqs data
+  const handleRemoveFaq = (index) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      faqs: prevFormData.faqs.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -90,11 +118,17 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
         "scholarship",
         "tuition_fees",
         "about",
-        "faqs",
         "type",
       ].forEach((field) => {
         if (formData[field]) submissionData.append(field, formData[field]);
       });
+        
+      // Add disciplines data
+        if (formData.disciplines) {
+          submissionData.append("disciplines", JSON.stringify(formData.disciplines)) // updated code
+        }
+
+      submissionData.append("faqs", JSON.stringify(formData.faqs));
 
       // ✅ Handle Logo, Brochure & Cover Image Uploads
       if (formData.logo instanceof File) submissionData.append("logo", formData.logo);
@@ -135,6 +169,71 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
 
         {/* About & Additional Information */}
         <UniversityAbout formData={formData} setFormData={setFormData} />
+
+        {/* Disciplines */}
+        <div className="mt-4">
+          <UniversityDisciplines formData={formData} setFormData={setFormData} />
+        </div>
+
+        {/* Add Faqs field */}
+        <div className="mt-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">
+            Frequently Asked Questions (FAQs)
+          </h2>
+          {Array.isArray(formData.faqs) && formData.faqs.map((faq, index) => (
+            <div key={index} className="mb-4">
+              <div className="mb-2">
+                <label
+                  htmlFor={`faq-question-${index}`}
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Question {index + 1}
+                </label>
+                <input
+                  type="text"
+                  id={`faq-question-${index}`}
+                  value={faq.question}
+                  onChange={(e) =>
+                    handleFaqChange(index, "question", e.target.value)
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter question"
+                />
+              </div>
+              <div className="mb-2">
+                <label
+                  htmlFor={`faq-answer-${index}`}
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Answer {index + 1}
+                </label>
+                <textarea
+                  id={`faq-answer-${index}`}
+                  value={faq.answer}
+                  onChange={(e) =>
+                    handleFaqChange(index, "answer", e.target.value)
+                  }
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Enter answer"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveFaq(index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddFaq}
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Add FAQ
+          </button>
+        </div>
 
         {/* Submit & Cancel Buttons */}
         <div className="flex gap-4 mt-6">

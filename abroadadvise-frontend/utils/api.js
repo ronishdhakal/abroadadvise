@@ -3,14 +3,15 @@ import axios from "axios";
 
 
 
-// ✅ Helper Function: Get Auth Headers
-const getAuthHeaders = () => {
-  if (typeof window !== "undefined") {  // ✅ Ensure running in browser
-    const token = localStorage.getItem("accessToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-  return {}; // ✅ Return empty headers on server-side
-};
+    // ✅ Helper Function: Get Auth Headers
+    const getAuthHeaders = () => {
+    if (typeof window !== "undefined") {  // ✅ Ensure running in browser
+        const token = localStorage.getItem("access_token"); // updated code
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+    return {}; // ✅ Return empty headers on server-side
+    };
+
 
 
 // ✅ Fetch Districts
@@ -199,22 +200,38 @@ const convertToJson = (formData, key) => {
   let value = formData.get(key);
 
   if (typeof value === "string") {
-      try {
-          value = JSON.parse(value);
-      } catch {
-          value = [];
-      }
+    try {
+      value = JSON.parse(value);
+    } catch {
+      value = [];
+    }
   }
 
   if (!Array.isArray(value)) {
-      value = [];
+    value = [];
   }
 
-  // ✅ Convert values to integers, filter NaN values
-  const intArray = value.map((item) => parseInt(item, 10)).filter((id) => !isNaN(id));
-
-  formData.set(key, JSON.stringify(intArray)); // ✅ Store as JSON string in FormData
+  // Check if we're dealing with disciplines (This is the university-specific fix)
+  if (key === "disciplines") {
+    // ✅ Convert values to integers, filter NaN values, and convert to string
+    const intArray = value.map(Number).filter((id) => !isNaN(id));
+    formData.set(key, JSON.stringify(intArray)); // Store as JSON string in FormData
+  } else {
+    // ✅ Existing logic for other fields (e.g., districts, study_abroad_destinations)
+    // Convert values to integers or keep them as they are, filter NaN values, and convert to string
+    const convertedArray = value.map((item) => {
+      if (typeof item === "string") {
+        const parsedItem = parseInt(item, 10);
+        return isNaN(parsedItem) ? item : parsedItem;
+      } else {
+        return item;
+      }
+    }).filter((item) => typeof item === 'number' || typeof item === 'string');
+    formData.set(key, JSON.stringify(convertedArray));
+  }
 };
+
+
 
 
 // ✅ Create Consultancy
@@ -353,6 +370,8 @@ export const createUniversity = async (formData) => {
   }
 };
 
+
+// ✅ Update University (Handles FormData & File Uploads)
 // ✅ Update University (Handles FormData & File Uploads)
 export const updateUniversity = async (slug, formData) => {
   try {
@@ -394,6 +413,7 @@ export const updateUniversity = async (slug, formData) => {
     throw error;
   }
 };
+//... rest of the code is same
 
 
 
@@ -448,9 +468,17 @@ export const fetchCourseDetails = async (slug) => {
 export const createCourse = async (formData) => {
   try {
     console.log("📤 Sending Course FormData:");
+
+    // ✅ Log all form data before sending
     for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);  // ✅ Logs all form data values
+      console.log(`🔹 ${pair[0]}:`, pair[1]);
     }
+     // ✅ Remove empty fields to prevent API errors
+     for (let [key, value] of formData.entries()) {
+        if (value === null || value === "null" || value === undefined) {
+           formData.delete(key);
+         }
+      }
 
     const response = await fetch(`${API_BASE_URL}/course/create/`, {
       method: "POST",
@@ -471,17 +499,28 @@ export const createCourse = async (formData) => {
   }
 };
 
-
 // ✅ Update Course (Handles FormData & File Uploads)
 export const updateCourse = async (slug, formData) => {
   try {
     console.log("📤 Updating Course FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
 
-    console.log("🖼️ Icon File:", formData.get("icon"));
-    console.log("🖼️ Cover Image File:", formData.get("cover_image"));
+    // ✅ Ensure we only send new files
+    if (!formData.get("icon") || !(formData.get("icon") instanceof File)) {
+      formData.delete("icon");
+    }
+    if (!formData.get("cover_image") || !(formData.get("cover_image") instanceof File)) {
+      formData.delete("cover_image");
+    }
+     // ✅ Log all form data before sending
+     for (let pair of formData.entries()) {
+        console.log(`🔹 ${pair[0]}:`, pair[1]);
+     }
+     // ✅ Remove empty fields to prevent API errors
+     for (let [key, value] of formData.entries()) {
+        if (value === null || value === "null" || value === undefined) {
+            formData.delete(key);
+        }
+     }
 
     const response = await fetch(`${API_BASE_URL}/course/${slug}/update/`, {
       method: "PATCH",
@@ -492,7 +531,7 @@ export const updateCourse = async (slug, formData) => {
     if (!response.ok) {
       const errorText = await response.text(); // Debug raw response
       console.error("❌ Update Course API Error:", errorText);
-      throw new Error("Failed to update course");
+      throw new Error(errorText);
     }
 
     return await response.json();
@@ -501,6 +540,8 @@ export const updateCourse = async (slug, formData) => {
     throw error;
   }
 };
+
+
 
 // ✅ Delete Course
 export const deleteCourse = async (slug) => {
