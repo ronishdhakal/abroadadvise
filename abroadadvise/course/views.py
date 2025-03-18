@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
@@ -40,6 +41,7 @@ class CourseListView(ListAPIView):
 
 # ✅ Create Course (Now Publicly Accessible)
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_course(request):
     print("Create course request received")  # Debugging log
@@ -65,6 +67,7 @@ def get_course(request, slug):
 
 # ✅ Update Course (Now Publicly Accessible)
 @api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_course(request, slug):
     print(f"Updating course with slug: {slug}")  # Debugging log
@@ -94,6 +97,7 @@ def update_course(request, slug):
 
 # ✅ Delete Course (Now Publicly Accessible)
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def delete_course(request, slug):
     print(f"Deleting course with slug: {slug}")  # Debugging log
     try:

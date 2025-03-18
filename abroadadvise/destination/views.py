@@ -2,6 +2,7 @@ import os
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
@@ -42,7 +43,7 @@ def get_destination(request, slug):
 
 # ✅ Publicly Accessible: Create a New Destination (Handles Image Uploads)
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_destination(request):
     """Creates a new destination and properly handles file uploads."""
@@ -70,6 +71,7 @@ def create_destination(request):
 
 # ✅ Publicly Accessible: Update an Existing Destination (Handles Image Uploads)
 @api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
 @permission_classes([AllowAny])
 @parser_classes([MultiPartParser, FormParser])
 def update_destination(request, slug):
@@ -117,7 +119,7 @@ def update_destination(request, slug):
 
 # ✅ Publicly Accessible: Delete a Destination
 @api_view(['DELETE'])  # ✅ Ensure DELETE is allowed
-@permission_classes([AllowAny])  # ✅ Ensure it's accessible
+@permission_classes([IsAuthenticated])
 def delete_destination(request, slug):
     """Deletes a destination and removes associated image files."""
     try:

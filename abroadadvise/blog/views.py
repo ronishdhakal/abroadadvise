@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -55,6 +56,7 @@ def get_blog_post(request, slug):
 
 # ✅ Create Blog Post (No Authentication Required)
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_blog_post(request):
     """
@@ -69,6 +71,7 @@ def create_blog_post(request):
 
 # ✅ Update Blog Post (No Authentication Required)
 @api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_blog_post(request, slug):
     """
@@ -96,6 +99,7 @@ def update_blog_post(request, slug):
 
 # ✅ Delete Blog Post (No Authentication Required)
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_blog_post(request, slug):
     """
     Delete a blog post (No authentication required).

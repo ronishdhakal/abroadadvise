@@ -51,6 +51,7 @@ class ConsultancyDetailView(RetrieveAPIView):
 
 # ✅ Dashboard - Get Consultancies
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def dashboard_consultancy_list(request):
     consultancies = Consultancy.objects.all()
     serializer = ConsultancySerializer(consultancies, many=True, context={"request": request})
@@ -58,6 +59,7 @@ def dashboard_consultancy_list(request):
 
 # ✅ Create Consultancy
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])  # ✅ Support file uploads
 def create_consultancy(request):
     """ ✅ Creates a new consultancy without authentication. """
@@ -126,6 +128,7 @@ def create_consultancy(request):
 
 # ✅ Update Consultancy
 @api_view(["PUT", "PATCH"])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
     """ ✅ Fully updates a consultancy, ensuring pre-filled data updates correctly. """
@@ -176,6 +179,7 @@ def update_consultancy(request, slug):
 
 # ✅ Delete Consultancy (Handles Deleting Files & Related Data)
 @api_view(["DELETE"])
+@permission_classes([IsAuthenticated])
 def delete_consultancy(request, slug):
     """ ✅ Deletes a consultancy and ensures all related data and files are removed safely. """
 
@@ -218,6 +222,8 @@ def delete_consultancy(request, slug):
 
 # ✅ Dashboard - Fetch Logged-in User's Consultancy Profile
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def consultancy_dashboard_view(request):
     """ ✅ Fetch the consultancy profile linked to the logged-in user and related inquiries. """
     user = request.user

@@ -2,6 +2,7 @@ from django.db.models import F
 from django.utils.timezone import now
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
@@ -49,6 +50,7 @@ def all_events(request):
 
 # ✅ Create Event (Using Slugs Instead of IDs)
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 @permission_classes([])  # ✅ Public access
 def create_event(request):
@@ -98,8 +100,8 @@ def get_event(request, slug):
 
 # ✅ Update Event (Using Slugs Instead of IDs)
 @api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-@permission_classes([])  # ✅ Public access
 def update_event(request, slug):
     try:
         event = Event.objects.get(slug=slug)
@@ -144,6 +146,7 @@ def update_event(request, slug):
 
 # ✅ Delete Event (Now Publicly Accessible)
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 @permission_classes([])  # ✅ Public access
 def delete_event(request, slug):
     try:

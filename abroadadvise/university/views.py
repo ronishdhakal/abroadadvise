@@ -55,6 +55,7 @@ def extract_disciplines(data):
 
 # ✅ Create University (Handles File Uploads & Disciplines)
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_university(request):
     """ ✅ Creates a new university including file uploads and disciplines """
@@ -102,6 +103,7 @@ def get_university(request, slug):
 
 # ✅ Update University (Handles File Uploads & Disciplines)
 @api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_university(request, slug):
     """ ✅ Updates an existing university including file uploads and disciplines """
@@ -142,6 +144,7 @@ def update_university(request, slug):
 
 # ✅ Delete University
 @api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_university(request, slug):
     """ ✅ Deletes an existing university including file cleanup """
     try:

@@ -72,7 +72,7 @@ def submit_inquiry(request):
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
     pagination_class = InquiryPagination  # ✅ Enable pagination
-    permission_classes = [AllowAny]  # ✅ Allow any users
+    @permission_classes([IsAuthenticated])
 
     def get_queryset(self):
         user = self.request.user  # ✅ Get logged-in user

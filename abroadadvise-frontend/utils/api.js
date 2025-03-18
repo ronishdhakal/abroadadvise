@@ -739,6 +739,7 @@ export const fetchExamDetails = async (slug) => {
       method: "GET",
       headers: {
         "Accept": "application/json",
+        
       },
     });
 
@@ -770,6 +771,7 @@ export const createExam = async (formData) => {
     const response = await fetch(`${API_BASE_URL}/exam/create/`, {
       method: "POST",
       headers: {
+        ...getAuthHeaders(), // ✅ Include authentication if needed
         "Accept": "application/json", // ✅ Accept JSON response
       },
       body: formData, // ✅ Do NOT set "Content-Type", it is auto-set for FormData
@@ -809,6 +811,7 @@ export const updateExam = async (slug, formData) => {
     const response = await fetch(`${API_BASE_URL}/exam/${slug}/update/`, {
       method: "PATCH",
       headers: {
+        ...getAuthHeaders(), // ✅ Include authentication if needed
         "Accept": "application/json",
       },
       body: formData,
@@ -839,6 +842,7 @@ export const deleteExam = async (slug) => {
     const response = await fetch(`${API_BASE_URL}/exam/${slug}/delete/`, {
       method: "DELETE",
       headers: {
+        ...getAuthHeaders(), // ✅ Include authentication if needed
         "Accept": "application/json",
       },
     });
@@ -937,6 +941,10 @@ const convertToSlugJson = (formData, key) => {
 };
 
 
+// utils/api.js
+
+// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
+
 /**
  * ✅ Create Event (Handles FormData & File Uploads)
  * @param {FormData} formData - Event data
@@ -944,103 +952,107 @@ const convertToSlugJson = (formData, key) => {
  */
 export const createEvent = async (formData) => {
   try {
-      console.log("📤 Sending Event FormData:");
-      for (let pair of formData.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-      }
+    console.log("📤 Sending Event FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
-      // ✅ Convert slug-based fields to JSON
-      convertToSlugJson(formData, "targeted_destinations");
-      convertToSlugJson(formData, "related_universities");
-      convertToSlugJson(formData, "related_consultancies");
+    // ✅ Convert slug-based fields to JSON
+    convertToSlugJson(formData, "targeted_destinations");
+    convertToSlugJson(formData, "related_universities");
+    convertToSlugJson(formData, "related_consultancies");
 
-      // ✅ Ensure organizer slug & type are strings
-      formData.set("organizer_slug", formData.get("organizer_slug") || "");
-      formData.set("organizer_type", formData.get("organizer_type") || "");
+    // ✅ Ensure organizer slug & type are strings
+    formData.set("organizer_slug", formData.get("organizer_slug") || "");
+    formData.set("organizer_type", formData.get("organizer_type") || "");
 
-      const response = await fetch(`${API_BASE_URL}/event/create/`, {
-          method: "POST",
-          headers: getAuthHeaders(), // ✅ No "Content-Type" needed for FormData
-          body: formData,
-      });
+    const response = await fetch(`${API_BASE_URL}/event/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
+      body: formData,
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Create Event API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to create event");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create Event API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create event");
+    }
 
-      return await response.json();
+    return await response.json();
   } catch (error) {
-      console.error("❌ Error creating event:", error);
-      throw error;
+    console.error("❌ Error creating event:", error);
+    throw error;
   }
 };
 
 /**
-* ✅ Update Event (Handles FormData & File Uploads)
-* @param {string} slug - Event slug
-* @param {FormData} formData - Updated event data
-* @returns {Promise} - API response
-*/
+ * ✅ Update Event (Handles FormData & File Uploads)
+ * @param {string} slug - Event slug
+ * @param {FormData} formData - Updated event data
+ * @returns {Promise} - API response
+ */
 export const updateEvent = async (slug, formData) => {
   try {
-      console.log("📤 Updating Event FormData:");
-      for (let pair of formData.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-      }
+    console.log("📤 Updating Event FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
-      // ✅ Convert slug-based fields to JSON
-      convertToSlugJson(formData, "targeted_destinations");
-      convertToSlugJson(formData, "related_universities");
-      convertToSlugJson(formData, "related_consultancies");
+    // ✅ Convert slug-based fields to JSON
+    convertToSlugJson(formData, "targeted_destinations");
+    convertToSlugJson(formData, "related_universities");
+    convertToSlugJson(formData, "related_consultancies");
 
-      // ✅ Ensure organizer slug & type are strings
-      formData.set("organizer_slug", formData.get("organizer_slug") || "");
-      formData.set("organizer_type", formData.get("organizer_type") || "");
+    // ✅ Ensure organizer slug & type are strings
+    formData.set("organizer_slug", formData.get("organizer_slug") || "");
+    formData.set("organizer_type", formData.get("organizer_type") || "");
 
-      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
-          method: "PATCH",
-          body: formData, // ✅ No headers for FormData
-      });
+    const response = await fetch(`${API_BASE_URL}/event/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),// ✅ Include authentication headers
+      body: formData,
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Update Event API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to update event");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Update Event API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to update event");
+    }
 
-      return await response.json();
+    return await response.json();
   } catch (error) {
-      console.error("❌ Error updating event:", error);
-      throw error;
+    console.error("❌ Error updating event:", error);
+    throw error;
   }
 };
 
 /**
-* ✅ Delete Event
-* @param {string} slug - Event slug
-* @returns {Promise} - API response
-*/
+ * ✅ Delete Event
+ * @param {string} slug - Event slug
+ * @returns {Promise} - API response
+ */
 export const deleteEvent = async (slug) => {
   try {
-      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
-          method: "DELETE",
-          headers: getAuthHeaders(), // ✅ Keep authentication headers
-      });
+    const response = await fetch(`${API_BASE_URL}/event/${slug}/delete/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(), // ✅ Keep authentication headers
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Delete Event API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to delete event");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Event API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete event");
+    }
 
-      return { success: true, message: "✅ Event deleted successfully!" };
+    return { success: true, message: "✅ Event deleted successfully!" };
   } catch (error) {
-      console.error("❌ Error deleting event:", error);
-      throw error;
+    console.error("❌ Error deleting event:", error);
+    throw error;
   }
 };
+
+// ... (rest of your api.js file) ...
+
 
 
 /**
@@ -1073,6 +1085,9 @@ export const getBlogBySlug = async (slug) => {
   }
 };
 
+// utils/api.js
+// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
+
 /**
  * ✅ Create Blog Post (Handles FormData & File Uploads)
  * @param {FormData} formData - Blog post form data (title, content, image, etc.)
@@ -1080,26 +1095,27 @@ export const getBlogBySlug = async (slug) => {
  */
 export const createBlog = async (formData) => {
   try {
-      console.log("📤 Sending Blog FormData:");
-      for (let pair of formData.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-      }
+    console.log("📤 Sending Blog FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
-      const response = await fetch(`${API_BASE_URL}/blog/create/`, {
-          method: "POST",
-          body: formData, // ✅ No headers needed for FormData
-      });
+    const response = await fetch(`${API_BASE_URL}/blog/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
+      body: formData,
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Create Blog API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to create blog");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create Blog API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create blog");
+    }
 
-      return await response.json();
+    return await response.json();
   } catch (error) {
-      console.error("❌ Error creating blog:", error);
-      throw error;
+    console.error("❌ Error creating blog:", error);
+    throw error;
   }
 };
 
@@ -1111,53 +1127,58 @@ export const createBlog = async (formData) => {
  */
 export const updateBlog = async (slug, formData) => {
   try {
-      console.log("📤 Updating Blog FormData:");
-      for (let pair of formData.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-      }
+    console.log("📤 Updating Blog FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
-      // ✅ Corrected API endpoint (Ensure slug placement is correct)
-      const response = await fetch(`${API_BASE_URL}/blog/${slug}/update/`, {
-          method: "PATCH",
-          body: formData, // ✅ No headers for FormData
-      });
+    // ✅ Corrected API endpoint (Ensure slug placement is correct)
+    const response = await fetch(`${API_BASE_URL}/blog/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
+      body: formData,
+    });
 
-      if (!response.ok) {
-          const errorText = await response.text();  // ✅ Capture error response
-          console.error("❌ Update Blog API Error:", errorText);
-          throw new Error(`Failed to update blog: ${errorText}`);
-      }
+    if (!response.ok) {
+      const errorText = await response.text(); // ✅ Capture error response
+      console.error("❌ Update Blog API Error:", errorText);
+      throw new Error(`Failed to update blog: ${errorText}`);
+    }
 
-      return await response.json();
+    return await response.json();
   } catch (error) {
-      console.error("❌ Error updating blog:", error);
-      throw error;
+    console.error("❌ Error updating blog:", error);
+    throw error;
   }
 };
 
 /**
-* ✅ Delete Blog Post (Ensures image deletion)
-* @param {string} slug - Blog post slug
-* @returns {Promise} - API response
-*/
+ * ✅ Delete Blog Post (Ensures image deletion)
+ * @param {string} slug - Blog post slug
+ * @returns {Promise} - API response
+ */
 export const deleteBlog = async (slug) => {
   try {
-      const response = await fetch(`${API_BASE_URL}/blog/${slug}/delete/`, {
-          method: "DELETE",
-      });
+    const response = await fetch(`${API_BASE_URL}/blog/${slug}/delete/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Delete Blog API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to delete blog");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Blog API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete blog");
+    }
 
-      return { success: true, message: "✅ Blog post deleted successfully!" };
+    return { success: true, message: "✅ Blog post deleted successfully!" };
   } catch (error) {
-      console.error("❌ Error deleting blog:", error);
-      throw error;
+    console.error("❌ Error deleting blog:", error);
+    throw error;
   }
 };
+
+// ... (rest of your api.js file) ...
+
 
 /**
  * ✅ Fetch Blog Categories
@@ -1177,6 +1198,11 @@ export const getBlogCategories = async () => {
 };
 
 // News
+// utils/api.js
+
+// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
+
+// News
 /**
  * ✅ Create News (Handles FormData & File Uploads)
  * @param {FormData} formData - News form data (title, detail, image, etc.)
@@ -1191,6 +1217,7 @@ export const createNews = async (formData) => {
 
     const response = await fetch(`${API_BASE_URL}/news/create/`, {
       method: "POST",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
       body: formData,
     });
 
@@ -1207,7 +1234,6 @@ export const createNews = async (formData) => {
   }
 };
 
-
 /**
  * ✅ Update News (Handles FormData & File Uploads)
  * @param {string} slug - News post slug
@@ -1216,27 +1242,28 @@ export const createNews = async (formData) => {
  */
 export const updateNews = async (slug, formData) => {
   try {
-      console.log("📤 Updating News FormData:");
-      for (let pair of formData.entries()) {
-          console.log(`${pair[0]}:`, pair[1]);
-      }
+    console.log("📤 Updating News FormData:");
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
 
-      // ✅ Corrected API endpoint (Ensure slug placement is correct)
-      const response = await fetch(`${API_BASE_URL}/news/${slug}/update/`, {
-          method: "PATCH",
-          body: formData, // ✅ No headers for FormData
-      });
+    // ✅ Corrected API endpoint (Ensure slug placement is correct)
+    const response = await fetch(`${API_BASE_URL}/news/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),// ✅ Include authentication headers
+      body: formData,
+    });
 
-      if (!response.ok) {
-          const errorText = await response.text();  // ✅ Capture error response
-          console.error("❌ Update News API Error:", errorText);
-          throw new Error(`Failed to update news: ${errorText}`);
-      }
+    if (!response.ok) {
+      const errorText = await response.text(); // ✅ Capture error response
+      console.error("❌ Update News API Error:", errorText);
+      throw new Error(`Failed to update news: ${errorText}`);
+    }
 
-      return await response.json();
+    return await response.json();
   } catch (error) {
-      console.error("❌ Error updating news:", error);
-      throw error;
+    console.error("❌ Error updating news:", error);
+    throw error;
   }
 };
 
@@ -1247,22 +1274,26 @@ export const updateNews = async (slug, formData) => {
  */
 export const deleteNews = async (slug) => {
   try {
-      const response = await fetch(`${API_BASE_URL}/news/${slug}/delete/`, {
-          method: "DELETE",
-      });
+    const response = await fetch(`${API_BASE_URL}/news/${slug}/delete/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(), // ✅ Include authentication headers
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          console.error("❌ Delete News API Error:", errorData);
-          throw new Error(errorData.detail || "Failed to delete news");
-      }
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete News API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete news");
+    }
 
-      return { success: true, message: "✅ News post deleted successfully!" };
+    return { success: true, message: "✅ News post deleted successfully!" };
   } catch (error) {
-      console.error("❌ Error deleting news:", error);
-      throw error;
+    console.error("❌ Error deleting news:", error);
+    throw error;
   }
 };
+
+// ... (rest of your api.js file) ...
+
 
 /**
  * ✅ Fetch News List with Filtering, Pagination, and Search
