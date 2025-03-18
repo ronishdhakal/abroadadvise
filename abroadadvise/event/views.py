@@ -14,6 +14,8 @@ from university.models import University
 from consultancy.models import Consultancy
 from destination.models import Destination
 from .serializers import EventSerializer
+import json  # ✅ Import the json module
+from django.core.exceptions import ValidationError
 
 
 # ✅ List Events with Pagination, Search, and Filtering (Public Access)
@@ -52,33 +54,46 @@ def all_events(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-@permission_classes([])  # ✅ Public access
 def create_event(request):
     data = request.data.copy()
+    print(data)
+    # ✅ Extract ManyToMany Fields (Expecting JSON strings)
+    try:
+        related_universities_slugs = json.loads(data.pop("related_universities", "[]")[0])
+        related_consultancies_slugs = json.loads(data.pop("related_consultancies", "[]")[0])
+        targeted_destinations_slugs = json.loads(data.pop("targeted_destinations", "[]")[0])
+    except (json.JSONDecodeError, IndexError) as e:
+        return Response({"error": "Invalid JSON format for ManyToMany fields", "details": str(e)},
+                        status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Extract ManyToMany Fields (Expecting slugs)
-    related_universities_slugs = data.pop("related_universities", [])
-    related_consultancies_slugs = data.pop("related_consultancies", [])
-    targeted_destinations_slugs = data.pop("targeted_destinations", [])
-
-    # ✅ Handle Organizer Using Slug
-    organizer_slug = data.pop("organizer_slug", None)
-    organizer_type = data.pop("organizer_type", None)
+    # ✅ Handle Organizer Using Slug (Strings)
+    organizer_slug = data.pop("organizer_slug", [None])[0]  # Get the first item
+    organizer_type = data.pop("organizer_type", [None])[0]  # Get the first item
 
     serializer = EventSerializer(data=data, context={'request': request})
     if serializer.is_valid():
         event = serializer.save()
 
         # ✅ Save ManyToMany Relationships Using Slugs
-        event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
-        event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
-        event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+        try:
+            event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
+            event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
+            event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+        except Exception as e:
+            return Response({"error": "Invalid slug in ManyToMany fields", "details": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # ✅ Assign Organizer
         if organizer_slug and organizer_type == "university":
-            event.organizer = University.objects.filter(slug=organizer_slug).first()
+            try:
+                event.organizer = University.objects.get(slug=organizer_slug)
+            except University.DoesNotExist:
+                return Response({"error": "University with that slug not found"}, status=status.HTTP_400_BAD_REQUEST)
         elif organizer_slug and organizer_type == "consultancy":
-            event.organizer = Consultancy.objects.filter(slug=organizer_slug).first()
+            try:
+                event.organizer = Consultancy.objects.get(slug=organizer_slug)
+            except Consultancy.DoesNotExist:
+                return Response({"error": "Consultancy with that slug not found"}, status=status.HTTP_400_BAD_REQUEST)
         event.save()
 
         return Response(EventSerializer(event, context={'request': request}).data, status=status.HTTP_201_CREATED)
@@ -91,7 +106,8 @@ def create_event(request):
 @permission_classes([])  # ✅ Public access
 def get_event(request, slug):
     try:
-        event = Event.objects.prefetch_related("related_universities", "related_consultancies", "targeted_destinations").get(slug__iexact=slug)
+        event = Event.objects.prefetch_related("related_universities", "related_consultancies",
+                                                 "targeted_destinations").get(slug__iexact=slug)
         serializer = EventSerializer(event, context={'request': request})
         return Response(serializer.data)
     except Event.DoesNotExist:
@@ -107,14 +123,18 @@ def update_event(request, slug):
         event = Event.objects.get(slug=slug)
         data = request.data.copy()
 
-        # ✅ Extract ManyToMany Fields (Expecting slugs)
-        related_universities_slugs = data.pop("related_universities", [])
-        related_consultancies_slugs = data.pop("related_consultancies", [])
-        targeted_destinations_slugs = data.pop("targeted_destinations", [])
-
-        # ✅ Handle Organizer Using Slug
-        organizer_slug = data.pop("organizer_slug", None)
-        organizer_type = data.pop("organizer_type", None)
+        print(data)
+        # ✅ Extract ManyToMany Fields (Expecting JSON strings)
+        try:
+            related_universities_slugs = json.loads(data.pop("related_universities", "[]")[0])
+            related_consultancies_slugs = json.loads(data.pop("related_consultancies", "[]")[0])
+            targeted_destinations_slugs = json.loads(data.pop("targeted_destinations", "[]")[0])
+        except (json.JSONDecodeError, IndexError) as e:
+            return Response({"error": "Invalid JSON format for ManyToMany fields", "details": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
+        # ✅ Handle Organizer Using Slug (Strings)
+        organizer_slug = data.pop("organizer_slug", [None])[0] # Get the first item
+        organizer_type = data.pop("organizer_type", [None])[0] # Get the first item
 
         serializer = EventSerializer(event, data=data, partial=True, context={'request': request})
 
@@ -122,18 +142,32 @@ def update_event(request, slug):
             event = serializer.save()
 
             # ✅ Save ManyToMany Relationships Using Slugs
-            if related_universities_slugs:
-                event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
-            if related_consultancies_slugs:
-                event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
-            if targeted_destinations_slugs:
-                event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+            try:
+                if related_universities_slugs:
+                    event.related_universities.set(University.objects.filter(slug__in=related_universities_slugs))
+                if related_consultancies_slugs:
+                    event.related_consultancies.set(Consultancy.objects.filter(slug__in=related_consultancies_slugs))
+                if targeted_destinations_slugs:
+                    event.targeted_destinations.set(Destination.objects.filter(slug__in=targeted_destinations_slugs))
+            except Exception as e:
+                return Response({"error": "Invalid slug in ManyToMany fields", "details": str(e)},
+                                status=status.HTTP_400_BAD_REQUEST)
 
             # ✅ Assign Organizer
             if organizer_slug and organizer_type == "university":
-                event.organizer = University.objects.filter(slug=organizer_slug).first()
+                try:
+                    event.organizer = University.objects.get(slug=organizer_slug)
+                except University.DoesNotExist:
+                    return Response({"error": "University with that slug not found"},
+                                    status=status.HTTP_400_BAD_REQUEST)
             elif organizer_slug and organizer_type == "consultancy":
-                event.organizer = Consultancy.objects.filter(slug=organizer_slug).first()
+                try:
+                    event.organizer = Consultancy.objects.get(slug=organizer_slug)
+                except Consultancy.DoesNotExist:
+                    return Response({"error": "Consultancy with that slug not found"},
+                                    status=status.HTTP_400_BAD_REQUEST)
+            else:
+                event.organizer = None
             event.save()
 
             return Response(EventSerializer(event, context={'request': request}).data)
@@ -147,7 +181,6 @@ def update_event(request, slug):
 # ✅ Delete Event (Now Publicly Accessible)
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-@permission_classes([])  # ✅ Public access
 def delete_event(request, slug):
     try:
         event = Event.objects.get(slug=slug)

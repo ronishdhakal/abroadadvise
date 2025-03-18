@@ -912,38 +912,21 @@ export const fetchEventDetails = async (slug) => {
   }
 };
 
-/**
- * ✅ Convert Array of Slugs to JSON
- * @param {FormData} formData - FormData object
- * @param {string} key - Key for array fields
- */
+// utils/api.js
+// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
+
 /**
  * ✅ Convert Array of Slugs to JSON String for FormData
  * @param {FormData} formData
  * @param {string} key - The field name to convert (e.g., "targeted_destinations")
  */
 const convertToSlugJson = (formData, key) => {
-  let value = formData.get(key);
-
-  if (typeof value === "string") {
-      try {
-          value = JSON.parse(value); // Parse if already in JSON format
-      } catch {
-          value = []; // If parsing fails, fallback to an empty array
-      }
+  const values = formData.getAll(key); // Get all values for the key
+  if (values.length > 0) {
+      formData.delete(key); // Remove all existing entries for the key
+      formData.set(key, JSON.stringify(values)); // Add the JSON string as a single entry
   }
-
-  if (!Array.isArray(value)) {
-      value = [];
-  }
-
-  formData.set(key, JSON.stringify(value)); // Save as JSON string
 };
-
-
-// utils/api.js
-
-// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
 
 /**
  * ✅ Create Event (Handles FormData & File Uploads)
@@ -962,10 +945,6 @@ export const createEvent = async (formData) => {
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
-    // ✅ Ensure organizer slug & type are strings
-    formData.set("organizer_slug", formData.get("organizer_slug") || "");
-    formData.set("organizer_type", formData.get("organizer_type") || "");
-
     const response = await fetch(`${API_BASE_URL}/event/create/`, {
       method: "POST",
       headers: getAuthHeaders(), // ✅ Include authentication headers
@@ -973,9 +952,9 @@ export const createEvent = async (formData) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Create Event API Error:", errorData);
-      throw new Error(errorData.detail || "Failed to create event");
+      const errorText = await response.text();
+      console.error("❌ Create Event API Error:", errorText);
+      throw new Error(errorText || "Failed to create event");
     }
 
     return await response.json();
@@ -1003,9 +982,6 @@ export const updateEvent = async (slug, formData) => {
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
-    // ✅ Ensure organizer slug & type are strings
-    formData.set("organizer_slug", formData.get("organizer_slug") || "");
-    formData.set("organizer_type", formData.get("organizer_type") || "");
 
     const response = await fetch(`${API_BASE_URL}/event/${slug}/update/`, {
       method: "PATCH",
@@ -1014,9 +990,9 @@ export const updateEvent = async (slug, formData) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("❌ Update Event API Error:", errorData);
-      throw new Error(errorData.detail || "Failed to update event");
+      const errorText = await response.text();
+      console.error("❌ Update Event API Error:", errorText);
+      throw new Error(errorText || "Failed to update event");
     }
 
     return await response.json();
@@ -1025,6 +1001,8 @@ export const updateEvent = async (slug, formData) => {
     throw error;
   }
 };
+// ... (rest of your api.js file) ...
+
 
 /**
  * ✅ Delete Event

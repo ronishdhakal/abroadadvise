@@ -7,7 +7,6 @@ const EventOverview = ({ formData, setFormData }) => {
   const [allConsultancies, setAllConsultancies] = useState([]);
   const [allUniversities, setAllUniversities] = useState([]);
   const [allDestinations, setAllDestinations] = useState([]);
-  const [selectedOrganizerType, setSelectedOrganizerType] = useState("consultancy");
 
   // ✅ Fetch Data on Component Mount
   useEffect(() => {
@@ -32,7 +31,6 @@ const EventOverview = ({ formData, setFormData }) => {
   // ✅ Handle Organizer Type Selection
   const handleOrganizerTypeChange = (e) => {
     const type = e.target.value;
-    setSelectedOrganizerType(type);
     setFormData((prev) => ({
       ...prev,
       organizer_slug: "", // Reset organizer when type changes
@@ -66,7 +64,7 @@ const EventOverview = ({ formData, setFormData }) => {
         <label className="block text-gray-700 font-semibold">Organizer Type:</label>
         <select
           name="organizer_type"
-          value={selectedOrganizerType}
+          value={formData.organizer_type}
           onChange={handleOrganizerTypeChange}
           className="w-full p-2 border border-gray-300 rounded mt-1"
         >
@@ -85,7 +83,7 @@ const EventOverview = ({ formData, setFormData }) => {
           className="w-full p-2 border border-gray-300 rounded mt-1"
         >
           <option value="">Select Organizer</option>
-          {(selectedOrganizerType === "consultancy" ? allConsultancies : allUniversities).map((org) => (
+          {(formData.organizer_type === "consultancy" ? allConsultancies : allUniversities).map((org) => (
             <option key={org.slug} value={org.slug}>
               {org.name}
             </option>
