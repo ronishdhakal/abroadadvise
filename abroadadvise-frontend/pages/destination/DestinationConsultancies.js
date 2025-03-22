@@ -12,9 +12,10 @@ const DestinationConsultancies = ({ consultancies = [], destination }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
 
-  // ✅ Safe check for consultancies linked to this destination
+  // ✅ Safe check for consultancies linked to this destination AND are verified
   const matchedConsultancies = consultancies.filter(
     (consultancy) =>
+      consultancy.verified && // ✅ Only include verified consultancies
       Array.isArray(consultancy.study_abroad_destinations) && // Ensure it's an array
       consultancy.study_abroad_destinations.some((dest) => dest.id === destination.id) // Check destination match
   );
@@ -75,17 +76,19 @@ const DestinationConsultancies = ({ consultancies = [], destination }) => {
                   </div>
               </a>
 
-              {/* ✅ Apply Now Button */}
-              <button
-                onClick={() => handleApplyNow(consultancy)}
-                className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
-              >
-                Apply
-              </button>
+              {/* ✅ Apply Now Button (Only for verified consultancies) */}
+              {consultancy.verified && (
+                <button
+                  onClick={() => handleApplyNow(consultancy)}
+                  className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+                >
+                  Apply
+                </button>
+              )}
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">No consultancies available for this destination.</p>
+          <p className="text-sm text-gray-500">No verified consultancies available for this destination.</p>
         )}
       </div>
 

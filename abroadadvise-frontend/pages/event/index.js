@@ -54,7 +54,7 @@ export default function Events() {
   return (
     <>
       <Head>
-        <title>Events - Abroad Advise</title>
+        <title>Study Abroad Education Fairs & Events in Nepal - Abroad Advise</title>
       </Head>
       <Header />
       <HeroSection />

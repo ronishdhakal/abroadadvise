@@ -7,7 +7,7 @@ const HeroSection = () => {
           style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           <h1 className="text-3xl md:text-5xl font-extrabold">
-            Upcoming Events
+            Education Fairs in Nepal - Study Abroad
           </h1>
           <p className="text-base md:text-lg mt-3">
             Discover educational events, university fairs, and workshops to help you on your academic journey.

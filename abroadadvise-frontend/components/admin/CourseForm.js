@@ -49,9 +49,9 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
             ...data,
             icon: data.icon || prev.icon,
             cover_image: data.cover_image || prev.cover_image,
-            university: data.university?.id || null, // Load the university Id, or null
-            disciplines: data.disciplines?.map((d) => d.id) || [], // Load the disciplines array of id, or empty array
-            destination: data.destination?.id || null, // Load the destination Id, or null
+            university: data.university_details?.id || null, // Load the university Id, or null
+            disciplines: data.disciplines_details?.map((d) => d.id) || [], // Load the disciplines array of id, or empty array
+            destination: data.destination_details?.id || null, // Load the destination Id, or null
           }));
         })
         .catch((error) => {
@@ -83,13 +83,13 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
 
     // ✅ Append all non-file fields, including university, disciplines, and destination
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "icon" && key !== "cover_image" && value !== null && value !== undefined) {
-        if (Array.isArray(value)) {
-          submissionData.append(key, JSON.stringify(value)); // Convert array fields (e.g., disciplines)
-        } else {
-          submissionData.append(key, value);
-        }
+      if (key !== "icon" && key !== "cover_image" && value !== null && value !== undefined && key !== "disciplines") {
+        submissionData.append(key, value);
       }
+    });
+    // ✅ Append disciplines as an array of numbers
+    formData.disciplines.forEach((disciplineId) => { // updated code
+      submissionData.append("disciplines", Number(disciplineId)); // updated code
     });
 
     // ✅ Append image fields only if they are new files

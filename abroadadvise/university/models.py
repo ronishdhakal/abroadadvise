@@ -43,6 +43,9 @@ class University(models.Model):
     facilities_features = HTMLField(blank=True, null=True)
     scholarship = HTMLField(blank=True, null=True)
     tuition_fees = models.CharField(max_length=100, blank=True, null=True)
+    
+    # ✅ New field for QS World University Rankings
+    qs_world_ranking = models.CharField(max_length=100, blank=True, null=True)
 
     consultancies_to_apply = models.ManyToManyField('consultancy.Consultancy', blank=True, related_name='universities')
 
@@ -103,4 +106,4 @@ def create_university_user(sender, instance, created, **kwargs):
             user.save()
 
         instance.user = user
-        instance.save(update_fields=["user"])  # ✅ Prevents infinite loops
+        instance.save(update_fields=["user"])

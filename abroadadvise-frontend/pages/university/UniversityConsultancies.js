@@ -33,11 +33,12 @@ const UniversityConsultancies = ({ university }) => {
     fetchAllConsultancies();
   }, [API_BASE_URL]);
 
-  // ✅ 2. Filter consultancies based on the university
+  // ✅ 2. Filter consultancies based on the university AND verification status
   useEffect(() => {
     if (universityId && allConsultancies.length > 0) {
       const universityConsultancies = allConsultancies.filter((consultancy) => {
         return (
+          consultancy.verified && // ✅ Only include verified consultancies
           Array.isArray(consultancy.partner_universities) &&
           consultancy.partner_universities.some((uni) => uni.id === universityId)
         );
@@ -114,18 +115,20 @@ const UniversityConsultancies = ({ university }) => {
                 </div>
               </a>
 
-              {/* ✅ Apply Now Button */}
-              <button
-                onClick={() => handleApplyNow(consultancy)}
-                className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
-              >
-                Apply
-              </button>
+              {/* ✅ Apply Now Button (Only for verified consultancies) */}
+              {consultancy.verified && (
+                <button
+                  onClick={() => handleApplyNow(consultancy)}
+                  className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+                >
+                  Apply
+                </button>
+              )}
             </div>
           ))
         ) : (
           <p className="text-sm text-gray-500">
-            No consultancies available for this university.
+            No verified consultancies available for this university.
           </p>
         )}
       </div>

@@ -9,15 +9,43 @@ class CourseSerializer(serializers.ModelSerializer):
     icon = serializers.ImageField(required=False)
     cover_image = serializers.ImageField(required=False)
 
-    university = serializers.SerializerMethodField()  # ✅ Fetch university details
-    disciplines = serializers.SerializerMethodField()  # ✅ Fetch linked disciplines
-    destination = serializers.SerializerMethodField()  # ✅ Fetch destination details
+    # --- Read-Only Fields for Display ---
+    university_details = serializers.SerializerMethodField(read_only=True)
+    disciplines_details = serializers.SerializerMethodField(read_only=True)
+    destination_details = serializers.SerializerMethodField(read_only=True)
+
+    # --- Writeable Fields for Saving ---
+    university = serializers.PrimaryKeyRelatedField(
+        queryset=University.objects.all(),
+        allow_null=True,
+        required=False,
+        write_only=True
+    )
+    disciplines = serializers.PrimaryKeyRelatedField(
+        queryset=Discipline.objects.all(),
+        many=True,
+        required=False,
+        write_only=True
+    )
+    destination = serializers.PrimaryKeyRelatedField(
+        queryset=Destination.objects.all(),
+        allow_null=True,
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = Course
         fields = '__all__'
+        # fields = [
+        #     'id', 'name', 'slug', 'abbreviation', 'university', 'destination',
+        #     'duration', 'level', 'icon', 'cover_image', 'fee', 'disciplines',
+        #     'priority', 'short_description', 'eligibility', 'course_structure',
+        #     'job_prospects', 'scholarship', 'features', 'university_details',
+        #     'disciplines_details', 'destination_details'
+        # ]
 
-    def get_university(self, obj):
+    def get_university_details(self, obj):
         """ ✅ Return University name, slug, and country """
         if obj.university:
             return {
@@ -28,7 +56,7 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
 
-    def get_destination(self, obj):
+    def get_destination_details(self, obj):
         """ ✅ Return Destination title and slug """
         if obj.destination:
             return {
@@ -38,6 +66,6 @@ class CourseSerializer(serializers.ModelSerializer):
             }
         return None
 
-    def get_disciplines(self, obj):
+    def get_disciplines_details(self, obj):
         """ ✅ Return list of discipline objects with ID & name """
         return [{"id": d.id, "name": d.name} for d in obj.disciplines.all()] if obj.disciplines.exists() else []

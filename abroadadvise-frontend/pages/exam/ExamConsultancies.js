@@ -32,11 +32,12 @@ const ExamConsultancies = ({ exam }) => {
     fetchAllConsultancies();
   }, [API_BASE_URL]);
 
-  // ✅ 2. Filter consultancies based on the exam
+  // ✅ 2. Filter consultancies based on the exam AND verification status
   useEffect(() => {
     if (exam && allConsultancies.length > 0) {
       const examConsultancies = allConsultancies.filter((consultancy) => {
         return (
+          consultancy.verified && // ✅ Only include verified consultancies
           Array.isArray(consultancy.test_preparation) &&
           consultancy.test_preparation.some((ex) => ex.id === exam.id)
         );
@@ -119,17 +120,19 @@ const ExamConsultancies = ({ exam }) => {
                 </div>
               </div>
 
-              {/* ✅ Apply Now Button */}
-              <button
-                onClick={() => handleInquiry(consultancy)}
-                className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
-              >
-                Apply
-              </button>
+              {/* ✅ Apply Now Button (Only for verified consultancies) */}
+              {consultancy.verified && (
+                <button
+                  onClick={() => handleInquiry(consultancy)}
+                  className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
+                >
+                  Apply
+                </button>
+              )}
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">No consultancies available for this exam.</p>
+          <p className="text-sm text-gray-500">No verified consultancies available for this exam.</p>
         )}
       </div>
 

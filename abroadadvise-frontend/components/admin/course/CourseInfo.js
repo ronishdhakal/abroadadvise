@@ -46,7 +46,11 @@ const CourseInfo = ({ formData, setFormData }) => {
       <Select
         isMulti
         options={disciplines.map((d) => ({ value: d.id, label: d.name }))}
-        onChange={(selectedOptions) => setFormData((prev) => ({ ...prev, disciplines: selectedOptions.map((opt) => opt.value) }))}
+        value={formData.disciplines?.map((id) => {
+          const discipline = disciplines.find((d) => d.id === id);
+          return discipline ? { value: discipline.id, label: discipline.name } : null;
+        }).filter(Boolean)}
+        onChange={(selectedOptions) => setFormData((prev) => ({ ...prev, disciplines: selectedOptions.map((opt) => Number(opt.value)) }))}
         className="w-full mb-4"
       />
 
@@ -54,6 +58,7 @@ const CourseInfo = ({ formData, setFormData }) => {
       <label className="block text-gray-700 font-medium">University</label>
       <Select
         options={universities.map((u) => ({ value: u.id, label: u.name }))}
+        value={formData.university ? {value: formData.university, label: universities.find((u) => u.id === formData.university)?.name} : null}
         onChange={(selectedOption) => setFormData((prev) => ({ ...prev, university: selectedOption.value }))}
         className="w-full mb-4"
       />
@@ -62,6 +67,7 @@ const CourseInfo = ({ formData, setFormData }) => {
       <label className="block text-gray-700 font-medium">Study Destination</label>
       <Select
         options={destinations.map((d) => ({ value: d.id, label: d.title }))}
+        value={formData.destination ? {value: formData.destination, label: destinations.find((d) => d.id === formData.destination)?.title} : null}
         onChange={(selectedOption) => setFormData((prev) => ({ ...prev, destination: selectedOption.value }))}
         className="w-full"
       />

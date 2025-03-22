@@ -32,6 +32,7 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
     cover_photo: null,
     type: "",
     disciplines: [], // ✅ Initialize disciplines as an empty array
+    qs_world_ranking: "", // ✅ Add qs_world_ranking to the form data
   });
 
   const [loading, setLoading] = useState(false);
@@ -54,6 +55,7 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
             brochure: data.brochure || prev.brochure,
             disciplines: data.disciplines?.map((item) => Number(item.id)) || [], // updated code
             faqs: Array.isArray(data.faqs) ? data.faqs : [], // ✅ Ensure `faqs` is an array
+            qs_world_ranking: data.qs_world_ranking || "", // ✅ Load qs_world_ranking
           }));
         })
         .catch(() => setError("❌ Failed to load university details"))
@@ -119,6 +121,7 @@ const UniversityForm = ({ universitySlug, onSuccess, onCancel }) => {
         "tuition_fees",
         "about",
         "type",
+        "qs_world_ranking", // ✅ Add qs_world_ranking here
       ].forEach((field) => {
         if (formData[field]) submissionData.append(field, formData[field]);
       });

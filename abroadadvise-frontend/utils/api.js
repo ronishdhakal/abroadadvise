@@ -1,5 +1,7 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; // Fallback in case env is missing
 import axios from "axios";
+import { fetchWithAuth } from "./auth"; // ✅ Import fetchWithAuth
+
 
 
 
@@ -219,14 +221,16 @@ const convertToJson = (formData, key) => {
   } else {
     // ✅ Existing logic for other fields (e.g., districts, study_abroad_destinations)
     // Convert values to integers or keep them as they are, filter NaN values, and convert to string
-    const convertedArray = value.map((item) => {
-      if (typeof item === "string") {
-        const parsedItem = parseInt(item, 10);
-        return isNaN(parsedItem) ? item : parsedItem;
-      } else {
-        return item;
-      }
-    }).filter((item) => typeof item === 'number' || typeof item === 'string');
+    const convertedArray = value
+      .map((item) => {
+        if (typeof item === "string") {
+          const parsedItem = parseInt(item, 10);
+          return isNaN(parsedItem) ? item : parsedItem;
+        } else {
+          return item;
+        }
+      })
+      .filter((item) => typeof item === "number" || typeof item === "string");
     formData.set(key, JSON.stringify(convertedArray));
   }
 };
@@ -464,23 +468,18 @@ export const fetchCourseDetails = async (slug) => {
   }
 };
 
+// ... (other imports and code) ...
 // ✅ Create Course (Handles FormData & File Uploads)
 export const createCourse = async (formData) => {
   try {
-    console.log("📤 Sending Course FormData:");
-
-    // ✅ Log all form data before sending
-    for (let pair of formData.entries()) {
-      console.log(`🔹 ${pair[0]}:`, pair[1]);
-    }
-     // ✅ Remove empty fields to prevent API errors
-     for (let [key, value] of formData.entries()) {
-        if (value === null || value === "null" || value === undefined) {
-           formData.delete(key);
-         }
+    // ✅ Remove empty fields to prevent API errors
+    for (let [key, value] of formData.entries()) {
+      if (value === null || value === "null" || value === undefined) {
+        formData.delete(key);
       }
+    }
 
-    const response = await fetch(`${API_BASE_URL}/course/create/`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/course/create/`, {
       method: "POST",
       headers: getAuthHeaders(), // ✅ No "Content-Type" needed for FormData
       body: formData,
@@ -502,8 +501,6 @@ export const createCourse = async (formData) => {
 // ✅ Update Course (Handles FormData & File Uploads)
 export const updateCourse = async (slug, formData) => {
   try {
-    console.log("📤 Updating Course FormData:");
-
     // ✅ Ensure we only send new files
     if (!formData.get("icon") || !(formData.get("icon") instanceof File)) {
       formData.delete("icon");
@@ -511,18 +508,14 @@ export const updateCourse = async (slug, formData) => {
     if (!formData.get("cover_image") || !(formData.get("cover_image") instanceof File)) {
       formData.delete("cover_image");
     }
-     // ✅ Log all form data before sending
-     for (let pair of formData.entries()) {
-        console.log(`🔹 ${pair[0]}:`, pair[1]);
-     }
-     // ✅ Remove empty fields to prevent API errors
-     for (let [key, value] of formData.entries()) {
-        if (value === null || value === "null" || value === undefined) {
-            formData.delete(key);
-        }
-     }
+    // ✅ Remove empty fields to prevent API errors
+    for (let [key, value] of formData.entries()) {
+      if (value === null || value === "null" || value === undefined) {
+        formData.delete(key);
+      }
+    }
 
-    const response = await fetch(`${API_BASE_URL}/course/${slug}/update/`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/course/${slug}/update/`, {
       method: "PATCH",
       headers: getAuthHeaders(), // ⚠️ Do NOT manually set "Content-Type"
       body: formData,
@@ -540,6 +533,7 @@ export const updateCourse = async (slug, formData) => {
     throw error;
   }
 };
+// ... (rest of the code) ...
 
 
 

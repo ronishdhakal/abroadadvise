@@ -12,15 +12,15 @@ export default function Courses() {
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // Track total pages dynamically
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Filters state
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [countryQuery, setCountryQuery] = useState(null);
   const [universityQuery, setUniversityQuery] = useState(null);
   const [selectedDisciplines, setSelectedDisciplines] = useState([]);
 
-  // Fetch Courses from API
+  // ✅ Fetch Courses from API
   const fetchCourses = async () => {
     try {
       const queryParams = new URLSearchParams({ page: currentPage });
@@ -29,22 +29,24 @@ export default function Courses() {
       if (universityQuery) queryParams.append("university", universityQuery);
       if (countryQuery) queryParams.append("country", countryQuery);
       if (selectedDisciplines.length > 0) {
-        selectedDisciplines.forEach((discipline) =>
-          queryParams.append("disciplines", discipline.value)
+        selectedDisciplines.forEach((d) =>
+          queryParams.append("disciplines", d.value)
         );
       }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/course/?${queryParams.toString()}`
       );
+
       if (!response.ok) throw new Error("Failed to fetch courses");
 
       const data = await response.json();
-      setCourses(data.results);
-      setFilteredCourses(data.results);
-      setTotalPages(data.total_pages || 1); // Dynamically set total pages
+      setCourses(data.results || []);
+      setFilteredCourses(data.results || []);
+      setTotalPages(data.total_pages || 1);
     } catch (error) {
-      setError(error.message);
+      console.error("❌ Error fetching courses:", error);
+      setError(error.message || "Something went wrong.");
     }
   };
 
@@ -52,36 +54,36 @@ export default function Courses() {
     fetchCourses();
   }, [searchQuery, universityQuery, countryQuery, selectedDisciplines, currentPage]);
 
-  // Extract unique disciplines from courses
+  // ✅ Safely extract unique disciplines
   const disciplines = Array.from(
     new Map(
       courses
-        .flatMap((course) => course.disciplines)
+        .flatMap((course) =>
+          Array.isArray(course.disciplines_details || course.disciplines)
+            ? course.disciplines_details || course.disciplines
+            : []
+        )
         .map((discipline) => [discipline.id, discipline])
     ).values()
   );
 
-  // Extract unique universities from courses
+  // ✅ Safely extract universities
   const universities = Array.from(
     new Map(
       courses
-        .filter((course) => course.university)
-        .map((course) => [
-          course.university.slug,
-          { slug: course.university.slug, name: course.university.name },
-        ])
+        .map((course) => course.university_details || course.university)
+        .filter((uni) => uni && uni.slug)
+        .map((uni) => [uni.slug, { slug: uni.slug, name: uni.name }])
     ).values()
   );
 
-  // Extract unique countries from universities
+  // ✅ Safely extract countries
   const countries = Array.from(
     new Map(
       courses
-        .filter((course) => course.university && course.university.country)
-        .map((course) => [
-          course.university.country,
-          { name: course.university.country },
-        ])
+        .map((course) => course.university_details || course.university)
+        .filter((uni) => uni && uni.country)
+        .map((uni) => [uni.country, { name: uni.country }])
     ).values()
   );
 
@@ -89,13 +91,17 @@ export default function Courses() {
     <>
       <Head>
         <title>Top Courses for Nepalese Students to Study Abroad - Abroad Advise</title>
-        <meta name="description" content="Explore top study abroad courses for Nepalese students and plan your international education journey." />
+        <meta
+          name="description"
+          content="Explore top study abroad courses for Nepalese students and plan your international education journey."
+        />
       </Head>
+
       <Header />
       <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
-        {/* Use CourseFilters component directly */}
+        {/* ✅ Filters */}
         <CourseFilters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -110,16 +116,23 @@ export default function Courses() {
           universities={universities}
         />
 
+        {/* ✅ Courses */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
-          {error && <p className="text-center text-red-500">Error: {error}</p>}
+          {error && (
+            <p className="text-center col-span-full text-red-500">{error}</p>
+          )}
           {filteredCourses.length > 0 ? (
-            filteredCourses.map((course) => <CourseCard key={course.slug} course={course} />)
+            filteredCourses.map((course) => (
+              <CourseCard key={course.slug} course={course} />
+            ))
           ) : (
-            <p className="text-center col-span-full text-gray-500">No courses found.</p>
+            <p className="text-center col-span-full text-gray-500">
+              No courses found.
+            </p>
           )}
         </div>
 
-        {/* Pagination only appears when there are multiple pages */}
+        {/* ✅ Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}

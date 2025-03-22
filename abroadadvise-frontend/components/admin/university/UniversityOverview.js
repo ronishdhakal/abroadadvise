@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Globe, FileText } from "lucide-react";
+import { Globe, FileText, Hash } from "lucide-react"; // ✅ Import Hash icon
 
 const UniversityOverview = ({ formData, setFormData }) => {
   // ✅ Handle input changes
@@ -44,6 +44,22 @@ const UniversityOverview = ({ formData, setFormData }) => {
           onChange={handleInputChange}
           className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
         />
+      </div>
+
+      {/* QS World Ranking */}
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium mb-1">QS World Ranking</label>
+        <div className="flex items-center gap-2">
+          <Hash className="h-5 w-5 text-gray-500" /> {/* QS Ranking Icon */}
+          <input
+            type="text"
+            name="qs_world_ranking"
+            placeholder="Enter QS World Ranking (e.g., 100-150, 200)"
+            value={formData.qs_world_ranking || ""}
+            onChange={handleInputChange}
+            className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
+          />
+        </div>
       </div>
 
       {/* Website */}

@@ -65,6 +65,9 @@ def create_university(request):
     disciplines, error_response = extract_disciplines(data)
     if error_response:
         return error_response  # Return error if disciplines parsing fails
+    
+    # ✅ Extract qs_world_ranking
+    qs_world_ranking = data.get("qs_world_ranking")
 
     serializer = UniversitySerializer(data=data)
 
@@ -78,6 +81,10 @@ def create_university(request):
             university.cover_photo = request.FILES["cover_photo"]
         if "brochure" in request.FILES:
             university.brochure = request.FILES["brochure"]
+        
+        # ✅ Set qs_world_ranking
+        if qs_world_ranking:
+            university.qs_world_ranking = qs_world_ranking
 
         # ✅ Set disciplines after saving (ManyToMany field handling)
         if disciplines:
@@ -115,6 +122,9 @@ def update_university(request, slug):
         disciplines, error_response = extract_disciplines(data)
         if error_response:
             return error_response  # Return error if disciplines parsing fails
+        
+        # ✅ Extract qs_world_ranking
+        qs_world_ranking = data.get("qs_world_ranking")
 
         serializer = UniversitySerializer(university, data=data, partial=True)
 
@@ -128,6 +138,10 @@ def update_university(request, slug):
                 updated_university.cover_photo = request.FILES["cover_photo"]
             if "brochure" in request.FILES:
                 updated_university.brochure = request.FILES["brochure"]
+            
+            # ✅ Set qs_world_ranking
+            if qs_world_ranking:
+                updated_university.qs_world_ranking = qs_world_ranking
 
             # ✅ Update disciplines if provided
             if disciplines:
@@ -202,6 +216,9 @@ def update_university_dashboard(request):
 
     university = user.university  # ✅ Get the university linked to the user
     data = request.data.copy()
+    
+    # ✅ Extract qs_world_ranking
+    qs_world_ranking = data.get("qs_world_ranking")
 
     serializer = UniversitySerializer(university, data=data, partial=True)
 
@@ -215,6 +232,10 @@ def update_university_dashboard(request):
             university.cover_photo = request.FILES["cover_photo"]
         if "brochure" in request.FILES:
             university.brochure = request.FILES["brochure"]
+        
+        # ✅ Set qs_world_ranking
+        if qs_world_ranking:
+            university.qs_world_ranking = qs_world_ranking
 
         university.save()
 

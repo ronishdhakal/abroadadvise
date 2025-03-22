@@ -12,7 +12,7 @@ class UniversityAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('University Info', {
-            'fields': ('name', 'slug', 'country', 'address', 'email', 'phone', 'type', 'website', 'verified')
+            'fields': ('name', 'slug', 'country', 'address', 'email', 'phone', 'type', 'website', 'verified', 'qs_world_ranking')
         }),
         ('Media', {
             'fields': ('logo', 'cover_photo', 'brochure')

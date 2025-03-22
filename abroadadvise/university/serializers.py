@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import University
 from consultancy.models import Consultancy  # ✅ Import Consultancy Model
 from course.models import Course  # ✅ Import Course Model
+from core.models import Discipline # ✅ Import Discipline Model
 
 # ✅ Course Serializer
 class CourseSerializer(serializers.ModelSerializer):
@@ -15,7 +16,13 @@ class ConsultancyBasicSerializer(serializers.ModelSerializer):
         model = Consultancy
         fields = ["id", "name", "slug"]
 
-# ✅ University Serializer (Updated with Verification and File Handling)
+# ✅ Discipline Serializer
+class DisciplineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Discipline
+        fields = ["id", "name"]
+
+# ✅ University Serializer (Updated with Verification, File Handling, and Disciplines)
 class UniversitySerializer(serializers.ModelSerializer):
     slug = serializers.ReadOnlyField()  # ✅ Prevent modification of slug
     logo = serializers.SerializerMethodField()
@@ -23,13 +30,15 @@ class UniversitySerializer(serializers.ModelSerializer):
     brochure = serializers.SerializerMethodField()
     courses = CourseSerializer(many=True, read_only=True)  # ✅ Automatically fetch linked courses
     is_verified = serializers.SerializerMethodField()  # ✅ Boolean verification check
+    disciplines = DisciplineSerializer(many=True, read_only=True) # ✅ Add disciplines field
+    qs_world_ranking = serializers.CharField(required=False, allow_blank=True, allow_null=True) # ✅ Add qs_world_ranking field
 
     class Meta:
         model = University
         fields = [
             "id", "name", "slug", "brochure", "logo", "cover_photo", "country", "address", "email", "phone",
             "type", "website", "priority", "eligibility", "facilities_features", "scholarship", "tuition_fees",
-            "about", "faqs", "courses", "is_verified",
+            "about", "faqs", "courses", "is_verified", "disciplines", "qs_world_ranking" # ✅ Add disciplines and qs_world_ranking here
         ]
 
     def get_logo(self, obj):
