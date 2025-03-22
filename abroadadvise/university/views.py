@@ -19,18 +19,20 @@ from inquiry.models import Inquiry  # Import Inquiry model
 from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
 from .pagination import UniversityPagination  # ✅ Import your custom pagination class
 
-# ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
     serializer_class = UniversitySerializer
     permission_classes = [AllowAny]  # 🔓 Public Access
-    pagination_class = UniversityPagination  # ✅ Use custom pagination
+    pagination_class = UniversityPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = UniversityFilter
     search_fields = ['name', 'country']
     renderer_classes = [JSONRenderer]
 
     def get_queryset(self):
-        return University.objects.prefetch_related("disciplines").order_by("priority", "-id")
+        # ✅ Priority first (lowest number = higher priority), then fallback to latest created
+        return University.objects.prefetch_related("disciplines").order_by(
+            "-priority", "-id"
+        )
 
 
 # ✅ Helper Function: Extract and Validate Discipline IDs

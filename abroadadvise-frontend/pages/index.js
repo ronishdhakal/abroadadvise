@@ -18,7 +18,8 @@ export default function Home() {
 
       {/* ✅ Main Content */}
       <main className="flex-1 bg-white py-12">
-        <div className="max-w-6xl mx-auto px-6">
+        {/* 🔽 Removed max-width limit to push content toward edges */}
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Featured Consultancies */}
           <FeaturedConsultancies />
 
@@ -28,7 +29,7 @@ export default function Home() {
           {/* Featured Courses */}
           <FeaturedCourses />
 
-          {/* Featured Events (Bottom Margin Set to 0) */}
+          {/* Featured Events */}
           <div className="mb-0">
             <FeaturedEvents />
           </div>

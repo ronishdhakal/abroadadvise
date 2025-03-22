@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, MapPin, Monitor, Users, RefreshCw } from "lucide-react"; // ✅ Elegant icons
+import { API_BASE_URL } from "@/utils/api"; // ✅ Centralized API URL
 
 export default function UpcomingEvents() {
   const [events, setEvents] = useState([]);
@@ -11,7 +12,7 @@ export default function UpcomingEvents() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/event/");
+        const res = await fetch(`${API_BASE_URL}/event/`);
         const data = await res.json();
         setEvents(data.results.slice(0, 3)); // Show only the latest 3 events
       } catch (error) {

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Globe, GraduationCap, BadgeCheck } from "lucide-react"; // ✅ Elegant icons
+import { Globe, GraduationCap, BadgeCheck } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api";
 
 export default function FeaturedUniversities() {
   const [universities, setUniversities] = useState([]);
@@ -11,10 +12,10 @@ export default function FeaturedUniversities() {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/university/");
+        const res = await fetch(`${API_BASE_URL}/university/`);
         const data = await res.json();
         if (data.results) {
-          setUniversities(data.results.slice(0, 6)); // Get only 6 universities
+          setUniversities(data.results.slice(0, 6));
         }
       } catch (error) {
         console.error("Error fetching universities:", error);
@@ -42,47 +43,47 @@ export default function FeaturedUniversities() {
       </div>
 
       {/* University Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {universities.map((university) => (
-          <div
+          <Link
+            href={`/university/${university.slug}`}
             key={university.id}
-            className="bg-white shadow-md rounded-lg p-6 border flex flex-col justify-between hover:shadow-lg transition-all duration-300"
+            className="group bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
           >
-            {/* Logo & Name */}
-            <div className="flex items-center space-x-4">
-              {/* ✅ Logo now links to detail page */}
-              <Link href={`/university/${university.slug}`} className="w-16 h-16 bg-gray-100 flex items-center justify-center">
-                {university.logo ? (
-                  <Image
-                    src={university.logo}
-                    alt={university.name}
-                    width={60}
-                    height={60}
-                    className="object-contain"
-                  />
-                ) : (
-                  <span className="text-gray-400">N/A</span>
-                )}
-              </Link>
-
-              {/* University Name & Location */}
-              <div className="flex-1">
-                {/* ✅ Name now links to detail page */}
-                <Link href={`/university/${university.slug}`} className="hover:underline flex items-center">
-                  <h3 className="text-lg font-semibold text-gray-900">{university.name}</h3>
-                  {university.verified && (
-                    <span className="ml-2 text-blue-500" title="Verified University">
-                      <BadgeCheck className="h-5 w-5" />
-                    </span>
-                  )}
-                </Link>
-                <p className="text-gray-600 text-sm flex items-center">
-                  <Globe className="w-4 h-4 text-gray-500 mr-1" />
-                  {university.country || "Location not available"}
-                </p>
-              </div>
+            {/* Cover Image */}
+            <div className="w-full h-28 sm:h-32 md:h-40 relative bg-gray-100">
+              {university.cover_photo ? (
+                <Image
+                  src={university.cover_photo}
+                  alt={university.name}
+                  layout="fill"
+                  objectFit="cover"
+                  className="transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  No Image
+                </div>
+              )}
             </div>
-          </div>
+
+            {/* Info */}
+            <div className="p-3 md:p-4">
+              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 flex items-center">
+                {university.name}
+                {university.verified && (
+                  <BadgeCheck
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 ml-2"
+                    title="Verified University"
+                  />
+                )}
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center">
+                <Globe className="w-4 h-4 mr-1 text-gray-500" />
+                {university.country || "Location not available"}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
     </section>
