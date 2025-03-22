@@ -12,16 +12,18 @@ from core.pagination import StandardResultsSetPagination
 from core.filters import ExamFilter
 from .models import Exam
 from .serializers import ExamSerializer
+from .pagination import ExamPagination  # ✅ Use custom pagination
 
 # ✅ List Exams with Pagination, Search, and Filtering (Public Access)
 class ExamListView(generics.ListAPIView):
-    queryset = Exam.objects.all().order_by("name")  # ✅ Ordered alphabetically
+    queryset = Exam.objects.all().order_by("name")  # ✅ Alphabetical order
     serializer_class = ExamSerializer
     permission_classes = [AllowAny]  # ✅ Public access
-    pagination_class = StandardResultsSetPagination
+    pagination_class = ExamPagination  # ✅ Custom page size control
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ExamFilter
     search_fields = ['name']
+
 
 # ✅ Fetch All Exams (Public Access) - No Pagination (For Dropdowns)
 @api_view(['GET'])

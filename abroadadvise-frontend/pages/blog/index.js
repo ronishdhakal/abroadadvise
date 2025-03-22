@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Header from "../../components/header";
@@ -21,24 +23,32 @@ const BlogList = () => {
 
   const router = useRouter();
 
+  // ✅ Fetch Blogs on Filters or Page Change
   useEffect(() => {
     const fetchBlogs = async () => {
-      try {
-        let queryParams = `?page=${currentPage}`;
-        if (searchQuery) queryParams += `&title=${encodeURIComponent(searchQuery)}`;
-        if (category) queryParams += `&category=${encodeURIComponent(category)}`;
+      setLoading(true);
+      setError(null);
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/${queryParams}`);
+      try {
+        const queryParams = new URLSearchParams();
+        queryParams.append("page", currentPage);
+        if (searchQuery) queryParams.append("search", searchQuery); // ✅ Correct key
+        if (category) queryParams.append("category", category);
+
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/blog/?${queryParams.toString()}`;
+        const res = await fetch(url);
+
         if (!res.ok) throw new Error("Failed to fetch blogs");
 
         const data = await res.json();
         setBlogs(data.results || []);
-        setTotalPages(data.total_pages || 1);
+        setTotalPages(Math.ceil(data.count / 10) || 1);
 
-        router.push(`/blog${queryParams}`, undefined, { shallow: true });
+        // ✅ Update URL without reload
+        router.push(`/blog?${queryParams.toString()}`, undefined, { shallow: true });
       } catch (error) {
-        setError("Error fetching blogs.");
         console.error("Error fetching blogs:", error);
+        setError("Something went wrong while loading blogs.");
       } finally {
         setLoading(false);
       }
@@ -50,27 +60,32 @@ const BlogList = () => {
   return (
     <>
       <Head>
-        <title>Blogs - Abroad Advise</title>
+        <title>Study Abroad Blogs - Abroad Advise</title>
+        <meta name="description" content="Read helpful blogs for Nepalese students planning to study abroad." />
       </Head>
+
       <Header />
       <BlogHeroSection />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 bg-white">
         <div className="flex items-center gap-4">
-          {/* Search Bar */}
+          {/* ✅ Search Bar */}
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search blogs..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // ✅ Reset page on search
+              }}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
               aria-label="Search Blogs"
             />
           </div>
 
-          {/* Filter Toggle Button */}
+          {/* ✅ Toggle Filter Button */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center bg-blue-600 text-white px-5 py-3 rounded-lg shadow-md hover:bg-blue-700 transition"
@@ -80,13 +95,13 @@ const BlogList = () => {
           </button>
         </div>
 
-        {/* Filter Section - Only Category Selection */}
+        {/* ✅ Filter Panel */}
         {showFilters && (
           <div className="mt-4">
-            <BlogFilter 
-              category={category} 
-              setCategory={setCategory} 
-            />
+            <BlogFilter category={category} setCategory={(val) => {
+              setCategory(val);
+              setCurrentPage(1); // ✅ Reset to first page on category change
+            }} />
           </div>
         )}
       </div>
@@ -99,7 +114,7 @@ const BlogList = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {blogs.map((blog) => (
-                  <BlogCard key={blog.id} blog={blog} />
+                  <BlogCard key={blog.slug} blog={blog} />
                 ))}
               </div>
             </div>
@@ -107,6 +122,7 @@ const BlogList = () => {
             <p className="text-center text-gray-500 mt-8">No blogs found.</p>
           )}
 
+          {/* ✅ Pagination */}
           {totalPages > 1 && (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex justify-center">
               <BlogPagination

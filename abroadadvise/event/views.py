@@ -16,19 +16,28 @@ from destination.models import Destination
 from .serializers import EventSerializer
 import json  # ✅ Import the json module
 from django.core.exceptions import ValidationError
+from .pagination import EventPagination  # ✅ Use the event-specific pagination
 
 
-# ✅ List Events with Pagination, Search, and Filtering (Public Access)
+from django.db.models.functions import Coalesce
+from django.db.models import Value, IntegerField
+
 class EventListView(generics.ListAPIView):
     serializer_class = EventSerializer
-    permission_classes = []  # ✅ Publicly accessible
-    pagination_class = StandardResultsSetPagination
+    pagination_class = EventPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = EventFilter
     search_fields = ['name', 'event_type', 'registration_type', 'location']
 
     def get_queryset(self):
-        return Event.objects.all().order_by(F('priority').asc(nulls_last=True), '-date', '-id')
+        return Event.objects.annotate(
+            priority_order=Coalesce('priority', Value(9999, output_field=IntegerField()))
+        ).order_by(
+            'priority_order',    # ✅ Lower priority first, nulls treated as high number
+            '-date',              # ✅ Upcoming events first
+            '-id'                # ✅ Most recently created last
+        )
+
 
 
 # ✅ List Active (Future) Events

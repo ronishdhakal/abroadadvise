@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api"; // ✅ Import reusable base URL
 
 const BlogHeader = ({ blog }) => {
   const [aboveHeadlineAd, setAboveHeadlineAd] = useState(null);
@@ -12,10 +13,10 @@ const BlogHeader = ({ blog }) => {
   useEffect(() => {
     const fetchAd = async (placement, setAd) => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/ads/?placement=${placement}`);
+        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=${placement}`);
         const data = await res.json();
         if (data.results.length > 0) {
-          setAd(data.results[0]); // ✅ Get the first ad if available
+          setAd(data.results[0]);
         }
       } catch (error) {
         console.error(`Error fetching ${placement} ad:`, error);
@@ -39,7 +40,7 @@ const BlogHeader = ({ blog }) => {
         </Link>
       </div>
 
-      {/* ✅ Full-Width Ad Above Blog Title (Aligned Left) */}
+      {/* ✅ Ad Above Blog Title */}
       {aboveHeadlineAd && (
         <div className="w-full flex justify-start items-center mb-4">
           <a href={aboveHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
@@ -54,7 +55,7 @@ const BlogHeader = ({ blog }) => {
         </div>
       )}
 
-      {/* ✅ Blog Category Badge */}
+      {/* ✅ Blog Category */}
       {blog.category?.name && (
         <div className="mb-2">
           <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
@@ -63,10 +64,10 @@ const BlogHeader = ({ blog }) => {
         </div>
       )}
 
-      {/* ✅ Blog Title */}
+      {/* ✅ Title */}
       <h1 className="text-4xl font-bold text-black leading-tight">{blog.title}</h1>
 
-      {/* ✅ Full-Width Ad Below Blog Title (Aligned Left) */}
+      {/* ✅ Ad Below Blog Title */}
       {belowHeadlineAd && (
         <div className="w-full flex justify-start items-center mt-4">
           <a href={belowHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
@@ -105,7 +106,7 @@ const BlogHeader = ({ blog }) => {
         )}
       </div>
 
-      {/* ✅ Full-Width Ad Below Featured Image (Aligned Left) */}
+      {/* ✅ Ad Below Image */}
       {belowImageAd && (
         <div className="w-full flex justify-start items-center mt-4">
           <a href={belowImageAd.redirect_url} target="_blank" rel="noopener noreferrer">

@@ -17,12 +17,13 @@ import json
 
 from inquiry.models import Inquiry  # Import Inquiry model
 from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
+from .pagination import UniversityPagination  # ✅ Import your custom pagination class
 
 # ✅ Public University List with Pagination, Search, and Filtering
 class UniversityListView(ListAPIView):
     serializer_class = UniversitySerializer
-    permission_classes = [AllowAny]  # 🔓 Public Access (No authentication required)
-    pagination_class = StandardResultsSetPagination
+    permission_classes = [AllowAny]  # 🔓 Public Access
+    pagination_class = UniversityPagination  # ✅ Use custom pagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = UniversityFilter
     search_fields = ['name', 'country']

@@ -9,6 +9,7 @@ from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.utils.text import slugify
 from django.contrib.auth import get_user_model
+from .pagination import ConsultancyPagination  # Use your custom pagination class
 import json
 import os
 from django.conf import settings
@@ -26,18 +27,21 @@ from inquiry.serializers import InquirySerializer  # Import the InquirySerialize
 
 User = get_user_model()
 
-# ✅ Publicly Accessible List of Consultancies
 class ConsultancyListView(ListAPIView):
     serializer_class = ConsultancySerializer
-    pagination_class = StandardResultsSetPagination
+    pagination_class = ConsultancyPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = ConsultancyFilter
     search_fields = ["name", "services"]
 
     def get_queryset(self):
         return Consultancy.objects.prefetch_related(
-            "districts", "study_abroad_destinations", "test_preparation",
-            "partner_universities", "gallery_images", "branches"
+            "districts",
+            "study_abroad_destinations",
+            "test_preparation",
+            "partner_universities",
+            "gallery_images",
+            "branches",
         ).order_by("priority", "-id").distinct()
 
 # ✅ Publicly Accessible Single Consultancy Detail View

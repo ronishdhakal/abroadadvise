@@ -16,11 +16,12 @@ const ExamPage = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Fetch exams with pagination & search
+  // ✅ Fetch exams
   const loadExams = async () => {
     setLoading(true);
     setError(null);
@@ -28,8 +29,8 @@ const ExamPage = () => {
 
     try {
       const data = await fetchExams(page, search);
-      console.log("✅ Fetched Exams Data:", data.results);
-      setExams(data.results);
+      setExams(data.results || []);
+      setTotalPages(Math.ceil(data.count / 10));
     } catch (err) {
       console.error("❌ Failed to load exams:", err);
       setError("Failed to load exams.");
@@ -42,11 +43,9 @@ const ExamPage = () => {
     loadExams();
   }, [page, search]);
 
-  // ✅ Handle Delete Exam with Optimistic UI & Error Handling
   const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this exam?")) return;
 
-    // ✅ Optimistic UI Update (Remove from list instantly)
     const originalExams = [...exams];
     setExams((prev) => prev.filter((e) => e.slug !== slug));
 
@@ -56,13 +55,10 @@ const ExamPage = () => {
     } catch (err) {
       console.error("❌ Failed to delete exam:", err);
       setError("Failed to delete exam.");
-
-      // ✅ Revert UI if deletion fails
-      setExams(originalExams);
+      setExams(originalExams); // Revert on failure
     }
   };
 
-  // ✅ Handle Edit Exam (Pre-fill Form)
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
@@ -79,7 +75,6 @@ const ExamPage = () => {
     }
   };
 
-  // ✅ Handle Successful Create/Update
   const handleSuccess = () => {
     setShowForm(false);
     setEditingSlug(null);
@@ -92,10 +87,29 @@ const ExamPage = () => {
     <AdminLayout>
       <h1 className="text-2xl font-bold mb-4">Manage Exams</h1>
 
-      {/* ✅ Success Message */}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-      {/* ✅ Toggle Form for Create/Edit */}
+      {/* ✅ Search Field */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search exams..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // Reset page when new search is triggered
+          }}
+          className="border rounded-lg p-2 w-full"
+        />
+        <button
+          onClick={loadExams}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Search
+        </button>
+      </div>
+
+      {/* ✅ Toggle Form */}
       <button
         onClick={() => {
           setShowForm(!showForm);
@@ -107,7 +121,6 @@ const ExamPage = () => {
         {showForm ? "Cancel" : "Add New Exam"}
       </button>
 
-      {/* ✅ Exam Form */}
       {showForm && (
         <ExamForm
           examSlug={editingSlug}
@@ -121,58 +134,81 @@ const ExamPage = () => {
         />
       )}
 
-      {/* ✅ Error Handling */}
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* ✅ Loading State */}
       {loading ? (
         <p>Loading exams...</p>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Type</th>
-              <th className="border p-2">Icon</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {exams.map((exam, index) => (
-              <tr key={exam.id}>
-                <td className="border p-2">{index + 1}</td>
-                <td className="border p-2">{exam.name}</td>
-                <td className="border p-2">{exam.type.replace("_", " ")}</td>
-                <td className="border p-2">
-                  {exam.icon ? (
-                    <img
-                      src={exam.icon}
-                      alt="Exam Icon"
-                      className="w-12 h-12 object-contain"
-                    />
-                  ) : (
-                    "No Icon"
-                  )}
-                </td>
-                <td className="border p-2">
-                  <button
-                    onClick={() => handleEdit(exam.slug)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(exam.slug)}
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                  >
-                    Delete
-                  </button>
-                </td>
+        <>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Name</th>
+                <th className="border p-2">Type</th>
+                <th className="border p-2">Icon</th>
+                <th className="border p-2">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {exams.map((exam, index) => (
+                <tr key={exam.id}>
+                  <td className="border p-2">{index + 1 + (page - 1) * 10}</td>
+                  <td className="border p-2">{exam.name}</td>
+                  <td className="border p-2">{exam.type.replace("_", " ")}</td>
+                  <td className="border p-2">
+                    {exam.icon ? (
+                      <img
+                        src={exam.icon}
+                        alt="Exam Icon"
+                        className="w-12 h-12 object-contain"
+                      />
+                    ) : (
+                      "No Icon"
+                    )}
+                  </td>
+                  <td className="border p-2">
+                    <button
+                      onClick={() => handleEdit(exam.slug)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(exam.slug)}
+                      className="bg-red-500 text-white px-3 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* ✅ Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span className="px-4 py-2 font-semibold">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </AdminLayout>
   );

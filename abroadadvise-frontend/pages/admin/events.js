@@ -4,19 +4,21 @@ import { useEffect, useState } from "react";
 import Head from "next/head"; // ✅ SEO Optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import EventForm from "@/components/admin/EventForm";
-import { 
-  fetchEvents, 
-  deleteEvent, 
-  fetchEventDetails 
+import {
+  fetchEvents,
+  deleteEvent,
+  fetchEventDetails,
 } from "@/utils/api";
+import Pagination from "@/pages/event/Pagination"; // ✅ Add pagination component
 
-const EventsPage = ({ initialEvents }) => {
+const EventsPage = ({ initialEvents, initialTotalPages }) => {
   const [events, setEvents] = useState(initialEvents || []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(initialTotalPages || 1);
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -29,8 +31,8 @@ const EventsPage = ({ initialEvents }) => {
 
     try {
       const data = await fetchEvents(page, search);
-      console.log("✅ Fetched Events Data:", data.results);
       setEvents(data.results || []);
+      setTotalPages(Math.ceil(data.count / 10));
     } catch (err) {
       console.error("❌ Failed to load events:", err);
       setError("Failed to load events.");
@@ -47,7 +49,6 @@ const EventsPage = ({ initialEvents }) => {
   const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
-    // Optimistic UI update
     const originalEvents = [...events];
     setEvents((prev) => prev.filter((e) => e.slug !== slug));
 
@@ -57,11 +58,11 @@ const EventsPage = ({ initialEvents }) => {
     } catch (err) {
       console.error("❌ Failed to delete event:", err);
       setError("❌ Failed to delete event.");
-      setEvents(originalEvents); // Revert UI on failure
+      setEvents(originalEvents);
     }
   };
 
-  // ✅ Handle Edit Event (Pre-fill Form)
+  // ✅ Handle Edit Event
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
@@ -69,8 +70,7 @@ const EventsPage = ({ initialEvents }) => {
 
     try {
       const eventData = await fetchEventDetails(slug);
-      console.log("✅ Editing Event:", eventData);
-      setEditingData(eventData); // Fill in data for editing
+      setEditingData(eventData);
     } catch (err) {
       console.error("❌ Failed to load event details:", err);
       setError("❌ Failed to load event details.");
@@ -79,7 +79,6 @@ const EventsPage = ({ initialEvents }) => {
     }
   };
 
-  // ✅ Handle Successful Create/Update
   const handleSuccess = () => {
     setShowForm(false);
     setEditingSlug(null);
@@ -90,32 +89,39 @@ const EventsPage = ({ initialEvents }) => {
 
   return (
     <AdminLayout>
-      {/* ✅ SEO Optimization */}
       <Head>
         <title>Manage Events | Admin Panel</title>
-        <meta name="description" content="Manage events in Abroad Advise admin panel. Add, edit, and delete event records seamlessly." />
+        <meta
+          name="description"
+          content="Manage events in Abroad Advise admin panel. Add, edit, and delete event records seamlessly."
+        />
       </Head>
 
       <h1 className="text-2xl font-bold mb-4">Manage Events</h1>
 
-      {/* ✅ Success Message */}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-      {/* ✅ Search Functionality */}
+      {/* ✅ Search */}
       <div className="mb-4 flex gap-2">
         <input
           type="text"
           placeholder="Search events..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           className="border rounded-lg p-2 w-full"
         />
-        <button onClick={loadEvents} className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          onClick={loadEvents}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           Search
         </button>
       </div>
 
-      {/* ✅ Toggle Form for Create/Edit */}
+      {/* ✅ Toggle Form */}
       <button
         onClick={() => {
           setShowForm(!showForm);
@@ -127,7 +133,7 @@ const EventsPage = ({ initialEvents }) => {
         {showForm ? "Cancel" : "Add New Event"}
       </button>
 
-      {/* ✅ Event Form */}
+      {/* ✅ Form Component */}
       {showForm && (
         <EventForm
           eventSlug={editingSlug}
@@ -141,62 +147,77 @@ const EventsPage = ({ initialEvents }) => {
         />
       )}
 
-      {/* ✅ Error Handling */}
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* ✅ Loading State */}
       {loading ? (
         <p>Loading events...</p>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Event Name</th>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Type</th>
-              <th className="border p-2">Featured Image</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.length > 0 ? (
-              events.map((event, index) => (
-                <tr key={event.id}>
-                  <td className="border p-2">{index + 1}</td>
-                  <td className="border p-2">{event.name}</td>
-                  <td className="border p-2">{event.date}</td>
-                  <td className="border p-2 capitalize">{event.event_type}</td>
-                  <td className="border p-2">
-                    {event.featured_image ? (
-                      <img
-                        src={event.featured_image}
-                        alt="Featured"
-                        className="w-16 h-12 object-cover"
-                      />
-                    ) : (
-                      "No Image"
-                    )}
-                  </td>
-                  <td className="border p-2">
-                    <button onClick={() => handleEdit(event.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(event.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
-                      Delete
-                    </button>
+        <>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Event Name</th>
+                <th className="border p-2">Date</th>
+                <th className="border p-2">Type</th>
+                <th className="border p-2">Featured Image</th>
+                <th className="border p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.length > 0 ? (
+                events.map((event, index) => (
+                  <tr key={event.id}>
+                    <td className="border p-2">{index + 1 + (page - 1) * 10}</td>
+                    <td className="border p-2">{event.name}</td>
+                    <td className="border p-2">{event.date}</td>
+                    <td className="border p-2 capitalize">{event.event_type}</td>
+                    <td className="border p-2">
+                      {event.featured_image ? (
+                        <img
+                          src={event.featured_image}
+                          alt="Featured"
+                          className="w-16 h-12 object-cover"
+                        />
+                      ) : (
+                        "No Image"
+                      )}
+                    </td>
+                    <td className="border p-2">
+                      <button
+                        onClick={() => handleEdit(event.slug)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(event.slug)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center p-4">
+                    No events found.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6" className="text-center p-4">
-                  No events found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+
+          {/* ✅ Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </AdminLayout>
   );
@@ -205,10 +226,20 @@ const EventsPage = ({ initialEvents }) => {
 // ✅ Server-Side Rendering
 export async function getServerSideProps() {
   try {
-    const events = await fetchEvents();
-    return { props: { initialEvents: events.results || [] } };
+    const events = await fetchEvents(1);
+    return {
+      props: {
+        initialEvents: events.results || [],
+        initialTotalPages: Math.ceil(events.count / 10) || 1,
+      },
+    };
   } catch (error) {
-    return { props: { initialEvents: [] } };
+    return {
+      props: {
+        initialEvents: [],
+        initialTotalPages: 1,
+      },
+    };
   }
 }
 

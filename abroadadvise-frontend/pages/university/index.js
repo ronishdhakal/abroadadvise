@@ -1,19 +1,21 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import Head from "next/head"; // ✅ Import Head for setting the page title
+import Head from "next/head";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import HeroSection from "./HeroSection";
 import UniversityFilters from "./UniversityFilters";
 import UniversityCard from "./UniversityCard";
-import Pagination from "./Pagination";
 import { Search, Filter } from "lucide-react";
+import Pagination from "../consultancy/Pagination"; // Import the Pagination component
 
 const UniversityList = ({ initialUniversities, initialTotalPages, disciplines }) => {
   const [universities, setUniversities] = useState(initialUniversities);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
-  const [searchQuery, setSearchQuery] = useState(""); 
-  const [countryQuery, setCountryQuery] = useState(""); 
-  const [selectedDisciplines, setSelectedDisciplines] = useState([]); // ✅ New: Store selected disciplines
+  const [searchQuery, setSearchQuery] = useState("");
+  const [countryQuery, setCountryQuery] = useState("");
+  const [selectedDisciplines, setSelectedDisciplines] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -25,7 +27,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
       if (searchQuery) queryParams.append("search", searchQuery);
       if (countryQuery) queryParams.append("country", countryQuery);
       if (selectedDisciplines.length > 0) {
-        queryParams.append("disciplines", selectedDisciplines.map(d => d.value).join(",")); // ✅ Apply discipline filter
+        queryParams.append("disciplines", selectedDisciplines.map(d => d.value).join(","));
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?${queryParams.toString()}`);
@@ -33,24 +35,23 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
 
       const data = await response.json();
       setUniversities(data.results || []);
-      setTotalPages(data.total_pages || 1);
+      setTotalPages(Math.ceil(data.count / 10)); // ✅ Updated for paginated API
     } catch (error) {
       console.error("Error fetching universities:", error.message);
     }
   };
 
-  // ✅ Fetch universities on filter change
   useEffect(() => {
     fetchUniversities();
   }, [searchQuery, countryQuery, selectedDisciplines, currentPage]);
 
   return (
     <>
-    {/* ✅ Set Page Title & Meta Description */}
-    <Head>
-        <title>Best Universities for Nepalese Students to Study Abroad -Abroad Advise</title>
+      <Head>
+        <title>Best Universities for Nepalese Students to Study Abroad - Abroad Advise</title>
         <meta name="description" content="Explore top study abroad universities for Nepalese students and plan your international education journey." />
       </Head>
+
       <Header />
       <HeroSection />
 
@@ -87,7 +88,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
             setCountryQuery={setCountryQuery}
             selectedDisciplines={selectedDisciplines}
             setSelectedDisciplines={setSelectedDisciplines}
-            disciplines={disciplines} // ✅ Pass available disciplines
+            disciplines={disciplines}
           />
         )}
 
@@ -107,7 +108,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            setCurrentPage={setCurrentPage}
+            onPageChange={setCurrentPage}
           />
         )}
       </main>
@@ -120,8 +121,10 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
 // ✅ Server-side Data Fetching (SSR)
 export async function getServerSideProps() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?page=1`);
-    const disciplinesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/discipline/`); // ✅ Fetch disciplines
+    const [response, disciplinesRes] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?page=1`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/discipline/`)
+    ]);
 
     if (!response.ok || !disciplinesRes.ok) throw new Error("Failed to fetch data");
 
@@ -131,13 +134,19 @@ export async function getServerSideProps() {
     return {
       props: {
         initialUniversities: data.results || [],
-        initialTotalPages: data.total_pages || 1,
-        disciplines: disciplines.results || [], // ✅ Pass disciplines
+        initialTotalPages: Math.ceil(data.count / 10) || 1, // ✅ Updated to use count
+        disciplines: disciplines.results || [],
       },
     };
   } catch (error) {
     console.error("Error fetching data:", error.message);
-    return { props: { initialUniversities: [], initialTotalPages: 1, disciplines: [] } };
+    return {
+      props: {
+        initialUniversities: [],
+        initialTotalPages: 1,
+        disciplines: [],
+      },
+    };
   }
 }
 

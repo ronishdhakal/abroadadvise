@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import Head from "next/head"; // ✅ SEO optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import DestinationForm from "@/components/admin/DestinationForm";
-import { 
-  fetchDestinations, 
-  deleteDestination, 
-  fetchDestinationDetails 
+import {
+  fetchDestinations,
+  deleteDestination,
+  fetchDestinationDetails,
 } from "@/utils/api";
+import Pagination from "@/pages/destination/Pagination"; // Import the Pagination component
 
 const DestinationsPage = ({ initialDestinations }) => {
   const [destinations, setDestinations] = useState(initialDestinations || []);
@@ -17,6 +18,7 @@ const DestinationsPage = ({ initialDestinations }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Add totalPages state
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -31,6 +33,7 @@ const DestinationsPage = ({ initialDestinations }) => {
       const data = await fetchDestinations(page, search);
       console.log("✅ Fetched Destinations Data:", data.results);
       setDestinations(data.results || []);
+      setTotalPages(Math.ceil(data.count / 10)); // Update totalPages
     } catch (err) {
       console.error("❌ Failed to load destinations:", err);
       setError("Failed to load destinations.");
@@ -45,7 +48,8 @@ const DestinationsPage = ({ initialDestinations }) => {
 
   // ✅ Handle Delete Destination
   const handleDelete = async (slug) => {
-    if (!window.confirm("Are you sure you want to delete this destination?")) return;
+    if (!window.confirm("Are you sure you want to delete this destination?"))
+      return;
 
     // Optimistic UI update
     const originalDestinations = [...destinations];
@@ -70,7 +74,7 @@ const DestinationsPage = ({ initialDestinations }) => {
     try {
       const destinationData = await fetchDestinationDetails(slug);
       console.log("✅ Editing Destination:", destinationData);
-      setEditingData(destinationData);  // Fill in data for editing
+      setEditingData(destinationData); // Fill in data for editing
     } catch (err) {
       console.error("❌ Failed to load destination details:", err);
       setError("❌ Failed to load destination details.");
@@ -93,7 +97,10 @@ const DestinationsPage = ({ initialDestinations }) => {
       {/* ✅ SEO Optimization */}
       <Head>
         <title>Manage Destinations | Admin Panel</title>
-        <meta name="description" content="Manage study destinations in Abroad Advise admin panel. Add, edit, and delete destination records seamlessly." />
+        <meta
+          name="description"
+          content="Manage study destinations in Abroad Advise admin panel. Add, edit, and delete destination records seamlessly."
+        />
       </Head>
 
       <h1 className="text-2xl font-bold mb-4">Manage Destinations</h1>
@@ -110,7 +117,10 @@ const DestinationsPage = ({ initialDestinations }) => {
           onChange={(e) => setSearch(e.target.value)}
           className="border rounded-lg p-2 w-full"
         />
-        <button onClick={loadDestinations} className="bg-blue-500 text-white px-4 py-2 rounded">
+        <button
+          onClick={loadDestinations}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           Search
         </button>
       </div>
@@ -148,63 +158,79 @@ const DestinationsPage = ({ initialDestinations }) => {
       {loading ? (
         <p>Loading destinations...</p>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Title</th>
-              <th className="border p-2">Country Logo</th>
-              <th className="border p-2">Cover Page</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {destinations.length > 0 ? (
-              destinations.map((destination, index) => (
-                <tr key={destination.id}>
-                  <td className="border p-2">{index + 1}</td>
-                  <td className="border p-2">{destination.title}</td>
-                  <td className="border p-2">
-                    {destination.country_logo ? (
-                      <img
-                        src={destination.country_logo}
-                        alt="Country Logo"
-                        className="w-12 h-12 object-contain"
-                      />
-                    ) : (
-                      "No Logo"
-                    )}
-                  </td>
-                  <td className="border p-2">
-                    {destination.cover_page ? (
-                      <img
-                        src={destination.cover_page}
-                        alt="Cover Page"
-                        className="w-16 h-12 object-cover"
-                      />
-                    ) : (
-                      "No Cover"
-                    )}
-                  </td>
-                  <td className="border p-2">
-                    <button onClick={() => handleEdit(destination.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(destination.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
-                      Delete
-                    </button>
+        <>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Title</th>
+                <th className="border p-2">Country Logo</th>
+                <th className="border p-2">Cover Page</th>
+                <th className="border p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {destinations.length > 0 ? (
+                destinations.map((destination, index) => (
+                  <tr key={destination.id}>
+                    <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">{destination.title}</td>
+                    <td className="border p-2">
+                      {destination.country_logo ? (
+                        <img
+                          src={destination.country_logo}
+                          alt="Country Logo"
+                          className="w-12 h-12 object-contain"
+                        />
+                      ) : (
+                        "No Logo"
+                      )}
+                    </td>
+                    <td className="border p-2">
+                      {destination.cover_page ? (
+                        <img
+                          src={destination.cover_page}
+                          alt="Cover Page"
+                          className="w-16 h-12 object-cover"
+                        />
+                      ) : (
+                        "No Cover"
+                      )}
+                    </td>
+                    <td className="border p-2">
+                      <button
+                        onClick={() => handleEdit(destination.slug)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(destination.slug)}
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center p-4">
+                    No destinations found.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center p-4">
-                  No destinations found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+          {/* ✅ Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </AdminLayout>
   );
@@ -214,7 +240,11 @@ const DestinationsPage = ({ initialDestinations }) => {
 export async function getServerSideProps() {
   try {
     const destinations = await fetchDestinations();
-    return { props: { initialDestinations: destinations.results || [] } };
+    return {
+      props: {
+        initialDestinations: destinations.results || [],
+      },
+    };
   } catch (error) {
     return { props: { initialDestinations: [] } };
   }

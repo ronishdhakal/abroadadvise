@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Upload, Trash } from "lucide-react";
+import { Upload, Trash } from "lucide-react";
 
 const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
   const [previewImages, setPreviewImages] = useState([]);
@@ -10,10 +10,10 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
   useEffect(() => {
     if (formData.gallery_images && Array.isArray(formData.gallery_images)) {
       const loadedImages = formData.gallery_images.map((img) => ({
-        id: img.id || Date.now(),
-        image: typeof img === "string" ? img : img.image,
-        file: img.file || null,
-        isNew: !img.id, // Track new uploads
+        id: img.id || Date.now(), // Use existing ID or generate a temporary one
+        image: typeof img === "string" ? img : img.image, // Handle both string URLs and image objects
+        file: img.file || null, // Store the file object (if it's a new image)
+        isNew: !img.id, // Mark as new if it doesn't have an ID from the database
       }));
       setPreviewImages(loadedImages);
     }
@@ -34,10 +34,10 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     const newImages = files.map((file) => ({
-      id: Date.now() + Math.random(),
-      image: URL.createObjectURL(file),
-      file,
-      isNew: true, // Mark as new upload
+      id: Date.now() + Math.random(), // Generate a temporary ID for new images
+      image: URL.createObjectURL(file), // Create a blob URL for preview
+      file, // Store the file object
+      isNew: true, // Mark as a new upload
     }));
 
     // ✅ Update local state
@@ -50,7 +50,7 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
       gallery_images: [...(formData.gallery_images || []), ...newImages], // Add new images to formData
     };
     setFormData(updatedFormData);
-    onUpdate(updatedFormData);
+    onUpdate(updatedFormData); // ✅ Call onUpdate to notify the parent component
   };
 
   // ✅ Handle image deletion
@@ -60,7 +60,10 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
 
     // ✅ Track deleted images only if they exist in the backend
     if (!imageToDelete.isNew) {
-      const updatedDeletedImages = [...(formData.deleted_gallery_images || []), imageToDelete.id];
+      const updatedDeletedImages = [
+        ...(formData.deleted_gallery_images || []),
+        imageToDelete.id,
+      ];
       setFormData((prev) => ({
         ...prev,
         deleted_gallery_images: updatedDeletedImages,
@@ -85,7 +88,13 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
       <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center shadow-lg transition duration-200 hover:shadow-xl w-full">
         <Upload className="h-5 w-5 mr-2" />
         Upload Images
-        <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </label>
 
       {/* Gallery Preview */}

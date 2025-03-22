@@ -35,10 +35,14 @@ export const fetchDistricts = async () => {
   }
 };
 
-// ✅ Fetch Study Destinations
-export const fetchDestinations = async () => {
+// ✅ Fetch Study Destinations with Pagination and Search
+export const fetchDestinations = async (page = 1, search = "") => {
   try {
-    const response = await fetch(`${API_BASE_URL}/destination/`, {
+    const params = new URLSearchParams({ page }); // Add page parameter
+    if (search) params.append("search", search);
+
+    const url = `${API_BASE_URL}/destination/?${params.toString()}`;
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -53,6 +57,7 @@ export const fetchDestinations = async () => {
     throw error;
   }
 };
+
 
 // ✅ Fetch Disciplines (Needed for University Form Dropdowns)
 export const fetchDisciplines = async () => {
@@ -73,44 +78,59 @@ export const fetchDisciplines = async () => {
   }
 };
 
-// ✅ Fetch Test Preparation Exams
-export const fetchExams = async () => {
+// ✅ Fetch Exams with Pagination and Filtering Support
+export const fetchExams = async (page = 1, search = "", type = "") => {
   try {
-    const response = await fetch(`${API_BASE_URL}/exam/`, {
+    const queryParams = new URLSearchParams();
+
+    queryParams.append("page", page);
+    if (search) queryParams.append("search", search); // ✅ DRF uses `search` param
+    if (type) queryParams.append("type", type);
+
+    const url = `${API_BASE_URL}/exam/?${queryParams.toString()}`;
+
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch exams");
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch exams: ${response.status} - ${errorText}`);
     }
 
-    return await response.json();
+    return await response.json(); // ✅ Returns { count, results, ... }
   } catch (error) {
-    console.error("Error fetching exams:", error);
+    console.error("❌ Error fetching exams:", error);
     throw error;
   }
 };
 
-// Fetch COurses
-export const fetchCourses = async (page = 1) => {
+// Fetch Courses with Pagination + Search
+export const fetchCourses = async (page = 1, search = "") => {
   try {
-    // Ensure `page` is always an integer (Default to 1 if undefined)
     const pageNumber = Number(page) || 1;
-    
-    console.log("🔍 Fetching courses from:", `${API_BASE_URL}/course/?page=${pageNumber}`);
 
-    const response = await fetch(`${API_BASE_URL}/course/?page=${pageNumber}`, {
+    const queryParams = new URLSearchParams({ page: pageNumber });
+
+    if (search) {
+      queryParams.append("search", search); // ✅ Use 'search' for DRF search filter
+    }
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL}/course/?${queryParams.toString()}`;
+    console.log("🔍 Fetching courses from:", url);
+
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      const errorMessage = await response.text(); // Log API response if it fails
+      const errorMessage = await response.text();
       throw new Error(`Failed to fetch courses: ${errorMessage}`);
     }
 
-    return await response.json();
+    return await response.json(); // ✅ Returns { count, next, previous, results }
   } catch (error) {
     console.error("❌ Error fetching courses:", error);
     throw error;

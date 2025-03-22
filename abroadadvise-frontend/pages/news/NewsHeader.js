@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api"; // ✅ Import API base URL
 
 const NewsHeader = ({ news }) => {
   const [aboveHeadlineAd, setAboveHeadlineAd] = useState(null);
@@ -12,7 +13,7 @@ const NewsHeader = ({ news }) => {
   useEffect(() => {
     const fetchAd = async (placement, setAd) => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/ads/?placement=${placement}`);
+        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=${placement}`);
         const data = await res.json();
         if (data.results.length > 0) {
           setAd(data.results[0]); // ✅ Get the first ad if available
@@ -39,7 +40,7 @@ const NewsHeader = ({ news }) => {
         </Link>
       </div>
 
-      {/* ✅ Full-Width Ad Above News Title (Aligned Left) */}
+      {/* ✅ Full-Width Ad Above News Title */}
       {aboveHeadlineAd && (
         <div className="w-full flex justify-start items-center mb-4">
           <a href={aboveHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
@@ -54,7 +55,7 @@ const NewsHeader = ({ news }) => {
         </div>
       )}
 
-      {/* ✅ News Category Badge */}
+      {/* ✅ News Category */}
       {news.category?.name && (
         <div className="mb-2">
           <span className="bg-gray-200 text-gray-700 text-xs font-semibold px-3 py-1 rounded-full">
@@ -63,10 +64,10 @@ const NewsHeader = ({ news }) => {
         </div>
       )}
 
-      {/* ✅ News Title */}
+      {/* ✅ Title */}
       <h1 className="text-4xl font-bold text-black leading-tight">{news.title}</h1>
 
-      {/* ✅ Full-Width Ad Below News Title (Aligned Left) */}
+      {/* ✅ Full-Width Ad Below Title */}
       {belowHeadlineAd && (
         <div className="w-full flex justify-start items-center mt-4">
           <a href={belowHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
@@ -81,7 +82,7 @@ const NewsHeader = ({ news }) => {
         </div>
       )}
 
-      {/* ✅ News Date */}
+      {/* ✅ Date */}
       <p className="text-gray-500 text-sm mt-2">{news.date.split("T")[0]}</p>
 
       {/* ✅ Featured Image */}
@@ -102,7 +103,7 @@ const NewsHeader = ({ news }) => {
         )}
       </div>
 
-      {/* ✅ Full-Width Ad Below Featured Image (Aligned Left) */}
+      {/* ✅ Ad Below Image */}
       {belowImageAd && (
         <div className="w-full flex justify-start items-center mt-4">
           <a href={belowImageAd.redirect_url} target="_blank" rel="noopener noreferrer">

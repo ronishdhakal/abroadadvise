@@ -6,6 +6,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
+from .pagination import BlogPagination  # ✅ Use custom pagination
 import os
 
 from core.pagination import StandardResultsSetPagination
@@ -26,8 +27,8 @@ class BlogCategoryListView(generics.ListAPIView):
 class BlogPostListView(generics.ListAPIView):
     serializer_class = BlogPostSerializer
     permission_classes = [permissions.AllowAny]
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter]  # ✅ Enable filtering
+    pagination_class = BlogPagination  # ✅ Custom pagination with 10/page
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = BlogPostFilter
     search_fields = ['title', 'content']
 
@@ -40,6 +41,7 @@ class BlogPostListView(generics.ListAPIView):
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
         return queryset
+
 
 # ✅ Get Single Blog Post by Slug (Public Access)
 @api_view(['GET'])

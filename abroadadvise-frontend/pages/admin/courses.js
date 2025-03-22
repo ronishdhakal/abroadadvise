@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Head from "next/head"; // ✅ SEO optimization
+import Head from "next/head";
 import AdminLayout from "@/components/admin/AdminLayout";
 import CourseForm from "@/components/admin/CourseForm";
-
-
-
 import {
   fetchCourses,
   deleteCourse,
   fetchDestinations,
   fetchUniversities,
   fetchDisciplines,
+  fetchCourseDetails, // ✅ You need this separate API for one course
 } from "@/utils/api";
+import Pagination from "@/pages/consultancy/Pagination"; // ✅ Reuse your pagination component
 
 const CoursesPage = ({ initialCourses }) => {
   const [courses, setCourses] = useState(initialCourses);
@@ -25,20 +24,21 @@ const CoursesPage = ({ initialCourses }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Fetch courses dynamically when page or search query changes
+  // ✅ Load paginated courses
   const loadCourses = async () => {
     setLoading(true);
     setError(null);
     setSuccessMessage("");
 
     try {
-      const data = await fetchCourses(page, search);
-      console.log("✅ Fetched Courses Data:", data.results);
-      setCourses(data.results);
+      const data = await fetchCourses(page, search); // ⬅ page + search
+      setCourses(data.results || []);
+      setTotalPages(Math.ceil(data.count / 10)); // ✅ server-side pagination
     } catch (err) {
       console.error("❌ Failed to load courses:", err);
       setError("Failed to load courses.");
@@ -51,7 +51,7 @@ const CoursesPage = ({ initialCourses }) => {
     loadCourses();
   }, [page, search]);
 
-  // ✅ Fetch Study Destinations, Universities, and Disciplines for Dropdowns
+  // ✅ Dropdown data (only once)
   useEffect(() => {
     const loadOptions = async () => {
       try {
@@ -64,19 +64,16 @@ const CoursesPage = ({ initialCourses }) => {
         const disciplinesData = await fetchDisciplines();
         setAllDisciplines(disciplinesData.results || []);
       } catch (err) {
-        console.error("❌ Failed to load options:", err);
-        setError("Failed to load study destinations, universities, or disciplines.");
+        console.error("❌ Failed to load dropdowns:", err);
+        setError("Failed to load dropdown options.");
       }
     };
-
     loadOptions();
   }, []);
 
-  // ✅ Handle Delete Course
+  // ✅ Handle Delete
   const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this course?")) return;
-
-    // Optimistic UI update
     const originalCourses = [...courses];
     setCourses((prev) => prev.filter((c) => c.slug !== slug));
 
@@ -86,29 +83,27 @@ const CoursesPage = ({ initialCourses }) => {
     } catch (err) {
       console.error("❌ Failed to delete course:", err);
       setError("Failed to delete course.");
-      setCourses(originalCourses); // Revert UI on failure
+      setCourses(originalCourses);
     }
   };
 
-  // ✅ Handle Edit Course (Pre-fill Form)
+  // ✅ Edit: fetch course by slug (corrected)
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
     setShowForm(true);
-
     try {
-      const courseData = await fetchCourses(slug);
-      console.log("✅ Editing Course:", courseData);
+      const courseData = await fetchCourseDetails(slug); // ✅ FIXED here
       setEditingData(courseData);
     } catch (err) {
-      console.error("❌ Failed to load course details:", err);
-      setError("Failed to load course details.");
+      console.error("❌ Failed to load course:", err);
+      setError("Failed to load course.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Handle Successful Create/Update
+  // ✅ After successful create/update
   const handleSuccess = () => {
     setShowForm(false);
     setEditingSlug(null);
@@ -119,7 +114,6 @@ const CoursesPage = ({ initialCourses }) => {
 
   return (
     <AdminLayout>
-      {/* ✅ SEO Optimization */}
       <Head>
         <title>Manage Courses | Admin Panel</title>
         <meta name="description" content="Manage courses in Abroad Advise admin panel. Add, edit, and delete course records seamlessly." />
@@ -127,10 +121,9 @@ const CoursesPage = ({ initialCourses }) => {
 
       <h1 className="text-2xl font-bold mb-4">Manage Courses</h1>
 
-      {/* ✅ Success Message */}
       {successMessage && <p className="text-green-500">{successMessage}</p>}
 
-      {/* ✅ Search Functionality */}
+      {/* ✅ Search */}
       <div className="mb-4 flex gap-2">
         <input
           type="text"
@@ -144,7 +137,7 @@ const CoursesPage = ({ initialCourses }) => {
         </button>
       </div>
 
-      {/* ✅ Toggle Form for Create/Edit */}
+      {/* ✅ Toggle Form */}
       <button
         onClick={() => {
           setShowForm(!showForm);
@@ -173,51 +166,60 @@ const CoursesPage = ({ initialCourses }) => {
         />
       )}
 
-      {/* ✅ Error Handling */}
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* ✅ Loading State */}
       {loading ? (
         <p>Loading courses...</p>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">University</th>
-              <th className="border p-2">Duration</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {courses.map((course, index) => (
-              <tr key={course.id}>
-                <td className="border p-2">{index + 1}</td>
-                <td className="border p-2">{course.name}</td>
-                <td className="border p-2">{course.university_details?.name || "N/A"}</td>
-                <td className="border p-2">{course.duration || "N/A"}</td>
-                <td className="border p-2">
-                  <button onClick={() => handleEdit(course.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(course.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
-                    Delete
-                  </button>
-                </td>
+        <>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Name</th>
+                <th className="border p-2">University</th>
+                <th className="border p-2">Duration</th>
+                <th className="border p-2">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {courses.map((course, index) => (
+                <tr key={course.id}>
+                  <td className="border p-2">{index + 1 + (page - 1) * 10}</td>
+                  <td className="border p-2">{course.name}</td>
+                  <td className="border p-2">{course.university_details?.name || "N/A"}</td>
+                  <td className="border p-2">{course.duration || "N/A"}</td>
+                  <td className="border p-2">
+                    <button onClick={() => handleEdit(course.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(course.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* ✅ Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </AdminLayout>
   );
 };
 
-// ✅ Server-Side Rendering
+// ✅ Server-Side Initial Fetch
 export async function getServerSideProps() {
   try {
-    const courses = await fetchCourses();
+    const courses = await fetchCourses(1); // First page only
     return { props: { initialCourses: courses.results || [] } };
   } catch (error) {
     return { props: { initialCourses: [] } };

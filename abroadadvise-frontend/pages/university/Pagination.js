@@ -1,11 +1,11 @@
 import { useRouter } from "next/router";
 
-const Pagination = ({ currentPage, totalPages, setCurrentPage }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const router = useRouter();
 
   const changePage = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage); // If setCurrentPage is a setter function
+      onPageChange(newPage); // ✅ fixed name
       router.push({
         pathname: router.pathname,
         query: { ...router.query, page: newPage },
@@ -15,7 +15,6 @@ const Pagination = ({ currentPage, totalPages, setCurrentPage }) => {
 
   return (
     <div className="flex justify-center items-center space-x-4 py-6">
-      {/* Previous Button */}
       <button
         onClick={() => changePage(currentPage - 1)}
         disabled={currentPage === 1}
@@ -28,12 +27,10 @@ const Pagination = ({ currentPage, totalPages, setCurrentPage }) => {
         Prev
       </button>
 
-      {/* Page Info */}
       <span className="text-lg font-semibold">
         Page {currentPage} of {totalPages}
       </span>
 
-      {/* Next Button */}
       <button
         onClick={() => changePage(currentPage + 1)}
         disabled={currentPage === totalPages}

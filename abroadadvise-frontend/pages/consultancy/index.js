@@ -1,5 +1,7 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import Head from "next/head"; // ✅ Import Head for setting the page title
+import Head from "next/head";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import HeroSection from "./HeroSection";
@@ -39,7 +41,7 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
 
       const data = await response.json();
       setConsultancies(data.results || []);
-      setTotalPages(data.total_pages || 1);
+      setTotalPages(Math.ceil(data.count / 10)); // ✅ Updated: use count to calculate total pages
     } catch (error) {
       console.error("Error fetching consultancies:", error.message);
     }
@@ -52,15 +54,19 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
 
   return (
     <>
-     {/* ✅ Set Page Title & Meta Description */}
-     <Head>
-        <title>Best Consultancies in Nepal to Study Abroad -Abroad Advise</title>
-        <meta name="description" content="Explore top study abroad education consultancies for Nepalese students and plan your international education journey." />
+      <Head>
+        <title>Best Consultancies in Nepal to Study Abroad - Abroad Advise</title>
+        <meta
+          name="description"
+          content="Explore top study abroad education consultancies for Nepalese students and plan your international education journey."
+        />
       </Head>
+
       <Header />
       <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
+        {/* 🔍 Search & Filter */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -82,6 +88,7 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
           </button>
         </div>
 
+        {/* 🧩 Filter Panel */}
         {isFilterOpen && (
           <ConsultancyFilters
             search={search}
@@ -100,6 +107,7 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
           />
         )}
 
+        {/* 📦 List */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {consultancies.length > 0 ? (
             consultancies.map((consultancy) => (
@@ -110,6 +118,7 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
           )}
         </div>
 
+        {/* 📄 Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -124,7 +133,6 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
   );
 };
 
-// ✅ Server-side Data Fetching (SSR)
 export async function getServerSideProps() {
   try {
     const [consultancyRes, districtRes, examRes, destinationRes] = await Promise.all([
@@ -149,7 +157,7 @@ export async function getServerSideProps() {
     return {
       props: {
         initialConsultancies: consultancyData.results || [],
-        initialTotalPages: consultancyData.total_pages || 1,
+        initialTotalPages: Math.ceil(consultancyData.count / 10) || 1, // ✅ Updated: use count for pagination
         districts: districtData.results || [],
         exams: examData.results || [],
         destinations: destinationData.results || [],
@@ -157,7 +165,15 @@ export async function getServerSideProps() {
     };
   } catch (error) {
     console.error("Error fetching data:", error.message);
-    return { props: { initialConsultancies: [], initialTotalPages: 1, districts: [], exams: [], destinations: [] }};
+    return {
+      props: {
+        initialConsultancies: [],
+        initialTotalPages: 1,
+        districts: [],
+        exams: [],
+        destinations: [],
+      },
+    };
   }
 }
 

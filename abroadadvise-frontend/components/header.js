@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { FiSearch } from "react-icons/fi";
 import { HiMenu, HiX } from "react-icons/hi";
 import Image from "next/image";
+import { API_BASE_URL } from "@/utils/api"; // ✅ Use dynamic base URL
 
 export default function Header() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function Header() {
   useEffect(() => {
     const fetchSiteLogo = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/site-settings/");
+        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
         const data = await res.json();
         if (data.site_logo_url) {
           setSiteLogo(data.site_logo_url);
@@ -34,7 +35,7 @@ export default function Header() {
   useEffect(() => {
     const fetchAd = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/ads/?placement=exclusive_below_navbar");
+        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=exclusive_below_navbar`);
         const data = await res.json();
         if (data.results.length > 0) {
           setAd(data.results[0]);
@@ -52,7 +53,7 @@ export default function Header() {
     if (router.pathname.startsWith("/blog") || router.pathname.startsWith("/news")) {
       const fetchBlogNewsAd = async () => {
         try {
-          const res = await fetch("http://127.0.0.1:8000/api/ads/?placement=below_navbar_blog_news");
+          const res = await fetch(`${API_BASE_URL}/api/ads/?placement=below_navbar_blog_news`);
           const data = await res.json();
           if (data.results.length > 0) {
             setBlogNewsAd(data.results[0]);
@@ -75,9 +76,8 @@ export default function Header() {
 
   return (
     <>
-      {/* ✅ Navbar (Matches College Info Nepal Design) */}
+      {/* ✅ Navbar */}
       <header className="bg-white shadow-md px-8 md:px-12 py-3 flex justify-between items-center sticky top-0 z-50 w-full border-b border-gray-200 font-sans">
-        {/* ✅ Logo */}
         <div className="flex items-center">
           {siteLogo ? (
             <Link href="/" className="flex items-center space-x-2">
@@ -100,21 +100,18 @@ export default function Header() {
           <Link href="/blog" className="hover:text-blue-600 transition">Blog</Link>
         </nav>
 
-        {/* ✅ Right Side - Search Button & Mobile Menu */}
+        {/* ✅ Search & Menu */}
         <div className="flex items-center space-x-4">
-          {/* ✅ Search Button */}
           <button onClick={() => setSearchOpen(!searchOpen)} className="p-2 bg-blue-500 hover:bg-blue-600 rounded-full transition shadow-md">
             <FiSearch className="text-white w-6 h-6" />
           </button>
-
-          {/* ✅ Mobile Menu Button */}
           <button onClick={() => setMenuOpen(!menuOpen)} className="lg:hidden p-2">
             {menuOpen ? <HiX className="w-6 h-6 text-gray-600" /> : <HiMenu className="w-6 h-6 text-gray-600" />}
           </button>
         </div>
       </header>
 
-      {/* ✅ Sticky Search Bar Below Navbar (Proper Padding & Sticky) */}
+      {/* ✅ Search Bar */}
       {searchOpen && (
         <div className="sticky top-[60px] w-full bg-white shadow-md px-6 py-4 flex justify-center z-40 border-b border-gray-200">
           <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl flex items-center space-x-3">
@@ -138,7 +135,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* ✅ Blog/News Ad Below Navbar */}
+      {/* ✅ Blog/News Ad */}
       {blogNewsAd && (
         <div className="w-full flex justify-center py-4 bg-white">
           <div className="max-w-6xl w-full px-4">
@@ -155,7 +152,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* ✅ Normal Ad Below Navbar */}
+      {/* ✅ General Ad */}
       {ad && (
         <div className="w-full flex justify-center py-4 bg-white">
           <div className="max-w-6xl w-full px-4">

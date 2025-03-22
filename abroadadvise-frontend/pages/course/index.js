@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Header from "../../components/header";
@@ -25,7 +27,8 @@ export default function Courses() {
     try {
       const queryParams = new URLSearchParams({ page: currentPage });
 
-      if (searchQuery) queryParams.append("name", searchQuery);
+      // ✅ Fixed: DRF expects "search" for SearchFilter
+      if (searchQuery) queryParams.append("search", searchQuery);
       if (universityQuery) queryParams.append("university", universityQuery);
       if (countryQuery) queryParams.append("country", countryQuery);
       if (selectedDisciplines.length > 0) {
@@ -43,7 +46,7 @@ export default function Courses() {
       const data = await response.json();
       setCourses(data.results || []);
       setFilteredCourses(data.results || []);
-      setTotalPages(data.total_pages || 1);
+      setTotalPages(Math.ceil(data.count / 10)); // ✅ works with DRF pagination
     } catch (error) {
       console.error("❌ Error fetching courses:", error);
       setError(error.message || "Something went wrong.");
@@ -54,7 +57,7 @@ export default function Courses() {
     fetchCourses();
   }, [searchQuery, universityQuery, countryQuery, selectedDisciplines, currentPage]);
 
-  // ✅ Safely extract unique disciplines
+  // ✅ Extract unique disciplines
   const disciplines = Array.from(
     new Map(
       courses
@@ -67,7 +70,7 @@ export default function Courses() {
     ).values()
   );
 
-  // ✅ Safely extract universities
+  // ✅ Extract universities
   const universities = Array.from(
     new Map(
       courses
@@ -77,7 +80,7 @@ export default function Courses() {
     ).values()
   );
 
-  // ✅ Safely extract countries
+  // ✅ Extract countries
   const countries = Array.from(
     new Map(
       courses
@@ -116,7 +119,7 @@ export default function Courses() {
           universities={universities}
         />
 
-        {/* ✅ Courses */}
+        {/* ✅ Course Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {error && (
             <p className="text-center col-span-full text-red-500">{error}</p>

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import Head from "next/head";
 import Header from "../../components/header";
@@ -16,9 +18,9 @@ export default function NewsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState([]);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // ✅ Toggle filter visibility
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // ✅ Fetch categories for filtering
+  // ✅ Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -33,52 +35,56 @@ export default function NewsPage() {
     fetchCategories();
   }, []);
 
-  // ✅ Fetch news with search and category filters
+  // ✅ Fetch news with filters
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const url = new URL(`${process.env.NEXT_PUBLIC_API_URL}/news/`);
         url.searchParams.append("page", currentPage);
         if (searchQuery) url.searchParams.append("search", searchQuery);
-        if (category) url.searchParams.append("category", category); // ✅ Filter by category
+        if (category) url.searchParams.append("category", category);
 
         const response = await fetch(url.toString());
         if (!response.ok) throw new Error("Failed to fetch news");
 
         const data = await response.json();
-        setNewsList(data.results);
-        setTotalPages(data.total_pages);
+        setNewsList(data.results || []);
+        setTotalPages(Math.ceil(data.count / 10)); // Use count instead of total_pages
       } catch (error) {
         setError(error.message);
       }
     };
+
     fetchNews();
   }, [currentPage, searchQuery, category]);
 
   return (
     <>
       <Head>
-        <title>News - Abroad Advise</title>
+        <title>Study Abroad News & Updates - Abroad Advise</title>
+        <meta name="description" content="Stay informed with the latest study abroad news, announcements, and updates for Nepalese students." />
       </Head>
+
       <Header />
       <NewsHeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
-        {/* ✅ Search & Filter Section */}
+        {/* 🔍 Search & Filter Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Search Field */}
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search news..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1); // Reset page
+              }}
               className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-black text-sm"
             />
           </div>
 
-          {/* Filter Button */}
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className="flex items-center px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md"
@@ -88,7 +94,7 @@ export default function NewsPage() {
           </button>
         </div>
 
-        {/* ✅ Conditional Filter Display */}
+        {/* 🧩 Filter Options */}
         {isFilterOpen && (
           <NewsFilter
             searchQuery={searchQuery}
@@ -99,8 +105,9 @@ export default function NewsPage() {
           />
         )}
 
-        {/* ✅ News List */}
-        {error && <p className="text-center text-red-500">Error: {error}</p>}
+        {/* 📰 News Grid */}
+        {error && <p className="text-center text-red-500 mt-4">Error: {error}</p>}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {newsList.length > 0 ? (
             newsList.map((news) => <NewsCard key={news.slug} news={news} />)
@@ -109,9 +116,13 @@ export default function NewsPage() {
           )}
         </div>
 
-        {/* ✅ Pagination */}
+        {/* 📄 Pagination */}
         {totalPages > 1 && (
-          <NewsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+          <NewsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         )}
       </main>
 

@@ -5,6 +5,7 @@ import Head from "next/head"; // ✅ SEO optimization
 import AdminLayout from "@/components/admin/AdminLayout";
 import UniversityForm from "@/components/admin/UniversityForm";
 import { fetchUniversities, deleteUniversity, fetchUniversityDetails, fetchDisciplines } from "@/utils/api";
+import Pagination from "@/pages/consultancy/Pagination"; // Import Pagination
 
 const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
   const [universities, setUniversities] = useState(initialUniversities);
@@ -13,6 +14,7 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1); // Add totalPages state
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -27,6 +29,7 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
       const data = await fetchUniversities(page, search);
       console.log("✅ Fetched Universities Data:", data.results);
       setUniversities(data.results);
+      setTotalPages(Math.ceil(data.count / 10)); // Update totalPages
     } catch (err) {
       console.error("❌ Failed to load universities:", err);
       setError("Failed to load universities.");
@@ -145,39 +148,49 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
       {loading ? (
         <p>Loading universities...</p>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Country</th>
-              <th className="border p-2">Verified</th>
-              <th className="border p-2">Logo</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {universities.map((university, index) => (
-              <tr key={university.id}>
-                <td className="border p-2">{index + 1}</td>
-                <td className="border p-2">{university.name}</td>
-                <td className="border p-2">{university.country || "N/A"}</td>
-                <td className="border p-2">{university.is_verified ? "Yes" : "No"}</td>
-                <td className="border p-2">
-                  {university.logo ? <img src={university.logo} alt="Logo" className="w-12 h-12 object-contain" /> : "No Logo"}
-                </td>
-                <td className="border p-2">
-                  <button onClick={() => handleEdit(university.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
-                    Edit
-                  </button>
-                  <button onClick={() => handleDelete(university.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
-                    Delete
-                  </button>
-                </td>
+        <>
+          <table className="w-full border-collapse border">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Name</th>
+                <th className="border p-2">Country</th>
+                <th className="border p-2">Verified</th>
+                <th className="border p-2">Logo</th>
+                <th className="border p-2">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {universities.map((university, index) => (
+                <tr key={university.id}>
+                  <td className="border p-2">{index + 1}</td>
+                  <td className="border p-2">{university.name}</td>
+                  <td className="border p-2">{university.country || "N/A"}</td>
+                  <td className="border p-2">{university.is_verified ? "Yes" : "No"}</td>
+                  <td className="border p-2">
+                    {university.logo ? <img src={university.logo} alt="Logo" className="w-12 h-12 object-contain" /> : "No Logo"}
+                  </td>
+                  <td className="border p-2">
+                    <button onClick={() => handleEdit(university.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(university.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* ✅ Pagination */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          )}
+        </>
       )}
     </AdminLayout>
   );
@@ -193,6 +206,7 @@ export async function getServerSideProps() {
       props: {
         initialUniversities: universities.results || [],
         allDisciplines: disciplines.results || [],
+        initialTotalPages: Math.ceil(universities.count / 10) || 1, // Add initialTotalPages
       },
     };
   } catch (error) {
@@ -200,6 +214,7 @@ export async function getServerSideProps() {
       props: {
         initialUniversities: [],
         allDisciplines: [],
+        initialTotalPages: 1, // Add initialTotalPages
       },
     };
   }

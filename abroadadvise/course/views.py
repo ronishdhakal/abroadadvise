@@ -12,12 +12,13 @@ from core.pagination import StandardResultsSetPagination  # ✅ Import paginatio
 from core.filters import CourseFilter  # ✅ Import filtering
 from .models import Course
 from .serializers import CourseSerializer
+from .pagination import CoursePagination  # ✅ Use custom course pagination
 
 # ✅ List Courses with Pagination, Search & Filtering
 class CourseListView(ListAPIView):
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = CoursePagination  # ✅ Updated pagination class
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = CourseFilter
     search_fields = ["name", "university__name", "destination__title"]
@@ -35,7 +36,7 @@ class CourseListView(ListAPIView):
         if destination_slug:
             queryset = queryset.filter(destination__slug=destination_slug)
 
-        # ✅ Order courses by priority (NULL values will be last) and then by latest created courses
+        # ✅ Order courses by priority and then by latest added
         return queryset.order_by(F("priority").asc(nulls_last=True), "-id")
 
 

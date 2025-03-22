@@ -13,13 +13,14 @@ from core.pagination import StandardResultsSetPagination
 from core.filters import DestinationFilter
 from .models import Destination
 from .serializers import StudyDestinationSerializer
+from .pagination import DestinationPagination  # ✅ Import the new pagination class
 
 # ✅ Publicly Accessible List of Destinations with Pagination & Filtering
 class DestinationListView(ListAPIView):
     queryset = Destination.objects.all()
     serializer_class = StudyDestinationSerializer
     permission_classes = [AllowAny]
-    pagination_class = StandardResultsSetPagination
+    pagination_class = DestinationPagination  # ✅ Updated pagination class
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = DestinationFilter
     search_fields = ['title']
@@ -27,7 +28,6 @@ class DestinationListView(ListAPIView):
     def get_serializer_context(self):
         """Ensure media URLs are correctly returned"""
         return {'request': self.request}
-
 
 # ✅ Publicly Accessible Single Destination View
 @api_view(['GET'])

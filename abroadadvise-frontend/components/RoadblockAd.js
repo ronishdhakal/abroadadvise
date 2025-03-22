@@ -1,42 +1,41 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import { X } from "lucide-react"
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { X } from "lucide-react";
+import { API_BASE_URL } from "@/utils/api"; // ✅ Centralized API URL
 
 export default function RoadblockAd() {
-  const [showAd, setShowAd] = useState(false)
-  const [ad, setAd] = useState(null)
+  const [showAd, setShowAd] = useState(false);
+  const [ad, setAd] = useState(null);
 
   useEffect(() => {
-    // Check if ad has already been shown in this session
-    const hasSeenAd = sessionStorage.getItem("hasSeenRoadblockAd")
-    if (hasSeenAd) return
+    const hasSeenAd = sessionStorage.getItem("hasSeenRoadblockAd");
+    if (hasSeenAd) return;
 
     const fetchAd = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8000/api/ads/?placement=roadblock_ad")
-        const data = await res.json()
+        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=roadblock_ad`);
+        const data = await res.json();
 
         if (data.results.length > 0) {
-          setAd(data.results[0])
-          setShowAd(true)
-          // Mark ad as seen in sessionStorage after displaying
-          sessionStorage.setItem("hasSeenRoadblockAd", "true")
+          setAd(data.results[0]);
+          setShowAd(true);
+          sessionStorage.setItem("hasSeenRoadblockAd", "true");
         }
       } catch (error) {
-        console.error("Error fetching roadblock ad:", error)
+        console.error("Error fetching roadblock ad:", error);
       }
-    }
+    };
 
-    fetchAd()
-  }, [])
+    fetchAd();
+  }, []);
 
   const closeAd = () => {
-    setShowAd(false)
-  }
+    setShowAd(false);
+  };
 
-  if (!showAd || !ad) return null
+  if (!showAd || !ad) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -44,9 +43,7 @@ export default function RoadblockAd() {
       <div className="fixed inset-0 bg-gray-900/10 backdrop-blur-[0.5px] pointer-events-none" />
 
       {/* Ad Container */}
-      <div 
-        className="relative max-w-4xl w-full sm:max-w-3xl pointer-events-auto animate-in fade-in zoom-in-95 duration-300 z-60"
-      >
+      <div className="relative max-w-4xl w-full sm:max-w-3xl pointer-events-auto animate-in fade-in zoom-in-95 duration-300 z-60">
         {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50">
           {/* Close Button */}
@@ -92,5 +89,5 @@ export default function RoadblockAd() {
         </div>
       </div>
     </div>
-  )
+  );
 }

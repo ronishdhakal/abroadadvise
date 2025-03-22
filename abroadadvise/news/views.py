@@ -9,16 +9,23 @@ from core.pagination import StandardResultsSetPagination
 from core.filters import NewsFilter
 from .models import News, NewsComment, NewsCategory
 from .serializers import NewsSerializer, NewsCommentSerializer, NewsCategorySerializer
+from .pagination import NewsPagination  # ✅ Use news-specific pagination class
 
-# ✅ List News with Pagination, Search, and Filtering (Public Access)
+# ✅ Public News List with Pagination, Search, and Filtering
 class NewsListView(generics.ListAPIView):
-    queryset = News.objects.select_related("category").all().order_by("-date")
     serializer_class = NewsSerializer
-    permission_classes = [permissions.AllowAny]  
-    pagination_class = StandardResultsSetPagination
+    permission_classes = [permissions.AllowAny]  # ✅ Public access
+    pagination_class = NewsPagination  # ✅ Use custom pagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = NewsFilter
     search_fields = ['title', 'category__name']
+
+    def get_queryset(self):
+        return (
+            News.objects.select_related("category")
+            .only("id", "title", "slug", "category__name", "date", "featured_image")
+            .order_by("-date", "-id")  # ✅ Ordered by latest news first
+        )
 
 # ✅ List News Categories (Public Access)
 class NewsCategoryListView(generics.ListAPIView):
