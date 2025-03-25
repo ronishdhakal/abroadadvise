@@ -155,3 +155,41 @@ def add_blog_comment(request, blog_slug):
 
     except BlogPost.DoesNotExist:
         return Response({"error": "Blog post not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+# ✅ Create Blog Category (Admin Only)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_blog_category(request):
+    serializer = BlogCategorySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ✅ Update Blog Category (Admin Only)
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_blog_category(request, slug):
+    try:
+        category = BlogCategory.objects.get(slug=slug)
+        serializer = BlogCategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except BlogCategory.DoesNotExist:
+        return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ✅ Delete Blog Category (Admin Only)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_blog_category(request, slug):
+    try:
+        category = BlogCategory.objects.get(slug=slug)
+        category.delete()
+        return Response({"message": "Category deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except BlogCategory.DoesNotExist:
+        return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+

@@ -28,7 +28,7 @@ export default function LearnHeader() {
           {[
             { icon: PlaneTakeoff, label: "Study Abroad" },
             { icon: Landmark, label: "Top Institutions" },
-            { icon: Globe2, label: "Global Reach" },
+            { icon: Globe2, label: "Destinations Info" },
             { icon: Handshake, label: "Trusted Partnerships" },
           ].map(({ icon: Icon, label }, i) => (
             <div

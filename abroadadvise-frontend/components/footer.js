@@ -133,13 +133,14 @@ export default function Footer() {
                 <li><Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200">Consultancies</Link></li>
                 <li><Link href="/university" className="hover:text-[#4c9bd5] transition-colors duration-200">Universities</Link></li>
                 <li><Link href="/event" className="hover:text-[#4c9bd5] transition-colors duration-200">Events</Link></li>
+                <li><Link href="/about" className="hover:text-[#4c9bd5] transition-colors duration-200">About Us</Link></li>
                 <li><Link href="/contact" className="hover:text-[#4c9bd5] transition-colors duration-200">Contact Us</Link></li>
               </ul>
             </div>
 
             {/* Consultancy Links */}
             <div>
-              <h2 className="text-[#4c9bd5] font-light text-lg tracking-wider mb-4">Consultancy</h2>
+              <h2 className="text-[#4c9bd5] font-light text-lg tracking-wider mb-4">For Consultancy</h2>
               <ul className="text-gray-600 text-sm space-y-3 font-light tracking-wide">
                 <li><Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200">Consultancies</Link></li>
                 <li><Link href="/dashboard/consultancy/login" className="hover:text-[#4c9bd5] transition-colors duration-200">Login</Link></li>
@@ -153,7 +154,6 @@ export default function Footer() {
               <ul className="text-gray-600 text-sm space-y-3 font-light tracking-wide">
                 <li><Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200">Blogs</Link></li>
                 <li><Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200">News</Link></li>
-                <li><Link href="/about" className="hover:text-[#4c9bd5] transition-colors duration-200">About Us</Link></li>
                 <li><Link href="/faqs" className="hover:text-[#4c9bd5] transition-colors duration-200">FAQs</Link></li>
                 <li><Link href="/privacy-policy" className="hover:text-[#4c9bd5] transition-colors duration-200">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-[#4c9bd5] transition-colors duration-200">Terms of Use</Link></li>

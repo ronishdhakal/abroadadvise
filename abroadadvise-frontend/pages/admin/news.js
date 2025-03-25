@@ -3,8 +3,19 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import NewsForm from "@/components/admin/NewsForm";
-import { getNewsList, deleteNews, getNewsBySlug } from "@/utils/api";
-import Pagination from "@/pages/news/NewsPagination"; // ✅ Shared reusable component
+import Pagination from "@/pages/news/NewsPagination";
+
+import {
+  getNewsList,
+  deleteNews,
+  getNewsBySlug,
+  fetchNewsCategories,
+  createNewsCategory,
+  updateNewsCategory,
+  deleteNewsCategory,
+} from "@/utils/api";
+
+import NewsCategoryManager from "@/components/admin/news/CategoryManager"; // ✅ Use your modular component
 
 const NewsPage = () => {
   const [news, setNews] = useState([]);
@@ -18,16 +29,13 @@ const NewsPage = () => {
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Load news dynamically
   const loadNews = async () => {
     setLoading(true);
     setError(null);
-    setSuccessMessage("");
-
     try {
       const data = await getNewsList({ page, search });
       setNews(data.results || []);
-      setTotalPages(Math.ceil(data.count / 10)); // Based on page size from backend
+      setTotalPages(Math.ceil((data.count || 0) / 10));
     } catch (err) {
       console.error("❌ Failed to load news:", err);
       setError("Failed to load news.");
@@ -40,56 +48,50 @@ const NewsPage = () => {
     loadNews();
   }, [page, search]);
 
-  // ✅ Handle Delete
   const handleDelete = async (slug) => {
-    if (!window.confirm("Are you sure you want to delete this news post?")) return;
-
+    if (!window.confirm("Are you sure you want to delete this news article?")) return;
     const originalNews = [...news];
     setNews((prev) => prev.filter((n) => n.slug !== slug));
-
     try {
       await deleteNews(slug);
       setSuccessMessage("✅ News deleted successfully!");
     } catch (err) {
-      console.error("❌ Failed to delete news:", err);
       setError("Failed to delete news.");
       setNews(originalNews);
     }
   };
 
-  // ✅ Handle Edit
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
     setShowForm(true);
-
     try {
       const newsData = await getNewsBySlug(slug);
       setEditingData(newsData);
     } catch (err) {
-      console.error("❌ Failed to load news details for editing:", err);
       setError("Failed to load news details.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ On Success (Save)
   const handleSuccess = () => {
     setShowForm(false);
     setEditingSlug(null);
     setEditingData(null);
     setSuccessMessage("✅ News saved successfully!");
     loadNews();
+    setTimeout(() => setSuccessMessage(""), 3000);
   };
 
   return (
     <AdminLayout>
       <h1 className="text-2xl font-bold mb-4">Manage News Articles</h1>
 
-      {successMessage && <p className="text-green-500 mb-2">{successMessage}</p>}
+      {successMessage && <p className="text-green-500">{successMessage}</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
-      {/* ✅ Search */}
+      {/* ✅ Search Bar */}
       <div className="mb-4 flex gap-2">
         <input
           type="text"
@@ -97,7 +99,7 @@ const NewsPage = () => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setPage(1); // Reset to first page on search
+            setPage(1);
           }}
           className="border rounded-lg p-2 w-full"
         />
@@ -109,7 +111,7 @@ const NewsPage = () => {
         </button>
       </div>
 
-      {/* ✅ Toggle Form */}
+      {/* ✅ Toggle News Form */}
       <button
         onClick={() => {
           setShowForm(!showForm);
@@ -121,7 +123,6 @@ const NewsPage = () => {
         {showForm ? "Cancel" : "Add New News"}
       </button>
 
-      {/* ✅ News Form */}
       {showForm && (
         <NewsForm
           newsSlug={editingSlug}
@@ -134,8 +135,6 @@ const NewsPage = () => {
           }}
         />
       )}
-
-      {error && <p className="text-red-500">{error}</p>}
 
       {loading ? (
         <p>Loading news...</p>
@@ -164,14 +163,14 @@ const NewsPage = () => {
                   <td className="border p-2">{article.is_published ? "Yes" : "No"}</td>
                   <td className="border p-2 flex gap-2">
                     <button
-                      onClick={() => handleEdit(article.slug)}
                       className="bg-blue-500 text-white px-3 py-1 rounded"
+                      onClick={() => handleEdit(article.slug)}
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(article.slug)}
                       className="bg-red-500 text-white px-3 py-1 rounded"
+                      onClick={() => handleDelete(article.slug)}
                     >
                       Delete
                     </button>
@@ -181,7 +180,6 @@ const NewsPage = () => {
             </tbody>
           </table>
 
-          {/* ✅ Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">
               <Pagination
@@ -193,6 +191,11 @@ const NewsPage = () => {
           )}
         </>
       )}
+
+      {/* ✅ News Category Management */}
+      <hr className="my-8" />
+      <h2 className="text-xl font-semibold mb-4">Manage Categories</h2>
+      <NewsCategoryManager />
     </AdminLayout>
   );
 };

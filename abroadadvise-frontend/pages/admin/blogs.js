@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import BlogForm from "@/components/admin/BlogForm";
-import { getBlogs, deleteBlog, getBlogBySlug } from "@/utils/api";
 import Pagination from "@/pages/blog/BlogPagination"; // ✅ Add reusable pagination
+import { getBlogs, deleteBlog, getBlogBySlug } from "@/utils/api";
+import CategoryManager from "@/components/admin/blog/CategoryManager"; // ✅ Import category manager
 
 const BlogsPage = () => {
   const [blogs, setBlogs] = useState([]);
@@ -99,7 +100,7 @@ const BlogsPage = () => {
         </button>
       </div>
 
-      {/* ✅ Toggle Form */}
+      {/* ✅ Toggle Blog Form */}
       <button
         onClick={() => {
           setShowForm(!showForm);
@@ -180,6 +181,11 @@ const BlogsPage = () => {
           )}
         </>
       )}
+
+      {/* ✅ Category Management Section Below Blog List */}
+      <hr className="my-8" />
+      <h2 className="text-xl font-semibold mb-4">Manage Categories</h2>
+      <CategoryManager />
     </AdminLayout>
   );
 };

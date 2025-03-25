@@ -1169,25 +1169,6 @@ export const deleteBlog = async (slug) => {
   }
 };
 
-// ... (rest of your api.js file) ...
-
-
-/**
- * ✅ Fetch Blog Categories
- * @returns {Promise} - List of categories
- */
-export const getBlogCategories = async () => {
-  try {
-      const response = await fetch(`${API_BASE_URL}/blog/categories/`);
-      if (!response.ok) {
-          throw new Error("Failed to fetch blog categories");
-      }
-      return await response.json();
-  } catch (error) {
-      console.error("❌ Error fetching blog categories:", error);
-      throw error;
-  }
-};
 
 // News
 // utils/api.js
@@ -1317,19 +1298,6 @@ export const getNewsBySlug = async (slug) => {
   }
 };
 
-/**
- * ✅ Fetch News Categories
- * @returns {Promise} - List of categories
- */
-export const getNewsCategories = async () => {
-  try {
-      const response = await axios.get(`${API_BASE_URL}/news/categories/`);
-      return response.data;
-  } catch (error) {
-      console.error("❌ Error fetching news categories:", error);
-      throw error;
-  }
-};
 
 
 
@@ -1566,3 +1534,225 @@ export const updateUniversityDashboard = async (updateData) => {
   }
 };
 
+
+
+
+
+/**
+ * ✅ Fetch Blog Categories
+ * @returns {Promise} - List of categories
+ */
+export const fetchBlogCategories = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/blog/categories/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch blog categories");
+    }
+    const data = await response.json();
+    return data || []; // ✅ Return an empty array if data is null or undefined
+  } catch (error) {
+    console.error("❌ Error fetching blog categories:", error);
+    throw error;
+  }
+};
+
+
+
+/**
+ * ✅ Create Blog Category
+ * @param {Object} data - Category data (e.g., { name: "New Category" })
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const createBlogCategory = async (data, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/blog/categories/create/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create Blog Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create blog category");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating blog category:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Update Blog Category
+ * @param {string} slug - Category slug
+ * @param {Object} data - Updated category data (e.g., { name: "Updated Category" })
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const updateBlogCategory = async (slug, data, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/blog/categories/${slug}/update/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Update Blog Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to update blog category");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error updating blog category:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Delete Blog Category
+ * @param {string} slug - Category slug
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const deleteBlogCategory = async (slug, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/blog/categories/${slug}/delete/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Blog Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete blog category");
+    }
+
+    return { success: true, message: "✅ Blog category deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting blog category:", error);
+    throw error;
+  }
+};
+
+
+/**
+ * ✅ Fetch News Categories
+ * @returns {Promise} - List of categories
+ */
+export const fetchNewsCategories = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/news/categories/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch news categories");
+    }
+    const data = await response.json();
+    return data || [];
+  } catch (error) {
+    console.error("❌ Error fetching news categories:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Create News Category
+ * @param {Object} data - Category data (e.g., { name: "New Category" })
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const createNewsCategory = async (data, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/news/categories/create/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Create News Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to create news category");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating news category:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Update News Category
+ * @param {string} slug - Category slug
+ * @param {Object} data - Updated category data (e.g., { name: "Updated Category" })
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const updateNewsCategory = async (slug, data, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/news/categories/${slug}/update/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Update News Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to update news category");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error updating news category:", error);
+    throw error;
+  }
+};
+
+/**
+ * ✅ Delete News Category
+ * @param {string} slug - Category slug
+ * @param {string} token - Authentication token
+ * @returns {Promise} - API response
+ */
+export const deleteNewsCategory = async (slug, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/news/categories/${slug}/delete/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete News Category API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete news category");
+    }
+
+    return { success: true, message: "✅ News category deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting news category:", error);
+    throw error;
+  }
+};

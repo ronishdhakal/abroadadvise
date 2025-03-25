@@ -1,155 +1,163 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createBlog, updateBlog, getBlogBySlug, getBlogCategories } from "@/utils/api";
+import {
+  createBlog,
+  updateBlog,
+  getBlogBySlug,
+  fetchBlogCategories,
+} from "@/utils/api";
 import BlogHeader from "./blog/BlogHeader";
 import BlogBody from "./blog/BlogBody";
 
 const BlogForm = ({ blogSlug, onSuccess, onCancel }) => {
-    const isEditing = !!blogSlug;
+  const isEditing = !!blogSlug;
 
-    // ✅ State for Form Data & Categories
-    const [formData, setFormData] = useState({
-        title: "",
-        slug: "",
-        category: "",
-        content: "",
-        priority: "",
-        is_published: true,
-        featured_image: null,
+  const [formData, setFormData] = useState({
+    title: "",
+    slug: "",
+    category: null,
+    content: "",
+    priority: 0,
+    is_published: false,
+    featured_image: null,
+  });
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ✅ Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchBlogCategories();
+        setCategories(data.results || []); // ✅ KEY FIX
+      } catch (err) {
+        console.error("❌ Failed to fetch categories:", err);
+        setError("Failed to load categories.");
+      }
+    };
+    loadCategories();
+  }, []);
+
+  // ✅ Load blog if editing
+  useEffect(() => {
+    if (isEditing) {
+      setLoading(true);
+      getBlogBySlug(blogSlug)
+        .then((data) => {
+          setFormData((prev) => ({
+            ...prev,
+            ...data,
+            category: data.category?.id || null,
+            featured_image: data.featured_image || null,
+          }));
+        })
+        .catch((err) => {
+          console.error("❌ Failed to load blog details:", err);
+          setError("Failed to load blog details.");
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [blogSlug, isEditing]);
+
+  // ✅ Auto-generate slug
+  useEffect(() => {
+    if (formData.title && !formData.slug) {
+      setFormData((prev) => ({
+        ...prev,
+        slug: prev.title
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, ""),
+      }));
+    }
+  }, [formData.title, formData.slug]);
+
+  // ✅ Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    const submissionData = new FormData();
+
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key !== "featured_image" && value !== null && value !== undefined) {
+        submissionData.append(key, value);
+      }
     });
 
-    const [categories, setCategories] = useState([]); // ✅ Store categories
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    if (formData.featured_image instanceof File) {
+      submissionData.append("featured_image", formData.featured_image);
+    }
 
-    // ✅ Fetch Categories on Component Mount
-    useEffect(() => {
-        const loadCategories = async () => {
-            try {
-                const data = await getBlogCategories();
-                setCategories(data);
-            } catch (err) {
-                console.error("❌ Failed to fetch categories:", err);
-            }
-        };
-        loadCategories();
-    }, []);
+    try {
+      if (isEditing) {
+        await updateBlog(blogSlug, submissionData);
+        setSuccess("✅ Blog updated successfully!");
+      } else {
+        await createBlog(submissionData);
+        setSuccess("✅ Blog created successfully!");
+      }
+      onSuccess();
+    } catch (err) {
+      console.error("❌ API Error:", err);
+      setError(err.message || "❌ Failed to save blog.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // ✅ Load blog data if editing
-    useEffect(() => {
-        if (isEditing) {
-            setLoading(true);
-            getBlogBySlug(blogSlug)
-                .then((data) => {
-                    console.log("✅ Fetched Blog Data:", data);
-                    setFormData((prev) => ({
-                        ...prev,
-                        ...data,
-                        category: data.category?.id || "",
-                        featured_image: data.featured_image || prev.featured_image,
-                    }));
-                })
-                .catch(() => setError("❌ Failed to load blog details"))
-                .finally(() => setLoading(false));
-        }
-    }, [blogSlug]);
+  const handleImageDelete = () => {
+    setFormData((prev) => ({
+      ...prev,
+      featured_image: null,
+    }));
+  };
 
-    // ✅ Handle Slug (Auto-generate but allow manual edit)
-    useEffect(() => {
-        if (formData.title && !formData.slug) {
-            setFormData((prev) => ({
-                ...prev,
-                slug: prev.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-            }));
-        }
-    }, [formData.title]);
+  return (
+    <div className="p-6 bg-white shadow-lg rounded-xl">
+      <h2 className="text-2xl font-bold mb-4">
+        {isEditing ? "Edit Blog" : "Create Blog"}
+      </h2>
 
-    // ✅ Handle Form Submission
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        setSuccess("");
+      {error && <p className="text-red-500">{error}</p>}
+      {success && <p className="text-green-500">{success}</p>}
 
-        const submissionData = new FormData();
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
+        <BlogHeader
+          formData={formData}
+          setFormData={setFormData}
+          categories={categories}
+          onDeleteImage={handleImageDelete}
+        />
 
-        // ✅ Append all non-file fields
-        Object.entries(formData).forEach(([key, value]) => {
-            if (key !== "featured_image" && value !== null && value !== undefined) {
-                submissionData.append(key, value);
-            }
-        });
+        <BlogBody formData={formData} setFormData={setFormData} />
 
-        // ✅ Append featured image only if it's a new file
-        if (formData.featured_image instanceof File) {
-            submissionData.append("featured_image", formData.featured_image);
-        }
-
-        try {
-            if (isEditing) {
-                await updateBlog(blogSlug, submissionData);
-                setSuccess("✅ Blog updated successfully!");
-            } else {
-                await createBlog(submissionData);
-                setSuccess("✅ Blog created successfully!");
-            }
-            onSuccess();
-        } catch (err) {
-            console.error("❌ API Error:", err);
-            setError(err.message || "❌ Failed to save blog.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // ✅ Handle Image Deletion
-    const handleImageDelete = () => {
-        setFormData((prev) => ({
-            ...prev,
-            featured_image: null, // ✅ Remove image from state
-        }));
-    };
-
-    return (
-        <div className="p-6 bg-white shadow-lg rounded-xl">
-            <h2 className="text-2xl font-bold mb-4">{isEditing ? "Edit Blog" : "Create Blog"}</h2>
-
-            {error && <p className="text-red-500">{error}</p>}
-            {success && <p className="text-green-500">{success}</p>}
-
-            <form onSubmit={handleSubmit} encType="multipart/form-data">
-                {/* ✅ Blog Header (Pass categories & handle image delete) */}
-                <BlogHeader
-                    formData={formData}
-                    setFormData={setFormData}
-                    categories={categories}
-                    onDeleteImage={handleImageDelete}
-                />
-
-                {/* ✅ Blog Body (Content & Publish Settings) */}
-                <BlogBody formData={formData} setFormData={setFormData} />
-
-                {/* ✅ Submit & Cancel Buttons */}
-                <div className="flex gap-4 mt-6">
-                    <button
-                        type="submit"
-                        className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition"
-                    >
-                        {loading ? "Saving..." : isEditing ? "Update" : "Create"}
-                    </button>
-                    <button
-                        type="button"
-                        className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition"
-                        onClick={onCancel}
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </form>
+        <div className="flex gap-4 mt-6">
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition"
+            disabled={loading}
+          >
+            {loading ? "Saving..." : isEditing ? "Update" : "Create"}
+          </button>
+          <button
+            type="button"
+            className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition"
+            onClick={onCancel}
+            disabled={loading}
+          >
+            Cancel
+          </button>
         </div>
-    );
+      </form>
+    </div>
+  );
 };
 
 export default BlogForm;

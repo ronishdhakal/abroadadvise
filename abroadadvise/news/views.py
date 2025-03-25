@@ -159,3 +159,39 @@ def delete_news_comment(request, comment_id):
         return Response({"message": "Comment deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
     except NewsComment.DoesNotExist:
         return Response({"error": "Comment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# ✅ Create News Category (Admin Only)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_news_category(request):
+    serializer = NewsCategorySerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# ✅ Update News Category (Admin Only)
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_news_category(request, slug):
+    try:
+        category = NewsCategory.objects.get(slug=slug)
+        serializer = NewsCategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except NewsCategory.DoesNotExist:
+        return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+# ✅ Delete News Category (Admin Only)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_news_category(request, slug):
+    try:
+        category = NewsCategory.objects.get(slug=slug)
+        category.delete()
+        return Response({"message": "Category deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except NewsCategory.DoesNotExist:
+        return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
