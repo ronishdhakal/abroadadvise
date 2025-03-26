@@ -64,7 +64,8 @@ def all_events(request):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_event(request):
-    data = request.data.copy()
+    data = request.data  # ✅ Do not use .copy()
+
     print(data)
     # ✅ Extract ManyToMany Fields (Expecting JSON strings)
     try:
@@ -130,7 +131,8 @@ def get_event(request, slug):
 def update_event(request, slug):
     try:
         event = Event.objects.get(slug=slug)
-        data = request.data.copy()
+        data = request.data  # ✅ Do not use .copy()
+
 
         print(data)
         # ✅ Extract ManyToMany Fields (Expecting JSON strings)

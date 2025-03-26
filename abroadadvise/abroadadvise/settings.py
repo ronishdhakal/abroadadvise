@@ -94,13 +94,17 @@ TEMPLATES = [
 # ✅ WSGI Application
 WSGI_APPLICATION = 'abroadadvise.wsgi.application'
 
-# ✅ Database (Using SQLite for development, switch to PostgreSQL for production)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'abroadadvise_db',
+        'USER': 'postgres',
+        'PASSWORD': 'Abroad@@##77',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 # ✅ Password Validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -164,10 +168,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # ✅ CORS Configuration (Ensures API Works with Frontend)
 CORS_ALLOW_ALL_ORIGINS = True  # Disable allowing all origins (security best practice)
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # ✅ Explicitly allow Next.js frontend
-    "http://127.0.0.1:3000",
-]
 CORS_ALLOW_CREDENTIALS = True  # ✅ Allow sending authentication credentials
 
 # ✅ CSRF Configuration for API (Ensure frontend can submit forms)

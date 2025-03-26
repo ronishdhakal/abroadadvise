@@ -64,13 +64,11 @@ def dashboard_consultancy_list(request):
 # ✅ Create Consultancy
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser, FormParser])  # ✅ Support file uploads
+@parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
     """ ✅ Creates a new consultancy without authentication. """
+    data = request.data  # ✅ Do NOT copy – it causes deepcopy errors with files
 
-    data = request.data.copy()  # ✅ Make a mutable copy of request data
-
-    # ✅ Convert JSON string fields into Python lists
     try:
         branches_data = json.loads(data.get("branches", "[]"))
         study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
@@ -79,6 +77,8 @@ def create_consultancy(request):
         districts = json.loads(data.get("districts", "[]"))
     except json.JSONDecodeError:
         return Response({"error": "Invalid JSON format in fields."}, status=status.HTTP_400_BAD_REQUEST)
+
+    ...
 
     # ✅ Required Fields Check
     required_fields = ["name", "districts"]
@@ -138,7 +138,8 @@ def update_consultancy(request, slug):
     """ ✅ Fully updates a consultancy, ensuring pre-filled data updates correctly. """
 
     consultancy = get_object_or_404(Consultancy, slug=slug)
-    data = request.data.copy()
+    data = request.data
+
 
     # ✅ Convert JSON string to lists
     branches_data = json.loads(data.get("branches", "[]"))
@@ -269,7 +270,8 @@ def update_consultancy_dashboard(request):
         return Response({"error": "User is not linked to any consultancy."}, status=status.HTTP_403_FORBIDDEN)
 
     consultancy = user.consultancy  # ✅ Get the consultancy linked to the user
-    data = request.data.copy()
+    data = request.data
+
 
     # ✅ Convert JSON string fields to lists
     branches_data = json.loads(data.get("branches", "[]"))

@@ -22,7 +22,7 @@ class Consultancy(models.Model):
     cover_photo = models.ImageField(upload_to='cover/', blank=True, null=True)
     districts = models.ManyToManyField('core.District', blank=True)
     # verified = models.ForeignKey('core.VerifiedItem', on_delete=models.SET_NULL, null=True, blank=True) # Removed
-    verified = models.BooleanField(default=False)  # Added
+    verified = models.BooleanField(default=False)
     address = models.TextField()
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)

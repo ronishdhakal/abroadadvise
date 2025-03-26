@@ -62,7 +62,7 @@ def extract_disciplines(data):
 @parser_classes([MultiPartParser, FormParser])
 def create_university(request):
     """ ✅ Creates a new university including file uploads and disciplines """
-    data = request.data.copy()  # ✅ Make mutable copy of request data
+    data = request.data  # ✅ Make mutable copy of request data
 
     # ✅ Extract disciplines safely
     disciplines, error_response = extract_disciplines(data)
@@ -119,7 +119,7 @@ def update_university(request, slug):
     """ ✅ Updates an existing university including file uploads and disciplines """
     try:
         university = University.objects.prefetch_related("disciplines").get(slug=slug)
-        data = request.data.copy()  # ✅ Make mutable copy of request data
+        data = request.data # ✅ Make mutable copy of request data
 
         # ✅ Extract disciplines safely
         disciplines, error_response = extract_disciplines(data)
@@ -218,7 +218,7 @@ def update_university_dashboard(request):
         return Response({"error": "User is not linked to any university."}, status=status.HTTP_403_FORBIDDEN)
 
     university = user.university  # ✅ Get the university linked to the user
-    data = request.data.copy()
+    data = request.data
     
     # ✅ Extract qs_world_ranking
     qs_world_ranking = data.get("qs_world_ranking")
