@@ -1939,3 +1939,81 @@ export const deleteAd = async (id) => {
 
   return { success: true };
 };
+
+// Users
+export const fetchUsers = async (page = 1, search = "") => {
+  const queryParams = new URLSearchParams({ page });
+  if (search) queryParams.append("search", search);
+
+  const response = await fetch(
+    `${API_BASE_URL}/auth/users/?${queryParams.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(), // ✅ Use existing helper
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch users: ${response.status} - ${errorText}`);
+  }
+
+  return await response.json();
+};
+
+
+export const createUser = async (userData) => {
+  const response = await fetch(`${API_BASE_URL}/auth/users/create/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to create user");
+  }
+
+  return await response.json();
+};
+
+export const updateUser = async (userId, updatedData) => {
+  const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(updatedData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to update user");
+  }
+
+  return await response.json();
+};
+
+export const deleteUser = async (userId) => {
+  const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/delete/`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to delete user");
+  }
+
+  return await response.json();
+};

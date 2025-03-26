@@ -61,13 +61,27 @@ def dashboard_consultancy_list(request):
     serializer = ConsultancySerializer(consultancies, many=True, context={"request": request})
     return Response(serializer.data)
 
-# ✅ Create Consultancy
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.text import slugify
+from consultancy.models import Consultancy, ConsultancyBranch, ConsultancyGallery
+from consultancy.serializers import ConsultancySerializer
+from destination.models import Destination
+from exam.models import Exam
+from university.models import University
+from core.models import District
+import json
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
-    """ ✅ Creates a new consultancy without authentication. """
-    data = request.data  # ✅ Do NOT copy – it causes deepcopy errors with files
+    """ ✅ Creates a new consultancy with optional manual slug. """
+    data = request.data  # ⚠️ Immutable — do NOT modify directly
 
     try:
         branches_data = json.loads(data.get("branches", "[]"))
@@ -78,27 +92,28 @@ def create_consultancy(request):
     except json.JSONDecodeError:
         return Response({"error": "Invalid JSON format in fields."}, status=status.HTTP_400_BAD_REQUEST)
 
-    ...
-
     # ✅ Required Fields Check
-    required_fields = ["name", "districts"]
+    required_fields = ["name"]
     missing_fields = [field for field in required_fields if not data.get(field)]
     if missing_fields:
         return Response({"error": f"Missing required fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # ✅ Generate unique slug
-    slug = data.get("slug") or slugify(data.get("name", ""))
-    original_slug = slug
+    # ✅ Generate unique slug (manual or auto)
+    requested_slug = data.get("slug")
+    base_slug = slugify(requested_slug) if requested_slug else slugify(data.get("name", ""))
+    slug = base_slug
     counter = 1
     while Consultancy.objects.filter(slug=slug).exists():
-        slug = f"{original_slug}-{counter}"
+        slug = f"{base_slug}-{counter}"
         counter += 1
-    data["slug"] = slug
 
-    # ✅ Serialize and validate data
-    serializer = ConsultancySerializer(data=data)
+    # ✅ Create mutable dict for serializer
+    consultancy_data = data.copy()
+    consultancy_data["slug"] = slug
+
+    serializer = ConsultancySerializer(data=consultancy_data)
     if serializer.is_valid():
-        consultancy = serializer.save()  # ✅ Save consultancy (no user required)
+        consultancy = serializer.save()
 
         # ✅ Assign ManyToMany Fields
         consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
@@ -106,14 +121,13 @@ def create_consultancy(request):
         consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
         consultancy.districts.set(District.objects.filter(id__in=districts))
 
-        # ✅ Handle File Uploads (Logo, Cover Photo, Brochure)
+        # ✅ Handle File Uploads
         if "logo" in request.FILES:
             consultancy.logo = request.FILES["logo"]
         if "cover_photo" in request.FILES:
             consultancy.cover_photo = request.FILES["cover_photo"]
         if "brochure" in request.FILES:
             consultancy.brochure = request.FILES["brochure"]
-
         consultancy.save()
 
         # ✅ Save Branches

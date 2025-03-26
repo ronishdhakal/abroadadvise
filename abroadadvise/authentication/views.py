@@ -6,8 +6,17 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from .serializers import UserSerializer
 from .permissions import IsConsultancyUser, IsUniversityUser, IsStudentUser
+from .permissions import IsAdminUser  # Make sure this exists or define it
 from consultancy.models import Consultancy
+from rest_framework import status
+from .pagination import UserPagination
+from django.db.models import Q
 from university.models import University
+from .serializers import (
+    UserListSerializer,
+    UserCreateSerializer,
+    UserUpdateSerializer,
+)
 
 User = get_user_model()
 
@@ -142,3 +151,68 @@ def university_only_view(request):
 @permission_classes([IsAuthenticated, IsStudentUser])  # Only Student Users
 def student_only_view(request):
     return Response({"message": "Hello, Student! You can submit inquiries."})
+
+
+
+# For Users in Admin
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def get_all_users(request):
+    search = request.GET.get('search', '')
+
+    users = User.objects.filter(
+        Q(username__icontains=search) |
+        Q(email__icontains=search) |
+        Q(role__icontains=search)
+    ).order_by('-date_joined')
+
+    paginator = UserPagination()
+    result_page = paginator.paginate_queryset(users, request)
+    serializer = UserListSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
+# ✅ CREATE a user (only for superadmin)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def create_user_by_admin(request):
+    serializer = UserCreateSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        user.set_password(serializer.validated_data['password'])  # Hash password
+        user.save()
+        return Response(UserListSerializer(user).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# ✅ UPDATE a user (only for superadmin)
+# ✅ UPDATE a user (only for superadmin)
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def update_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        updated_user = serializer.save()
+
+        # ✅ Only update password if provided
+        if 'password' in request.data and request.data['password']:
+            updated_user.set_password(request.data['password'])
+            updated_user.save()
+
+        return Response(UserListSerializer(updated_user).data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ✅ DELETE a user (only for superadmin)
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def delete_user(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        user.delete()
+        return Response({"message": "User deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
