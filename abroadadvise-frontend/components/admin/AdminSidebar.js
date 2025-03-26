@@ -32,6 +32,7 @@ const AdminSidebar = () => {
     { name: "Events", path: "/admin/events", icon: <Calendar className="w-4 h-4" /> },
     { name: "News", path: "/admin/news", icon: <Newspaper className="w-4 h-4" /> },
     { name: "Blogs", path: "/admin/blogs", icon: <Pencil className="w-4 h-4" /> },
+    { name: "Configurations", path: "/admin/configurations", icon: <Pencil className="w-4 h-4" /> },
     { name: "Inquiries", path: "/admin/inquiries", icon: <MessageSquare className="w-4 h-4" /> },
   ];
 

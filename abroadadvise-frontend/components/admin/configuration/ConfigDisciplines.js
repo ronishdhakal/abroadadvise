@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import {
-  getDisciplines,
+  fetchDisciplines,
   createDiscipline,
   updateDiscipline,
   deleteDiscipline,
 } from "@/utils/api";
+import DisciplineForm from "./DisciplineForm";
+import Pagination from "@/components/Pagination";
 
 const ConfigDisciplines = () => {
   const [disciplines, setDisciplines] = useState([]);
@@ -15,20 +17,24 @@ const ConfigDisciplines = () => {
   const [showForm, setShowForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedDiscipline, setSelectedDiscipline] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-  });
 
-  // ✅ Fetch Disciplines
+  // ✅ Pagination
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // ✅ Search
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     loadDisciplines();
-  }, []);
+  }, [page, search]);
 
   const loadDisciplines = async () => {
     setLoading(true);
     try {
-      const response = await getDisciplines();
-      setDisciplines(response.data);
+      const response = await fetchDisciplines(page, search);
+      setDisciplines(response?.results || []);
+      setTotalPages(Math.ceil((response?.count || 0) / 10));
     } catch (err) {
       console.error("❌ Failed to load disciplines:", err);
       setError("Failed to load disciplines.");
@@ -37,29 +43,17 @@ const ConfigDisciplines = () => {
     }
   };
 
-  // ✅ Handle Input Change
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  // ✅ Handle Create / Update Discipline
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleCreateOrUpdate = async (formData) => {
     setLoading(true);
-
     try {
-      if (editMode) {
+      if (editMode && selectedDiscipline) {
         await updateDiscipline(selectedDiscipline.id, formData);
       } else {
         await createDiscipline(formData);
       }
-
       setShowForm(false);
-      setFormData({ name: "" });
       setEditMode(false);
+      setSelectedDiscipline(null);
       loadDisciplines();
     } catch (err) {
       console.error("❌ Failed to save discipline:", err);
@@ -69,17 +63,6 @@ const ConfigDisciplines = () => {
     }
   };
 
-  // ✅ Handle Edit Discipline
-  const handleEdit = (discipline) => {
-    setSelectedDiscipline(discipline);
-    setFormData({
-      name: discipline.name,
-    });
-    setEditMode(true);
-    setShowForm(true);
-  };
-
-  // ✅ Handle Delete Discipline
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this discipline?")) return;
     setLoading(true);
@@ -98,11 +81,31 @@ const ConfigDisciplines = () => {
     <div>
       <h2 className="text-xl font-semibold mb-4">Manage Disciplines</h2>
 
+      {/* ✅ Search Bar */}
+      <div className="mb-4 flex gap-2">
+        <input
+          type="text"
+          placeholder="Search disciplines..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1); // reset to page 1 when searching
+          }}
+          className="border p-2 rounded w-full md:w-1/2"
+        />
+        <button
+          onClick={() => loadDisciplines()}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Search
+        </button>
+      </div>
+
       <button
         onClick={() => {
           setShowForm(true);
           setEditMode(false);
-          setFormData({ name: "" });
+          setSelectedDiscipline(null);
         }}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
       >
@@ -111,54 +114,59 @@ const ConfigDisciplines = () => {
 
       {error && <p className="text-red-500">{error}</p>}
 
-      {/* ✅ Discipline Form */}
       {showForm && (
-        <form onSubmit={handleSubmit} className="border p-4 rounded mb-4">
-          <h3 className="text-lg font-semibold mb-2">
-            {editMode ? "Edit Discipline" : "Create Discipline"}
-          </h3>
-
-          <input
-            type="text"
-            name="name"
-            placeholder="Discipline Name"
-            value={formData.name}
-            onChange={handleInputChange}
-            required
-            className="border p-2 rounded w-full mb-2"
-          />
-
-          <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-4">
-            {editMode ? "Update Discipline" : "Create Discipline"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowForm(false)}
-            className="bg-gray-500 text-white px-4 py-2 rounded mt-4 ml-2"
-          >
-            Cancel
-          </button>
-        </form>
+        <DisciplineForm
+          initialData={selectedDiscipline}
+          editMode={editMode}
+          onCancel={() => {
+            setShowForm(false);
+            setSelectedDiscipline(null);
+            setEditMode(false);
+          }}
+          onSubmit={handleCreateOrUpdate}
+        />
       )}
 
-      {/* ✅ List Disciplines */}
       {loading ? (
         <p>Loading disciplines...</p>
+      ) : disciplines.length === 0 ? (
+        <p>No disciplines found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {disciplines.map((discipline) => (
-            <div key={discipline.id} className="border p-4 rounded shadow">
-              <h3 className="font-semibold">{discipline.name}</h3>
-              <button onClick={() => handleEdit(discipline)} className="bg-yellow-500 text-white px-2 py-1 rounded mt-2">
-                Edit
-              </button>
-              <button onClick={() => handleDelete(discipline.id)} className="bg-red-500 text-white px-2 py-1 rounded mt-2 ml-2">
-                Delete
-              </button>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {disciplines.map((discipline) => (
+              <div key={discipline.id} className="border p-4 rounded shadow">
+                <h3 className="font-semibold">{discipline.name}</h3>
+                <button
+                  onClick={() => {
+                    setSelectedDiscipline(discipline);
+                    setEditMode(true);
+                    setShowForm(true);
+                  }}
+                  className="bg-yellow-500 text-white px-2 py-1 rounded mt-2"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(discipline.id)}
+                  className="bg-red-500 text-white px-2 py-1 rounded mt-2 ml-2"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={(newPage) => setPage(newPage)}
+              />
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

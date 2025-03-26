@@ -38,14 +38,18 @@ class SiteSettingSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.hero_image.url) if request else obj.hero_image.url
         return None
 
-# ✅ Serializer for Advertisement (Ad API)
 class AdSerializer(serializers.ModelSerializer):
     desktop_image_url = serializers.SerializerMethodField()
     mobile_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Ad
-        fields = ["id", "title", "placement", "desktop_image_url", "mobile_image_url", "redirect_url", "is_active"]
+        fields = [
+            "id", "title", "placement", "redirect_url", "is_active",
+            "desktop_image", "mobile_image",  # ✅ Include these for file upload
+            "desktop_image_url", "mobile_image_url"  # ✅ For display
+        ]
+        read_only_fields = ["desktop_image_url", "mobile_image_url"]
 
     def get_desktop_image_url(self, obj):
         request = self.context.get('request')
@@ -58,6 +62,7 @@ class AdSerializer(serializers.ModelSerializer):
         if obj.mobile_image:
             return request.build_absolute_uri(obj.mobile_image.url) if request else obj.mobile_image.url
         return None
+
 
 # ✅ Review Serializer with Reply Fields
 class ReviewSerializer(serializers.ModelSerializer):

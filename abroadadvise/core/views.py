@@ -12,6 +12,7 @@ from .serializers import ReviewSerializer, DistrictSerializer, DisciplineSeriali
 from .filters import ReviewFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.conf import settings
+from .pagination import StandardResultsSetPagination
 
 
 # ✅ Import Consultancy, University, and Course models
@@ -19,19 +20,40 @@ from consultancy.models import Consultancy
 from university.models import University
 from course.models import Course
 
-# ✅ API for Fetching All Districts
+# ✅ API for Fetching All Districts (paginated)
 class DistrictListAPIView(generics.ListAPIView):
     queryset = District.objects.all().order_by("name")
     serializer_class = DistrictSerializer
     permission_classes = [permissions.AllowAny]
     renderer_classes = [JSONRenderer]
+    pagination_class = StandardResultsSetPagination  # ✅ ADD THIS
+    
+    def get_queryset(self):
+        queryset = District.objects.all().order_by("name")
+        search_query = self.request.GET.get("search")
 
-# ✅ API for Fetching All Disciplines
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+
+        return queryset
+
+
 class DisciplineListAPIView(generics.ListAPIView):
-    queryset = Discipline.objects.all().order_by("name")
     serializer_class = DisciplineSerializer
     permission_classes = [permissions.AllowAny]
     renderer_classes = [JSONRenderer]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = Discipline.objects.all().order_by("name")
+        search_query = self.request.GET.get("search")
+
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+
+        return queryset
+
+
 
 # ✅ API for Users to Submit Reviews
 class ReviewCreateAPIView(generics.CreateAPIView):
@@ -161,3 +183,84 @@ class GlobalSearchAPIView(APIView):
         }
 
         return Response({"results": results})
+
+
+# ✅ Create District
+class DistrictCreateAPIView(generics.CreateAPIView):
+    queryset = District.objects.all()
+    serializer_class = DistrictSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Update District
+class DistrictUpdateAPIView(generics.UpdateAPIView):
+    queryset = District.objects.all()
+    serializer_class = DistrictSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Delete District
+class DistrictDeleteAPIView(generics.DestroyAPIView):
+    queryset = District.objects.all()
+    serializer_class = DistrictSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Create Discipline
+class DisciplineCreateAPIView(generics.CreateAPIView):
+    queryset = Discipline.objects.all()
+    serializer_class = DisciplineSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Update Discipline
+class DisciplineUpdateAPIView(generics.UpdateAPIView):
+    queryset = Discipline.objects.all()
+    serializer_class = DisciplineSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Delete Discipline
+class DisciplineDeleteAPIView(generics.DestroyAPIView):
+    queryset = Discipline.objects.all()
+    serializer_class = DisciplineSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+# ✅ Admin API: Paginated, Searchable Ad List
+class AdAdminListAPIView(generics.ListAPIView):
+    serializer_class = AdSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        queryset = Ad.objects.all().order_by("-updated_at")
+        search_query = self.request.GET.get("search")
+        if search_query:
+            queryset = queryset.filter(title__icontains=search_query)
+        return queryset
+
+
+# ✅ Admin API: Create Advertisement
+class AdCreateAPIView(generics.CreateAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+
+# ✅ Admin API: Update Advertisement
+class AdUpdateAPIView(generics.UpdateAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]
+
+
+# ✅ Admin API: Delete Advertisement
+class AdDeleteAPIView(generics.DestroyAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    permission_classes = [IsAdminUser]
+    renderer_classes = [JSONRenderer]

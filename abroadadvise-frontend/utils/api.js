@@ -16,24 +16,7 @@ import { fetchWithAuth } from "./auth"; // ✅ Import fetchWithAuth
 
 
 
-// ✅ Fetch Districts
-export const fetchDistricts = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/districts/`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch districts");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching districts:", error);
-    throw error;
-  }
-};
 
 // ✅ Fetch Study Destinations with Pagination and Search
 export const fetchDestinations = async (page = 1, search = "") => {
@@ -59,24 +42,7 @@ export const fetchDestinations = async (page = 1, search = "") => {
 };
 
 
-// ✅ Fetch Disciplines (Needed for University Form Dropdowns)
-export const fetchDisciplines = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/disciplines/`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch disciplines");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("❌ Error fetching disciplines:", error);
-    throw error;
-  }
-};
 
 // ✅ Fetch Exams with Pagination and Filtering Support
 export const fetchExams = async (page = 1, search = "", type = "") => {
@@ -1755,4 +1721,221 @@ export const deleteNewsCategory = async (slug, token) => {
     console.error("❌ Error deleting news category:", error);
     throw error;
   }
+};
+
+
+// Core Features
+
+// ✅ Fetch Districts (Paginated + Searchable)
+export const fetchDistricts = async (page = 1, search = "") => {
+  try {
+    const url = new URL(`${API_BASE_URL}/districts/`);
+    url.searchParams.append("page", page);
+    if (search) {
+      url.searchParams.append("search", search);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch districts");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching districts:", error);
+    throw error;
+  }
+};
+
+
+// ✅ Create District
+export const createDistrict = async (data) => {
+  const response = await fetch(`${API_BASE_URL}/districts/create/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create district");
+  return await response.json();
+};
+
+// ✅ Update District
+export const updateDistrict = async (id, data) => {
+  const response = await fetch(`${API_BASE_URL}/districts/${id}/update/`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update district");
+  return await response.json();
+};
+
+// ✅ Delete District
+export const deleteDistrict = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/districts/${id}/delete/`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+  });
+  if (!response.ok) throw new Error("Failed to delete district");
+  return { success: true };
+};
+
+// ✅ Fetch Disciplines (Paginated + Searchable)
+export const fetchDisciplines = async (page = 1, search = "") => {
+  try {
+    const url = new URL(`${API_BASE_URL}/disciplines/`);
+    url.searchParams.append("page", page);
+    if (search) {
+      url.searchParams.append("search", search);
+    }
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch disciplines");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching disciplines:", error);
+    throw error;
+  }
+};
+
+
+
+// ✅ Create Discipline
+export const createDiscipline = async (data) => {
+  const response = await fetch(`${API_BASE_URL}/disciplines/create/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create discipline");
+  return await response.json();
+};
+
+// ✅ Update Discipline
+export const updateDiscipline = async (id, data) => {
+  const response = await fetch(`${API_BASE_URL}/disciplines/${id}/update/`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update discipline");
+  return await response.json();
+};
+
+// ✅ Delete Discipline
+export const deleteDiscipline = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/disciplines/${id}/delete/`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+  });
+  if (!response.ok) throw new Error("Failed to delete discipline");
+  return { success: true };
+};
+
+
+// ✅ Fetch Ads (Paginated)
+export const fetchAds = async (page = 1, search = "") => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/ads/admin/?page=${page}&search=${encodeURIComponent(search)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch ads");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching ads:", error);
+    throw error;
+  }
+};
+
+// ✅ Create Ad
+export const createAd = async (formData) => {
+  const response = await fetch(`${API_BASE_URL}/ads/create/`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeaders(), // Don't include Content-Type for FormData
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create ad");
+  }
+
+  return await response.json();
+};
+
+// ✅ Update Ad
+export const updateAd = async (id, formData) => {
+  const response = await fetch(`${API_BASE_URL}/ads/${id}/update/`, {
+    method: "PATCH",
+    headers: {
+      ...getAuthHeaders(), // No need for Content-Type for FormData
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update ad");
+  }
+
+  return await response.json();
+};
+
+// ✅ Delete Ad
+export const deleteAd = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/ads/${id}/delete/`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete ad");
+  }
+
+  return { success: true };
 };
