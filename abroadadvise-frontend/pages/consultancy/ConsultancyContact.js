@@ -3,12 +3,20 @@
 import { Globe, Mail, Phone, Calendar, CheckCircle } from "lucide-react";
 
 const ConsultancyContact = ({ consultancy }) => {
+  if (!consultancy) {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+        <p className="text-gray-400 italic">Consultancy data not available.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
 
       {/* Website */}
-      {consultancy.website && (
+      {consultancy.website ? (
         <div className="flex items-center space-x-3 mb-3">
           <Globe className="h-5 w-5 text-gray-500" />
           <div>
@@ -23,10 +31,10 @@ const ConsultancyContact = ({ consultancy }) => {
             </a>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Email */}
-      {consultancy.email && (
+      {consultancy.email ? (
         <div className="flex items-center space-x-3 mb-3">
           <Mail className="h-5 w-5 text-gray-500" />
           <div>
@@ -36,10 +44,10 @@ const ConsultancyContact = ({ consultancy }) => {
             </a>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Phone */}
-      {consultancy.phone && (
+      {consultancy.phone ? (
         <div className="flex items-center space-x-3 mb-3">
           <Phone className="h-5 w-5 text-gray-500" />
           <div>
@@ -49,10 +57,10 @@ const ConsultancyContact = ({ consultancy }) => {
             </a>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Established Date */}
-      {consultancy.establishment_date && (
+      {consultancy.establishment_date ? (
         <div className="flex items-center space-x-3 mb-4">
           <Calendar className="h-5 w-5 text-gray-500" />
           <div>
@@ -66,18 +74,18 @@ const ConsultancyContact = ({ consultancy }) => {
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Ministry Certification */}
-      {consultancy.moe_certified && (
+      {consultancy.moe_certified ? (
         <div className="mt-4 flex items-center px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 border border-green-500">
           <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
           <span>Certified Ministry of Education</span>
         </div>
-      )}
+      ) : null}
 
       {/* Districts Covered */}
-      {consultancy.districts?.length > 0 && (
+      {consultancy.districts?.length > 0 ? (
         <div className="mt-4">
           <h3 className="text-gray-800 font-medium">Districts Covered</h3>
           <div className="flex flex-wrap gap-2 mt-2">
@@ -88,10 +96,10 @@ const ConsultancyContact = ({ consultancy }) => {
             ))}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Download Brochure */}
-      {consultancy.brochure && (
+      {consultancy.brochure ? (
         <a
           href={consultancy.brochure}
           download
@@ -99,7 +107,7 @@ const ConsultancyContact = ({ consultancy }) => {
         >
           📄 Download Brochure
         </a>
-      )}
+      ) : null}
     </div>
   );
 };

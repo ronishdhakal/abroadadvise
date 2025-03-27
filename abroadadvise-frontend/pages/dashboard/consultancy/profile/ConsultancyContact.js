@@ -21,7 +21,7 @@ const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = []
 
   // ✅ Prefill selected districts when editing
   useEffect(() => {
-    if (formData.districts && Array.isArray(formData.districts) && allDistricts.length > 0) {
+    if (formData?.districts && Array.isArray(formData.districts) && allDistricts.length > 0) {
       const preselected = allDistricts
         .filter((district) => formData.districts.includes(district.id))
         .map((district) => ({
@@ -31,7 +31,7 @@ const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = []
 
       setSelectedDistricts(preselected);
     }
-  }, [formData.districts, allDistricts]);
+  }, [formData?.districts, allDistricts]);
 
   // ✅ Handle input changes
   const handleInputChange = (e) => {
@@ -40,7 +40,7 @@ const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = []
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    onUpdate({ [name]: type === "checkbox" ? checked : value }); // Pass change to parent
+    onUpdate({ [name]: type === "checkbox" ? checked : value });
   };
 
   // ✅ Handle district selection
@@ -51,8 +51,16 @@ const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = []
       ...prev,
       districts: updatedDistricts,
     }));
-    onUpdate({ districts: updatedDistricts }); // Pass change to parent
+    onUpdate({ districts: updatedDistricts });
   };
+
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">No consultancy data available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
@@ -118,19 +126,18 @@ const ConsultancyContact = ({ formData, setFormData, onUpdate, allDistricts = []
             placeholder="+1 234 567 890"
             value={formData.phone || ""}
             onChange={handleInputChange}
-            required
             className="border rounded-lg w-full p-3 focus:ring focus:ring-blue-300"
           />
         </div>
       </div>
 
-      {/* Districts Covered (Multi-Select Dropdown) */}
+      {/* Districts Covered */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Districts Covered</label>
         <Select
           isMulti
           options={districtOptions}
-          value={selectedDistricts} // ✅ Prefilled correctly
+          value={selectedDistricts}
           onChange={handleDistrictChange}
           className="w-full"
           placeholder="Search and select districts..."

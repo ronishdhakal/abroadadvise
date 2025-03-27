@@ -5,26 +5,24 @@ import { useState } from "react";
 import { GraduationCap, Clock, School } from "lucide-react";
 import InquiryModal from "@/components/InquiryModal";
 
-const UniversityCourses = ({ courses }) => {
+const UniversityCourses = ({ courses = [] }) => {
   const [showAll, setShowAll] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // ✅ Extract primary university (from the first course)
-  const firstCourse = courses[0];
-  const university =
-    firstCourse?.university_details || firstCourse?.university || null;
+  // ✅ Safely extract first course and university
+  const firstCourse = courses?.[0] || null;
+  const university = firstCourse?.university_details || firstCourse?.university || null;
 
-  // ✅ Filter courses that belong to the same university
-  const filteredCourses = courses.filter((course) => {
-    const uni = course.university_details || course.university || null;
-    return uni?.id === university?.id;
-  });
+  // ✅ Filter courses by university match
+  const filteredCourses = Array.isArray(courses)
+    ? courses.filter((course) => {
+        const uni = course?.university_details || course?.university || null;
+        return uni?.id === university?.id;
+      })
+    : [];
 
-  // ✅ Show first 5 by default
-  const visibleCourses = showAll
-    ? filteredCourses
-    : filteredCourses.slice(0, 5);
+  const visibleCourses = showAll ? filteredCourses : filteredCourses.slice(0, 5);
 
   const openInquiryModal = (course) => {
     setSelectedCourse(course);
@@ -41,17 +39,17 @@ const UniversityCourses = ({ courses }) => {
       <div className="space-y-4">
         {visibleCourses.length > 0 ? (
           visibleCourses.map((course) => {
-            const uni = course.university_details || course.university || null;
+            const uni = course?.university_details || course?.university || null;
 
             return (
               <div
-                key={course.slug}
+                key={course?.slug || course?.id}
                 className="bg-white hover:bg-gray-50 transition rounded-lg p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 cursor-pointer border border-gray-200"
               >
-                <Link href={`/course/${course.slug}`} className="block flex-grow">
+                <Link href={`/course/${course?.slug}`} className="block flex-grow">
                   <div className="flex flex-col">
                     <h3 className="text-lg font-semibold text-gray-900">
-                      {course.name}
+                      {course?.name || "Untitled Course"}
                     </h3>
                     <p className="text-sm text-gray-500 flex items-center mt-1">
                       <School className="h-4 w-4 mr-1 text-gray-400" />
@@ -66,7 +64,7 @@ const UniversityCourses = ({ courses }) => {
                     <GraduationCap className="h-6 w-6 text-gray-400 mb-1" />
                     <span className="text-xs text-gray-500">Level</span>
                     <span className="text-sm font-medium">
-                      {course.level || "Not Specified"}
+                      {course?.level || "Not Specified"}
                     </span>
                   </div>
 
@@ -74,16 +72,14 @@ const UniversityCourses = ({ courses }) => {
                     <Clock className="h-6 w-6 text-gray-400 mb-1" />
                     <span className="text-xs text-gray-500">Duration</span>
                     <span className="text-sm font-medium">
-                      {course.duration || "Not Specified"}
+                      {course?.duration || "Not Specified"}
                     </span>
                   </div>
                 </div>
 
                 {/* Apply Now Button */}
                 <button
-                  onClick={() =>
-                    openInquiryModal({ ...course, university: uni })
-                  }
+                  onClick={() => openInquiryModal({ ...course, university: uni })}
                   className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition"
                 >
                   Apply
@@ -114,10 +110,10 @@ const UniversityCourses = ({ courses }) => {
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
           entityType="course"
-          entityId={selectedCourse.id}
-          entityName={selectedCourse.name}
-          universityId={selectedCourse.university?.id || null}
-          universityName={selectedCourse.university?.name || ""}
+          entityId={selectedCourse?.id}
+          entityName={selectedCourse?.name}
+          universityId={selectedCourse?.university?.id || null}
+          universityName={selectedCourse?.university?.name || ""}
         />
       )}
     </div>

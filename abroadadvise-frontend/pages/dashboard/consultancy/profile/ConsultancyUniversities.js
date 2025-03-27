@@ -14,7 +14,7 @@ const ConsultancyUniversities = ({ formData, setFormData, onUpdate }) => {
     if (universities.length === 0) {
       setLoading(true);
       fetchUniversities()
-        .then((data) => setUniversities(data.results || []))
+        .then((data) => setUniversities(data?.results || []))
         .catch((error) => console.error("Error fetching universities:", error))
         .finally(() => setLoading(false));
     }
@@ -22,7 +22,10 @@ const ConsultancyUniversities = ({ formData, setFormData, onUpdate }) => {
 
   // ✅ Prefill selected partner universities
   useEffect(() => {
-    if (formData.partner_universities?.length && universities.length > 0) {
+    if (
+      formData?.partner_universities?.length &&
+      universities.length > 0
+    ) {
       const preselected = universities
         .filter((uni) => formData.partner_universities.includes(uni.id))
         .map((uni) => ({
@@ -32,27 +35,37 @@ const ConsultancyUniversities = ({ formData, setFormData, onUpdate }) => {
 
       setSelectedUniversities(preselected);
     }
-  }, [formData.partner_universities, universities]);
+  }, [formData?.partner_universities, universities]);
 
-  // ✅ Handle University Selection (Triggers only on change)
+  // ✅ Handle University Selection
   const handleUniversityChange = (selectedOptions) => {
     const updatedUniversities = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
 
-    if (JSON.stringify(updatedUniversities) !== JSON.stringify(formData.partner_universities)) {
+    if (
+      JSON.stringify(updatedUniversities) !==
+      JSON.stringify(formData?.partner_universities)
+    ) {
       setSelectedUniversities(selectedOptions);
       setFormData((prev) => ({
         ...prev,
         partner_universities: updatedUniversities,
       }));
-      onUpdate({ partner_universities: updatedUniversities }); // ✅ Pass changes to parent
+      onUpdate({ partner_universities: updatedUniversities });
     }
   };
+
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">Consultancy data not available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Partner Universities</h2>
 
-      {/* Multi-Select Dropdown */}
       <Select
         isMulti
         isLoading={loading}
@@ -60,17 +73,19 @@ const ConsultancyUniversities = ({ formData, setFormData, onUpdate }) => {
           value: university.id,
           label: university.name,
         }))}
-        value={selectedUniversities} // ✅ Prefilled correctly
+        value={selectedUniversities}
         onChange={handleUniversityChange}
         className="w-full"
         placeholder="Select partner universities..."
       />
 
-      {/* Display Selected Universities */}
       {selectedUniversities.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {selectedUniversities.map((uni) => (
-            <span key={uni.value} className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+            <span
+              key={uni.value}
+              className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md"
+            >
               {uni.label}
             </span>
           ))}

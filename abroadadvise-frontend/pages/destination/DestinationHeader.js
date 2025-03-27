@@ -3,7 +3,7 @@
 import { MessageSquare, Globe, BadgeCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 
-const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) => {
+const DestinationHeader = ({ destination = {}, setIsModalOpen, setSelectedEntity }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -15,8 +15,8 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
   }, []);
 
   const handleInquiry = () => {
-    if (!setSelectedEntity || !setIsModalOpen) {
-      console.error("setSelectedEntity or setIsModalOpen is not provided!");
+    if (!setSelectedEntity || !setIsModalOpen || !destination?.id || !destination?.title) {
+      console.error("Required data or functions are missing for inquiry.");
       return;
     }
 
@@ -33,7 +33,7 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
     <div className="relative w-full flex flex-col justify-end overflow-hidden">
       {/* ✅ Fixed Cover Photo Section - Ensures No Cropping */}
       <div className="relative w-full max-w-[2000px] mx-auto flex items-center justify-center bg-gray-100">
-        {destination.cover_page ? (
+        {destination?.cover_page ? (
           <img
             src={destination.cover_page}
             alt="Cover"
@@ -41,7 +41,7 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
             style={{
               maxWidth: "2000px",
               height: "auto",
-              objectFit: "contain", // ✅ Ensures full image is visible, no cropping
+              objectFit: "contain",
             }}
           />
         ) : (
@@ -53,17 +53,17 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
 
       {/* ✅ Destination Info Section */}
       <div
-        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 pt-6 sm:pt-8 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300${
+        className={`relative w-full max-w-[2000px] bg-white px-4 sm:px-8 md:px-12 pt-6 sm:pt-8 pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-t-3xl shadow-xl transition-all duration-300 ${
           isScrolled ? "shadow-2xl" : "shadow-lg"
         }`}
         style={{ marginTop: "-2rem" }}
       >
         <div className="flex items-center gap-5 w-full sm:w-auto">
-          {destination.country_logo && (
+          {destination?.country_logo && (
             <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
               <img
                 src={destination.country_logo}
-                alt={`${destination.title} logo`}
+                alt={`${destination?.title || "Destination"} logo`}
                 className="w-full h-full object-contain rounded-xl"
               />
             </div>
@@ -71,8 +71,8 @@ const DestinationHeader = ({ destination, setIsModalOpen, setSelectedEntity }) =
 
           <div className="flex-1 pt-2 sm:pt-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center flex-wrap">
-              Study in {destination.title} from Nepal
-              {destination.is_verified && (
+              Study in {destination?.title || "Destination"} from Nepal
+              {destination?.is_verified && (
                 <span className="inline-flex ml-2 items-center" title="Verified Destination">
                   <BadgeCheck className="h-6 w-6 md:h-7 md:w-7 text-blue-500" />
                 </span>

@@ -10,17 +10,16 @@ const DestinationCourses = ({ destination }) => {
   const [showAll, setShowAll] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const coursesPerPage = 6; // Show 6 courses per page by default
+  const coursesPerPage = 6;
 
   useEffect(() => {
-    if (!destination) return;
+    if (!destination?.slug) return;
 
     const fetchCourses = async () => {
       try {
         setLoading(true);
         console.log("Fetching courses for:", destination.title);
 
-        // ✅ Fetch courses directly linked to the destination
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/course/?destination=${destination.slug}`
         );
@@ -41,16 +40,14 @@ const DestinationCourses = ({ destination }) => {
     fetchCourses();
   }, [destination]);
 
-  // ✅ Toggle showing all courses
   const displayedCourses = showAll ? courses : courses.slice(0, coursesPerPage);
 
-  // ✅ Handle Apply Now (opens inquiry modal)
   const handleApplyNow = (course) => {
     setSelectedCourse({
       courseId: course.id,
       courseName: course.name,
-      destinationId: destination.id, // ✅ Track Destination ID
-      destinationName: destination.title, // ✅ Track Destination Name
+      destinationId: destination?.id || null,
+      destinationName: destination?.title || "",
     });
     setIsModalOpen(true);
   };
@@ -58,7 +55,7 @@ const DestinationCourses = ({ destination }) => {
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-6xl mx-auto mt-8">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        Popular Courses to Study in {destination.title}
+        Popular Courses to Study in {destination?.title || "this Destination"}
       </h2>
 
       {loading ? (
@@ -84,7 +81,7 @@ const DestinationCourses = ({ destination }) => {
                     className="h-10 w-10 object-cover rounded-md bg-gray-100"
                   />
                 ) : (
-                  <div className="h-10 w-10 bg-gray-300 rounded-md"></div>
+                  <div className="h-10 w-10 bg-gray-300 rounded-md" />
                 )}
 
                 <div>
@@ -97,11 +94,10 @@ const DestinationCourses = ({ destination }) => {
                           : "bg-purple-100 text-purple-600"
                       }`}
                     >
-                      {course.level}
+                      {course.level || "N/A"}
                     </span>
-                    {/* ✅ Course Duration Included */}
                     <span className="text-sm text-gray-500">
-                      {course.duration} 
+                      {course.duration || "Duration N/A"}
                     </span>
                   </div>
                 </div>
@@ -119,11 +115,11 @@ const DestinationCourses = ({ destination }) => {
         </div>
       ) : (
         <p className="text-sm text-gray-500">
-          No courses available in {destination.title}.
+          No courses available in {destination?.title || "this destination"}.
         </p>
       )}
 
-      {/* ✅ Show All Button */}
+      {/* ✅ Show All Toggle */}
       {courses.length > coursesPerPage && (
         <div className="mt-4 flex justify-center">
           <button
@@ -131,14 +127,12 @@ const DestinationCourses = ({ destination }) => {
             className="text-blue-600 text-sm font-medium hover:underline flex items-center"
           >
             {showAll ? "Show Less" : `Show All Courses (${courses.length})`}
-            <span className={`ml-1 transform ${showAll ? "rotate-180" : "rotate-0"}`}>
-              ▼
-            </span>
+            <span className={`ml-1 transform ${showAll ? "rotate-180" : "rotate-0"}`}>▼</span>
           </button>
         </div>
       )}
 
-      {/* ✅ Inquiry Modal (Now Tracking Destination & Course) */}
+      {/* ✅ Inquiry Modal */}
       {selectedCourse && (
         <InquiryModal
           isModalOpen={isModalOpen}
@@ -147,8 +141,8 @@ const DestinationCourses = ({ destination }) => {
           entityId={selectedCourse.courseId}
           entityName={selectedCourse.courseName}
           additionalData={{
-            destinationId: selectedCourse.destinationId, // ✅ Send Destination ID
-            destinationName: selectedCourse.destinationName, // ✅ Send Destination Name
+            destinationId: selectedCourse.destinationId,
+            destinationName: selectedCourse.destinationName,
           }}
         />
       )}

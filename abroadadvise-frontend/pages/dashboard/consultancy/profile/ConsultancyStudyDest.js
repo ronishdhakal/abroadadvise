@@ -9,23 +9,23 @@ const ConsultancyStudyDest = ({ formData, setFormData, onUpdate, allDestinations
   const [destinations, setDestinations] = useState([]);
   const [selectedDestinations, setSelectedDestinations] = useState([]);
 
-  // ✅ Load destinations from props or fetch if not available
+  // ✅ Load destinations from props or fetch from API
   useEffect(() => {
     if (allDestinations.length > 0) {
-      setDestinations(allDestinations); // ✅ Use provided destinations
+      setDestinations(allDestinations);
     } else if (destinations.length === 0) {
       setLoading(true);
       fetchDestinations()
-        .then((data) => setDestinations(data.results || []))
+        .then((data) => setDestinations(data?.results || []))
         .catch((error) => console.error("Error fetching destinations:", error))
         .finally(() => setLoading(false));
     }
-  }, [allDestinations]); // ✅ Runs only when `allDestinations` changes
+  }, [allDestinations]);
 
-  // ✅ Prefill selected study destinations (Runs only when necessary)
+  // ✅ Prefill selected destinations
   useEffect(() => {
     if (
-      formData.study_abroad_destinations &&
+      formData?.study_abroad_destinations &&
       Array.isArray(formData.study_abroad_destinations) &&
       destinations.length > 0
     ) {
@@ -38,27 +38,37 @@ const ConsultancyStudyDest = ({ formData, setFormData, onUpdate, allDestinations
 
       setSelectedDestinations(preselected);
     }
-  }, [formData.study_abroad_destinations, destinations]);
+  }, [formData?.study_abroad_destinations, destinations]);
 
-  // ✅ Handle Destination Selection (Only triggers on change)
+  // ✅ Handle selection change
   const handleDestinationChange = (selectedOptions) => {
     const updatedDestinations = selectedOptions ? selectedOptions.map((opt) => opt.value) : [];
 
-    if (JSON.stringify(updatedDestinations) !== JSON.stringify(formData.study_abroad_destinations)) {
+    if (
+      JSON.stringify(updatedDestinations) !==
+      JSON.stringify(formData?.study_abroad_destinations)
+    ) {
       setSelectedDestinations(selectedOptions);
       setFormData((prev) => ({
         ...prev,
         study_abroad_destinations: updatedDestinations,
       }));
-      onUpdate({ study_abroad_destinations: updatedDestinations }); // ✅ Prevents unnecessary updates
+      onUpdate({ study_abroad_destinations: updatedDestinations });
     }
   };
+
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">Consultancy data not available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Study Abroad Destinations</h2>
 
-      {/* Multi-Select Dropdown */}
       <Select
         isMulti
         isLoading={loading}
@@ -66,17 +76,19 @@ const ConsultancyStudyDest = ({ formData, setFormData, onUpdate, allDestinations
           value: dest.id,
           label: dest.title,
         }))}
-        value={selectedDestinations} // ✅ Prefilled correctly
+        value={selectedDestinations}
         onChange={handleDestinationChange}
         className="w-full"
         placeholder="Select study destinations..."
       />
 
-      {/* Display Selected Destinations */}
       {selectedDestinations.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {selectedDestinations.map((dest) => (
-            <span key={dest.value} className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+            <span
+              key={dest.value}
+              className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md"
+            >
               {dest.label}
             </span>
           ))}

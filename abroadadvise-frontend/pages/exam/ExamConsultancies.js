@@ -2,18 +2,19 @@
 
 import { useState, useEffect } from "react";
 import InquiryModal from "@/components/InquiryModal";
-import { BadgeCheck } from "lucide-react"; // Import BadgeCheck
+import { BadgeCheck } from "lucide-react";
 
 const ExamConsultancies = ({ exam }) => {
-  const [allConsultancies, setAllConsultancies] = useState([]); // All consultancies
-  const [filteredConsultancies, setFilteredConsultancies] = useState([]); // Filtered consultancies
+  if (!exam) return null; // ✅ Prevent crash if exam is undefined
+
+  const [allConsultancies, setAllConsultancies] = useState([]);
+  const [filteredConsultancies, setFilteredConsultancies] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const consultanciesPerPage = 5;
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  // ✅ 1. Fetch ALL consultancies
   useEffect(() => {
     const fetchAllConsultancies = async () => {
       try {
@@ -23,7 +24,7 @@ const ExamConsultancies = ({ exam }) => {
         }
         const data = await response.json();
         console.log("🔍 All Consultancies API Response:", data);
-        setAllConsultancies(data.results || []); // Store ALL consultancies result
+        setAllConsultancies(data.results || []);
       } catch (err) {
         console.error("❌ Error fetching consultancies:", err);
       }
@@ -32,23 +33,21 @@ const ExamConsultancies = ({ exam }) => {
     fetchAllConsultancies();
   }, [API_BASE_URL]);
 
-  // ✅ 2. Filter consultancies based on the exam AND verification status
   useEffect(() => {
     if (exam && allConsultancies.length > 0) {
       const examConsultancies = allConsultancies.filter((consultancy) => {
         return (
-          consultancy.verified && // ✅ Only include verified consultancies
+          consultancy.verified &&
           Array.isArray(consultancy.test_preparation) &&
           consultancy.test_preparation.some((ex) => ex.id === exam.id)
         );
       });
       setFilteredConsultancies(examConsultancies);
     } else {
-      setFilteredConsultancies([]); // Reset when no exam or no data
+      setFilteredConsultancies([]);
     }
   }, [exam, allConsultancies]);
 
-  // ✅ 3. Pagination Logic (using filtered consultancies)
   const indexOfLastConsultancy = currentPage * consultanciesPerPage;
   const indexOfFirstConsultancy = indexOfLastConsultancy - consultanciesPerPage;
   const currentConsultancies = filteredConsultancies.slice(
@@ -57,27 +56,21 @@ const ExamConsultancies = ({ exam }) => {
   );
   const totalPages = Math.ceil(filteredConsultancies.length / consultanciesPerPage);
 
-  // ✅ Open Inquiry Modal
   const handleInquiry = (consultancy) => {
-    console.log("🟢 Selected Consultancy:", consultancy);
-    console.log("🟢 Exam Data:", exam);
-
-    // ✅ Pass consultancy & exam details
     const entityData = {
       entityType: "consultancy",
       entityId: consultancy.id,
       entityName: consultancy.name,
       consultancyId: consultancy.id,
       consultancyName: consultancy.name,
-      examId: exam?.id || null, // ✅ Always pass exam ID
-      examName: exam?.name || null, // ✅ Always pass exam name
+      examId: exam?.id || null,
+      examName: exam?.name || null,
     };
 
     setSelectedEntity(entityData);
     setTimeout(() => setIsModalOpen(true), 100);
   };
 
-  // ✅ Handle Page Change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
@@ -94,7 +87,6 @@ const ExamConsultancies = ({ exam }) => {
               className="flex items-center justify-between bg-gray-100 rounded-lg p-4 shadow"
             >
               <div className="flex items-center gap-4">
-                {/* ✅ Consultancy Logo */}
                 {consultancy.logo ? (
                   <img
                     src={consultancy.logo}
@@ -105,9 +97,7 @@ const ExamConsultancies = ({ exam }) => {
                   <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
                 )}
 
-                {/* Container for name and tick */}
                 <div className="flex items-center gap-1">
-                  {/* ✅ Consultancy Name and Tick */}
                   <a
                     href={`/consultancy/${consultancy.slug}`}
                     className="text-sm font-medium text-gray-800 hover:text-blue-600 flex items-center"
@@ -120,7 +110,6 @@ const ExamConsultancies = ({ exam }) => {
                 </div>
               </div>
 
-              {/* ✅ Apply Now Button (Only for verified consultancies) */}
               {consultancy.verified && (
                 <button
                   onClick={() => handleInquiry(consultancy)}
@@ -136,7 +125,6 @@ const ExamConsultancies = ({ exam }) => {
         )}
       </div>
 
-      {/* ✅ Pagination */}
       {filteredConsultancies.length > consultanciesPerPage && (
         <div className="mt-4 flex justify-center items-center space-x-2">
           {Array.from({ length: totalPages }, (_, index) => (
@@ -153,7 +141,6 @@ const ExamConsultancies = ({ exam }) => {
         </div>
       )}
 
-      {/* ✅ Inquiry Modal */}
       {selectedEntity && (
         <InquiryModal
           isModalOpen={isModalOpen}
@@ -163,8 +150,8 @@ const ExamConsultancies = ({ exam }) => {
           entityName={selectedEntity.entityName}
           consultancyId={selectedEntity.consultancyId}
           consultancyName={selectedEntity.consultancyName}
-          examId={selectedEntity.examId} // ✅ Pass exam ID
-          examName={selectedEntity.examName} // ✅ Pass exam name
+          examId={selectedEntity.examId}
+          examName={selectedEntity.examName}
         />
       )}
     </div>

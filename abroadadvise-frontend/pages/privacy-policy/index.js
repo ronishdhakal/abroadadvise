@@ -18,7 +18,7 @@ export default function PrivacyPolicyPage() {
 
           <h2 className="text-xl font-semibold text-gray-800 mt-8 mb-3">1. What We Collect</h2>
           <p className="text-gray-700 mb-4">
-            When you interact with our site — whether you're exploring courses, contacting a consultancy, or signing up — we may collect:
+            <p>{"When you interact with our site — whether you're exploring courses, contacting a consultancy, or signing up — we may collect:"}</p>  {/* ✅ Fixed unescaped entities */}
           </p>
           <ul className="list-disc pl-6 text-gray-700 mb-6">
             <li>Your name and email when submitting inquiries</li>

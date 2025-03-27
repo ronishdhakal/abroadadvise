@@ -4,7 +4,10 @@ import { MessageSquare, DollarSign } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const ExamHeader = ({ exam, setIsModalOpen, setSelectedEntity }) => {
+  if (!exam) return null;
+
   const handleInquiry = () => {
+    if (!setSelectedEntity || !setIsModalOpen) return;
     setSelectedEntity({
       entityType: "exam",
       entityId: exam.id,
@@ -21,7 +24,7 @@ const ExamHeader = ({ exam, setIsModalOpen, setSelectedEntity }) => {
           {exam.icon ? (
             <img
               src={exam.icon}
-              alt={`${exam.name} icon`}
+              alt={`${exam.name || "Exam"} icon`}
               className="w-full h-full object-contain rounded-lg"
             />
           ) : (
@@ -32,16 +35,20 @@ const ExamHeader = ({ exam, setIsModalOpen, setSelectedEntity }) => {
         {/* Exam Details */}
         <div className="flex-1">
           {/* Exam Type Badge */}
-          <span className="bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded-full inline-block">
-            {exam.type === "english_proficiency"
-              ? "English Proficiency Test"
-              : "Standardized Test"}
-          </span>
+          {exam.type && (
+            <span className="bg-gray-200 text-gray-700 text-xs font-medium px-3 py-1 rounded-full inline-block">
+              {exam.type === "english_proficiency"
+                ? "English Proficiency Test"
+                : "Standardized Test"}
+            </span>
+          )}
 
           {/* Exam Name */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
-            {exam.name}
-          </h1>
+          {exam.name && (
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-2">
+              {exam.name}
+            </h1>
+          )}
 
           {/* Short Description */}
           {exam.short_description && (

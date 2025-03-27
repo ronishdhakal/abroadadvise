@@ -1,8 +1,16 @@
 import Link from "next/link";
-import Image from "next/image"; // ✅ Import Next.js Image component
+import Image from "next/image";
 import { Globe } from "lucide-react";
 
 const DestinationCard = ({ destination }) => {
+  if (!destination || !destination.slug) {
+    return (
+      <div className="bg-gray-100 p-6 rounded-xl shadow text-gray-500 italic text-center">
+        Destination data not available.
+      </div>
+    );
+  }
+
   return (
     <Link href={`/destination/${destination.slug}`} passHref>
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all transform hover:-translate-y-1 p-5 cursor-pointer text-center">
@@ -11,11 +19,11 @@ const DestinationCard = ({ destination }) => {
           {destination.country_logo ? (
             <Image
               src={destination.country_logo}
-              alt={destination.title}
-              width={64} // ✅ Set width and height for optimization
+              alt={destination.title || "Country"}
+              width={64}
               height={64}
               className="rounded-full object-cover"
-              unoptimized // Remove if images are from an external source configured in next.config.js
+              unoptimized // Remove this if image domain is configured
             />
           ) : (
             <Globe className="h-10 w-10 text-gray-400" />
@@ -23,7 +31,9 @@ const DestinationCard = ({ destination }) => {
         </div>
 
         {/* 🌎 Destination Title */}
-        <h2 className="mt-4 text-xl font-semibold text-gray-900">{destination.title}</h2>
+        <h2 className="mt-4 text-xl font-semibold text-gray-900">
+          {destination.title || "Unknown Destination"}
+        </h2>
       </div>
     </Link>
   );

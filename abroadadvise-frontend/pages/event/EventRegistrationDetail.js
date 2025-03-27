@@ -4,6 +4,8 @@ import { CheckCircle, XCircle, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const EventRegistrationDetail = ({ event, setIsModalOpen, setSelectedEntity }) => {
+  if (!event) return null; // ✅ Prevent crash during SSR
+
   const [isEventClosed, setIsEventClosed] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
@@ -20,16 +22,15 @@ const EventRegistrationDetail = ({ event, setIsModalOpen, setSelectedEntity }) =
   const handleRegistration = () => {
     if (!event) return;
 
-    // ✅ Pass correct event details to the inquiry modal, including organizer details
     setSelectedEntity({
       entityType: "event",
       entityId: event.id,
       entityName: event.name,
-      organizerId: event.organizer ? event.organizer.id : null, // ✅ Now tracking organizer ID
+      organizerId: event.organizer ? event.organizer.id : null,
       organizerName: event.organizer ? event.organizer.name : "Unknown Organizer",
     });
 
-    setIsModalOpen(true); // ✅ Open Inquiry Modal
+    setIsModalOpen(true);
   };
 
   const handleShare = async () => {
@@ -89,7 +90,6 @@ const EventRegistrationDetail = ({ event, setIsModalOpen, setSelectedEntity }) =
         </div>
       </div>
 
-      {/* ✅ Register Now button now correctly opens the Inquiry Modal */}
       {!isEventClosed && (
         <button
           onClick={handleRegistration}
@@ -99,7 +99,6 @@ const EventRegistrationDetail = ({ event, setIsModalOpen, setSelectedEntity }) =
         </button>
       )}
 
-      {/* ✅ Share Event Button */}
       <button
         onClick={handleShare}
         className="mt-3 w-full border border-gray-300 hover:bg-gray-100 text-gray-900 font-semibold py-3 rounded-lg flex items-center justify-center transition-all"

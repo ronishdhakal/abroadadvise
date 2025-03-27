@@ -4,6 +4,8 @@ import { Calendar, Clock, MapPin, Building, Tag, Users } from "lucide-react";
 import Link from "next/link";
 
 const EventOverview = ({ event }) => {
+  if (!event) return null; // ✅ Prevent crash if event is undefined
+
   return (
     <div className="w-full bg-white shadow-sm rounded-2xl p-8 border border-gray-200">
       {/* ✅ Responsive Grid Layout (Side-by-side on Desktop, Stacked on Mobile) */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Head from "next/head"; // ✅ SEO Optimization
+import Head from "next/head";
 import AdminLayout from "@/components/admin/AdminLayout";
 import EventForm from "@/components/admin/EventForm";
 import {
@@ -9,7 +9,7 @@ import {
   deleteEvent,
   fetchEventDetails,
 } from "@/utils/api";
-import Pagination from "@/pages/event/Pagination"; // ✅ Add pagination component
+import Pagination from "@/pages/consultancy/Pagination";
 
 const EventsPage = ({ initialEvents, initialTotalPages }) => {
   const [events, setEvents] = useState(initialEvents || []);
@@ -23,7 +23,6 @@ const EventsPage = ({ initialEvents, initialTotalPages }) => {
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Fetch events dynamically when page or search query changes
   const loadEvents = async () => {
     setLoading(true);
     setError(null);
@@ -45,7 +44,6 @@ const EventsPage = ({ initialEvents, initialTotalPages }) => {
     loadEvents();
   }, [page, search]);
 
-  // ✅ Handle Delete Event
   const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
 
@@ -62,7 +60,6 @@ const EventsPage = ({ initialEvents, initialTotalPages }) => {
     }
   };
 
-  // ✅ Handle Edit Event
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
@@ -97,133 +94,152 @@ const EventsPage = ({ initialEvents, initialTotalPages }) => {
         />
       </Head>
 
-      <h1 className="text-2xl font-bold mb-4">Manage Events</h1>
+      <div className="p-4 sm:p-6 bg-gray-100 min-h-screen w-full">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Events</h1>
 
-      {successMessage && <p className="text-green-500">{successMessage}</p>}
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-sm">
+            {successMessage}
+          </div>
+        )}
 
-      {/* ✅ Search */}
-      <div className="mb-4 flex gap-2">
-        <input
-          type="text"
-          placeholder="Search events..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="border rounded-lg p-2 w-full"
-        />
-        <button
-          onClick={loadEvents}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Search
-        </button>
-      </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg shadow-sm">
+            {error}
+          </div>
+        )}
 
-      {/* ✅ Toggle Form */}
-      <button
-        onClick={() => {
-          setShowForm(!showForm);
-          setEditingSlug(null);
-          setEditingData(null);
-        }}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        {showForm ? "Cancel" : "Add New Event"}
-      </button>
-
-      {/* ✅ Form Component */}
-      {showForm && (
-        <EventForm
-          eventSlug={editingSlug}
-          eventData={editingData}
-          onSuccess={handleSuccess}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingSlug(null);
-            setEditingData(null);
-          }}
-        />
-      )}
-
-      {error && <p className="text-red-500">{error}</p>}
-
-      {loading ? (
-        <p>Loading events...</p>
-      ) : (
-        <>
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2">#</th>
-                <th className="border p-2">Event Name</th>
-                <th className="border p-2">Date</th>
-                <th className="border p-2">Type</th>
-                <th className="border p-2">Featured Image</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.length > 0 ? (
-                events.map((event, index) => (
-                  <tr key={event.id}>
-                    <td className="border p-2">{index + 1 + (page - 1) * 10}</td>
-                    <td className="border p-2">{event.name}</td>
-                    <td className="border p-2">{event.date}</td>
-                    <td className="border p-2 capitalize">{event.event_type}</td>
-                    <td className="border p-2">
-                      {event.featured_image ? (
-                        <img
-                          src={event.featured_image}
-                          alt="Featured"
-                          className="w-16 h-12 object-cover"
-                        />
-                      ) : (
-                        "No Image"
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      <button
-                        onClick={() => handleEdit(event.slug)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(event.slug)}
-                        className="bg-red-500 text-white px-3 py-1 rounded"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center p-4">
-                    No events found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          {/* ✅ Pagination */}
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] transition-all"
             />
-          )}
-        </>
-      )}
+            <button
+              onClick={loadEvents}
+              className="bg-[#4c9bd5] text-white px-4 py-3 rounded-lg hover:bg-[#3a8cc4] transition-all"
+            >
+              Search
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingSlug(null);
+              setEditingData(null);
+            }}
+            className={`px-4 py-3 rounded-lg font-medium transition-all ${
+              showForm
+                ? "bg-gray-500 text-white hover:bg-gray-600"
+                : "bg-[#4c9bd5] text-white hover:bg-[#3a8cc4]"
+            }`}
+          >
+            {showForm ? "Cancel" : "Add New Event"}
+          </button>
+        </div>
+
+        {showForm && (
+          <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
+            <EventForm
+              eventSlug={editingSlug}
+              eventData={editingData}
+              onSuccess={handleSuccess}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingSlug(null);
+                setEditingData(null);
+              }}
+            />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-6 text-gray-600">Loading events...</div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-700">
+                    <th className="p-4 text-left font-semibold min-w-[50px]">#</th>
+                    <th className="p-4 text-left font-semibold min-w-[200px]">Event Name</th>
+                    <th className="p-4 text-left font-semibold min-w-[150px]">Date</th>
+                    <th className="p-4 text-left font-semibold min-w-[150px]">Type</th>
+                    <th className="p-4 text-left font-semibold min-w-[100px]">Featured Image</th>
+                    <th className="p-4 text-left font-semibold min-w-[150px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {events.length > 0 ? (
+                    events.map((event, index) => (
+                      <tr
+                        key={event.id}
+                        className="border-t border-gray-200 hover:bg-gray-50 transition-all"
+                      >
+                        <td className="p-4 text-gray-600">{index + 1 + (page - 1) * 10}</td>
+                        <td className="p-4 text-gray-800">{event.name}</td>
+                        <td className="p-4 text-gray-600">{event.date}</td>
+                        <td className="p-4 text-gray-600 capitalize">{event.event_type}</td>
+                        <td className="p-4">
+                          {event.featured_image ? (
+                            <img
+                              src={event.featured_image}
+                              alt="Featured"
+                              className="w-16 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <span className="text-gray-500">No Image</span>
+                          )}
+                        </td>
+                        <td className="p-4 flex gap-2">
+                          <button
+                            onClick={() => handleEdit(event.slug)}
+                            className="bg-[#4c9bd5] text-white px-4 py-2 rounded-lg hover:bg-[#3a8cc4] transition-all"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(event.slug)}
+                            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center p-4 text-gray-600">
+                        No events found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </AdminLayout>
   );
 };
 
-// ✅ Server-Side Rendering
 export async function getServerSideProps() {
   try {
     const events = await fetchEvents(1);

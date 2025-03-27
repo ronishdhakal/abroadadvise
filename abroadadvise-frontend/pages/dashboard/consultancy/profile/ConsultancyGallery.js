@@ -4,16 +4,18 @@ import { useState, useEffect } from "react";
 import { Upload, Trash } from "lucide-react";
 
 const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
+  if (!formData) return null; // ✅ Prevents crash if formData is undefined
+
   const [previewImages, setPreviewImages] = useState([]);
 
   // ✅ Load existing images on mount
   useEffect(() => {
     if (formData.gallery_images && Array.isArray(formData.gallery_images)) {
       const loadedImages = formData.gallery_images.map((img) => ({
-        id: img.id || Date.now(), // Use existing ID or generate a temporary one
-        image: typeof img === "string" ? img : img.image, // Handle both string URLs and image objects
-        file: img.file || null, // Store the file object (if it's a new image)
-        isNew: !img.id, // Mark as new if it doesn't have an ID from the database
+        id: img.id || Date.now(),
+        image: typeof img === "string" ? img : img.image,
+        file: img.file || null,
+        isNew: !img.id,
       }));
       setPreviewImages(loadedImages);
     }
@@ -34,31 +36,28 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     const newImages = files.map((file) => ({
-      id: Date.now() + Math.random(), // Generate a temporary ID for new images
-      image: URL.createObjectURL(file), // Create a blob URL for preview
-      file, // Store the file object
-      isNew: true, // Mark as a new upload
+      id: Date.now() + Math.random(),
+      image: URL.createObjectURL(file),
+      file,
+      isNew: true,
     }));
 
-    // ✅ Update local state
     const updatedImages = [...previewImages, ...newImages];
     setPreviewImages(updatedImages);
 
-    // ✅ Append new images to formData
     const updatedFormData = {
       ...formData,
-      gallery_images: [...(formData.gallery_images || []), ...newImages], // Add new images to formData
+      gallery_images: [...(formData.gallery_images || []), ...newImages],
     };
     setFormData(updatedFormData);
-    onUpdate(updatedFormData); // ✅ Call onUpdate to notify the parent component
+    onUpdate(updatedFormData);
   };
 
   // ✅ Handle image deletion
   const handleDeleteImage = (index) => {
     const imageToDelete = previewImages[index];
-    let updatedImages = previewImages.filter((_, i) => i !== index);
+    const updatedImages = previewImages.filter((_, i) => i !== index);
 
-    // ✅ Track deleted images only if they exist in the backend
     if (!imageToDelete.isNew) {
       const updatedDeletedImages = [
         ...(formData.deleted_gallery_images || []),
@@ -71,11 +70,10 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
       onUpdate({ deleted_gallery_images: updatedDeletedImages });
     }
 
-    // ✅ Update local state
     setPreviewImages(updatedImages);
     setFormData((prev) => ({
       ...prev,
-      gallery_images: updatedImages, // Remove from formData
+      gallery_images: updatedImages,
     }));
     onUpdate({ gallery_images: updatedImages });
   };

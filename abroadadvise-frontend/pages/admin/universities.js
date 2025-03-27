@@ -1,25 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Head from "next/head"; // ✅ SEO optimization
+import Head from "next/head";
 import AdminLayout from "@/components/admin/AdminLayout";
 import UniversityForm from "@/components/admin/UniversityForm";
 import { fetchUniversities, deleteUniversity, fetchUniversityDetails, fetchDisciplines } from "@/utils/api";
-import Pagination from "@/pages/consultancy/Pagination"; // Import Pagination
+import Pagination from "@/pages/consultancy/Pagination";
 
-const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
+const UniversitiesPage = ({ initialUniversities, allDisciplines, initialTotalPages }) => {
   const [universities, setUniversities] = useState(initialUniversities);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // Add totalPages state
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [editingSlug, setEditingSlug] = useState(null);
   const [editingData, setEditingData] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Fetch universities dynamically when page or search query changes
   const loadUniversities = async () => {
     setLoading(true);
     setError(null);
@@ -29,7 +28,7 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
       const data = await fetchUniversities(page, search);
       console.log("✅ Fetched Universities Data:", data.results);
       setUniversities(data.results);
-      setTotalPages(Math.ceil(data.count / 10)); // Update totalPages
+      setTotalPages(Math.ceil(data.count / 10));
     } catch (err) {
       console.error("❌ Failed to load universities:", err);
       setError("Failed to load universities.");
@@ -42,11 +41,9 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
     loadUniversities();
   }, [page, search]);
 
-  // ✅ Handle Delete University
   const handleDelete = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this university?")) return;
 
-    // Optimistically update UI
     const originalUniversities = [...universities];
     setUniversities((prev) => prev.filter((u) => u.slug !== slug));
 
@@ -56,11 +53,10 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
     } catch (err) {
       console.error("❌ Failed to delete university:", err);
       setError("Failed to delete university.");
-      setUniversities(originalUniversities); // Revert UI on failure
+      setUniversities(originalUniversities);
     }
   };
 
-  // ✅ Handle Edit University (Pre-fill Form)
   const handleEdit = async (slug) => {
     setLoading(true);
     setEditingSlug(slug);
@@ -78,7 +74,6 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
     }
   };
 
-  // ✅ Handle Successful Create/Update
   const handleSuccess = () => {
     setShowForm(false);
     setEditingSlug(null);
@@ -89,124 +84,170 @@ const UniversitiesPage = ({ initialUniversities, allDisciplines }) => {
 
   return (
     <AdminLayout>
-      {/* ✅ SEO Optimization */}
       <Head>
         <title>Manage Universities | Admin Panel</title>
-        <meta name="description" content="Manage universities in Abroad Advise admin panel. Add, edit, and delete university records seamlessly." />
+        <meta
+          name="description"
+          content="Manage universities in Abroad Advise admin panel. Add, edit, and delete university records seamlessly."
+        />
       </Head>
 
-      <h1 className="text-2xl font-bold mb-4">Manage Universities</h1>
+      <div className="p-4 sm:p-6 bg-gray-100 min-h-screen w-full">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Manage Universities</h1>
 
-      {/* ✅ Success Message */}
-      {successMessage && <p className="text-green-500">{successMessage}</p>}
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-sm">
+            {successMessage}
+          </div>
+        )}
 
-      {/* ✅ Search Functionality */}
-      <div className="mb-4 flex gap-2">
-        <input
-          type="text"
-          placeholder="Search universities..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="border rounded-lg p-2 w-full"
-        />
-        <button onClick={loadUniversities} className="bg-blue-500 text-white px-4 py-2 rounded">
-          Search
-        </button>
-      </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg shadow-sm">
+            {error}
+          </div>
+        )}
 
-      {/* ✅ Toggle Form for Create/Edit */}
-      <button
-        onClick={() => {
-          setShowForm(!showForm);
-          setEditingSlug(null);
-          setEditingData(null);
-        }}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        {showForm ? "Cancel" : "Add New University"}
-      </button>
-
-      {/* ✅ University Form */}
-      {showForm && (
-        <UniversityForm
-          universitySlug={editingSlug}
-          universityData={editingData}
-          allDisciplines={allDisciplines} // ✅ Pass disciplines
-          onSuccess={handleSuccess}
-          onCancel={() => {
-            setShowForm(false);
-            setEditingSlug(null);
-            setEditingData(null);
-          }}
-        />
-      )}
-
-      {/* ✅ Error Handling */}
-      {error && <p className="text-red-500">{error}</p>}
-
-      {/* ✅ Loading State */}
-      {loading ? (
-        <p>Loading universities...</p>
-      ) : (
-        <>
-          <table className="w-full border-collapse border">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2">#</th>
-                <th className="border p-2">Name</th>
-                <th className="border p-2">Country</th>
-                <th className="border p-2">Verified</th>
-                <th className="border p-2">Logo</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {universities.map((university, index) => (
-                <tr key={university.id}>
-                  <td className="border p-2">{index + 1}</td>
-                  <td className="border p-2">{university.name}</td>
-                  <td className="border p-2">{university.country || "N/A"}</td>
-                  <td className="border p-2">{university.is_verified ? "Yes" : "No"}</td>
-                  <td className="border p-2">
-                    {university.logo ? <img src={university.logo} alt="Logo" className="w-12 h-12 object-contain" /> : "No Logo"}
-                  </td>
-                  <td className="border p-2">
-                    <button onClick={() => handleEdit(university.slug)} className="bg-blue-500 text-white px-3 py-1 rounded mr-2">
-                      Edit
-                    </button>
-                    <button onClick={() => handleDelete(university.slug)} className="bg-red-500 text-white px-3 py-1 rounded">
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {/* ✅ Pagination */}
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search universities..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] transition-all"
             />
-          )}
-        </>
-      )}
+            <button
+              onClick={loadUniversities}
+              className="bg-[#4c9bd5] text-white px-4 py-3 rounded-lg hover:bg-[#3a8cc4] transition-all"
+            >
+              Search
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setShowForm(!showForm);
+              setEditingSlug(null);
+              setEditingData(null);
+            }}
+            className={`px-4 py-3 rounded-lg font-medium transition-all ${
+              showForm
+                ? "bg-gray-500 text-white hover:bg-gray-600"
+                : "bg-[#4c9bd5] text-white hover:bg-[#3a8cc4]"
+            }`}
+          >
+            {showForm ? "Cancel" : "Add New University"}
+          </button>
+        </div>
+
+        {showForm && (
+          <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
+            <UniversityForm
+              universitySlug={editingSlug}
+              universityData={editingData}
+              allDisciplines={allDisciplines}
+              onSuccess={handleSuccess}
+              onCancel={() => {
+                setShowForm(false);
+                setEditingSlug(null);
+                setEditingData(null);
+              }}
+            />
+          </div>
+        )}
+
+        {loading ? (
+          <div className="text-center py-6 text-gray-600">Loading universities...</div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-700">
+                    <th className="p-4 text-left font-semibold min-w-[50px]">#</th>
+                    <th className="p-4 text-left font-semibold min-w-[200px]">Name</th>
+                    <th className="p-4 text-left font-semibold min-w-[150px]">Country</th>
+                    <th className="p-4 text-left font-semibold min-w-[100px]">Verified</th>
+                    <th className="p-4 text-left font-semibold min-w-[100px]">Logo</th>
+                    <th className="p-4 text-left font-semibold min-w-[150px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {universities.map((university, index) => (
+                    <tr
+                      key={university.id}
+                      className="border-t border-gray-200 hover:bg-gray-50 transition-all"
+                    >
+                      <td className="p-4 text-gray-600">{index + 1}</td>
+                      <td className="p-4 text-gray-800">{university.name}</td>
+                      <td className="p-4 text-gray-600">{university.country || "N/A"}</td>
+                      <td className="p-4">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            university.is_verified
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {university.is_verified ? "Yes" : "No"}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        {university.logo ? (
+                          <img
+                            src={university.logo}
+                            alt="Logo"
+                            className="w-12 h-12 object-contain rounded"
+                          />
+                        ) : (
+                          <span className="text-gray-500">No Logo</span>
+                        )}
+                      </td>
+                      <td className="p-4 flex gap-2">
+                        <button
+                          onClick={() => handleEdit(university.slug)}
+                          className="bg-[#4c9bd5] text-white px-4 py-2 rounded-lg hover:bg-[#3a8cc4] transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(university.slug)}
+                          className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-6">
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={setPage}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </AdminLayout>
   );
 };
 
-// ✅ Server-Side Rendering (Ensures fresh data on each request)
 export async function getServerSideProps() {
   try {
     const universities = await fetchUniversities();
-    const disciplines = await fetchDisciplines(); // ✅ Fetch disciplines
+    const disciplines = await fetchDisciplines();
 
     return {
       props: {
         initialUniversities: universities.results || [],
         allDisciplines: disciplines.results || [],
-        initialTotalPages: Math.ceil(universities.count / 10) || 1, // Add initialTotalPages
+        initialTotalPages: Math.ceil(universities.count / 10) || 1,
       },
     };
   } catch (error) {
@@ -214,7 +255,7 @@ export async function getServerSideProps() {
       props: {
         initialUniversities: [],
         allDisciplines: [],
-        initialTotalPages: 1, // Add initialTotalPages
+        initialTotalPages: 1,
       },
     };
   }

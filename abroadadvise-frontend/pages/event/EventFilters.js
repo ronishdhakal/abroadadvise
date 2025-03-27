@@ -1,3 +1,5 @@
+"use client";
+
 import Select from "react-select";
 
 const EventFilters = ({
@@ -7,7 +9,7 @@ const EventFilters = ({
   setRegistrationType,
   destination,
   setDestination,
-  destinations,
+  destinations = [], // ✅ Fallback to empty array to prevent map error
 }) => {
   const eventTypeOptions = [
     { value: "", label: "All Types" },
@@ -24,7 +26,12 @@ const EventFilters = ({
 
   const destinationOptions = [
     { value: "", label: "All Destinations" },
-    ...destinations.map((dest) => ({ value: dest.slug, label: dest.title })),
+    ...(Array.isArray(destinations)
+      ? destinations.map((dest) => ({
+          value: dest.slug,
+          label: dest.title,
+        }))
+      : []),
   ];
 
   return (

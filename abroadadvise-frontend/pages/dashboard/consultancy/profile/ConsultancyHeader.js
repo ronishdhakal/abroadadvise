@@ -5,6 +5,8 @@ import { Upload, Image, FileText, Trash } from "lucide-react";
 import { updateConsultancyDashboard } from "@/utils/api";
 
 const ConsultancyHeader = ({ formData, setFormData }) => {
+  if (!formData) return null; // ✅ Prevent crash if formData is undefined
+
   const [logoPreview, setLogoPreview] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
   const [brochureName, setBrochureName] = useState(null);
@@ -12,20 +14,17 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // ✅ Load existing images and data
+  // ✅ Load existing previews from formData
   useEffect(() => {
-    if (formData.logo && typeof formData.logo === "string") {
-      setLogoPreview(formData.logo);
-    }
-    if (formData.cover_photo && typeof formData.cover_photo === "string") {
-      setCoverPreview(formData.cover_photo);
-    }
-    if (formData.brochure && typeof formData.brochure === "string") {
-      setBrochureName(formData.brochure.split("/").pop());
+    if (typeof formData.logo === "string") setLogoPreview(formData.logo);
+    if (typeof formData.cover_photo === "string") setCoverPreview(formData.cover_photo);
+    if (typeof formData.brochure === "string") {
+      const parts = formData.brochure.split("/");
+      setBrochureName(parts[parts.length - 1]);
     }
   }, [formData]);
 
-  // ✅ Cleanup Object URLs on unmount
+  // ✅ Cleanup URLs
   useEffect(() => {
     return () => {
       if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
@@ -33,37 +32,39 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     };
   }, [logoPreview, coverPreview]);
 
-  // ✅ Handle file uploads
+  // ✅ File change handler
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    if (files.length > 0) {
-      const file = files[0];
+    if (files.length === 0) return;
 
-      if (name === "logo" || name === "cover_photo") {
-        const objectURL = URL.createObjectURL(file);
-        if (name === "logo") {
-          if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
-          setLogoPreview(objectURL);
-        }
-        if (name === "cover_photo") {
-          if (coverPreview && typeof coverPreview !== "string") URL.revokeObjectURL(coverPreview);
-          setCoverPreview(objectURL);
-        }
+    const file = files[0];
+
+    if (name === "logo" || name === "cover_photo") {
+      const objectURL = URL.createObjectURL(file);
+      if (name === "logo") {
+        if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
+        setLogoPreview(objectURL);
       }
-      if (name === "brochure") {
-        setBrochureName(file.name);
+      if (name === "cover_photo") {
+        if (coverPreview && typeof coverPreview !== "string") URL.revokeObjectURL(coverPreview);
+        setCoverPreview(objectURL);
       }
-      setFormData((prev) => ({ ...prev, [name]: file }));
     }
+
+    if (name === "brochure") {
+      setBrochureName(file.name);
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: file }));
   };
 
-  // ✅ Handle text input changes
+  // ✅ Input text change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Handle file removal
+  // ✅ Remove file
   const handleRemoveFile = (type) => {
     if (type === "logo") setLogoPreview(null);
     if (type === "cover_photo") setCoverPreview(null);
@@ -71,7 +72,7 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     setFormData((prev) => ({ ...prev, [type]: null }));
   };
 
-  // ✅ Handle update request (ONLY updates header fields)
+  // ✅ Submit update
   const handleUpdate = async () => {
     setLoading(true);
     setError(null);
@@ -79,8 +80,6 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
 
     try {
       const updateData = new FormData();
-
-      // ✅ Send only fields that need to be updated
       if (formData.name) updateData.append("name", formData.name);
       if (formData.logo) updateData.append("logo", formData.logo);
       if (formData.cover_photo) updateData.append("cover_photo", formData.cover_photo);
@@ -99,7 +98,7 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Consultancy Header</h2>
 
-      {/* Consultancy Name */}
+      {/* Name Input */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Consultancy Name *</label>
         <input
@@ -180,8 +179,12 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
         </div>
       </div>
 
-      {/* Update Button */}
-      <button onClick={handleUpdate} className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full" disabled={loading}>
+      {/* Submit Button */}
+      <button
+        onClick={handleUpdate}
+        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
+        disabled={loading}
+      >
         {loading ? "Updating..." : "Update Header"}
       </button>
 

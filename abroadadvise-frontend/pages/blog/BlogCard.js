@@ -3,6 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 const BlogCard = ({ blog }) => {
+  if (!blog) return null; // ✅ Prevent crash if blog is undefined
+
   const formattedDate = blog.date ? blog.date.split("T")[0] : "Unknown Date"; // ✅ Prevent error
 
   return (
@@ -41,10 +43,10 @@ const BlogCard = ({ blog }) => {
 
             {/* Date & Comments */}
             <div className="flex justify-between items-center text-gray-600 text-sm mt-2">
-              <span>{formattedDate}</span> {/* ✅ Fix applied */}
+              <span>{formattedDate}</span>
               <div className="flex items-center space-x-1">
                 <FaRegComment className="w-4 h-4" />
-                <span>{blog.comment_count ?? 0}</span> {/* ✅ Ensure comment count isn't undefined */}
+                <span>{blog.comment_count ?? 0}</span>
               </div>
             </div>
 

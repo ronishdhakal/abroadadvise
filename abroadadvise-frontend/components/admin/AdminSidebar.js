@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { API_BASE_URL } from "@/utils/api";
 import {
   LayoutDashboard,
-  Building, // Changed from Building2
+  Building,
   School,
   Book,
   MapPin,
@@ -12,8 +12,7 @@ import {
   Calendar,
   Newspaper,
   MessageSquare,
-  CheckSquare, // Changed from ListChecks
-  Share2,
+  CheckSquare,
   Users,
 } from "lucide-react";
 
@@ -47,11 +46,11 @@ const AdminSidebar = () => {
       title: "Management",
       items: [
         { name: "Dashboard", path: "/admin", icon: <LayoutDashboard className="w-4 h-4" /> },
-        { name: "Consultancies", path: "/admin/consultancies", icon: <Building className="w-4 h-4" /> }, // Updated icon
+        { name: "Consultancies", path: "/admin/consultancies", icon: <Building className="w-4 h-4" /> },
         { name: "Universities", path: "/admin/universities", icon: <School className="w-4 h-4" /> },
         { name: "Courses", path: "/admin/courses", icon: <Book className="w-4 h-4" /> },
         { name: "Destination", path: "/admin/destinations", icon: <MapPin className="w-4 h-4" /> },
-        { name: "Exams", path: "/admin/exams", icon: <CheckSquare className="w-4 h-4" /> }, // Updated icon
+        { name: "Exams", path: "/admin/exams", icon: <CheckSquare className="w-4 h-4" /> },
         { name: "Configurations", path: "/admin/configurations", icon: <Pencil className="w-4 h-4" /> },
         { name: "Inquiries", path: "/admin/inquiries", icon: <MessageSquare className="w-4 h-4" /> },
       ],
@@ -65,23 +64,22 @@ const AdminSidebar = () => {
       ],
     },
     {
-      title: "Roles & Teams",
+      title: "Users",
       items: [
-        { name: "Roles", path: "/admin/roles", icon: <Share2 className="w-4 h-4" /> },
-        { name: "Teams", path: "/admin/teams", icon: <Users className="w-4 h-4" /> },
+        { name: "Users", path: "/admin/users", icon: <Users className="w-4 h-4" /> },
       ],
     },
   ];
 
   return (
-    <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm">
+    <aside className="w-64 md:w-56 sm:w-full bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sm:p-4">
       {/* Logo Section */}
       <div className="mb-10 flex items-center justify-start">
         {siteLogo ? (
-          <img src={siteLogo} alt="Abroad Advise Logo" className="w-32 h-10 object-contain" />
+          <img src={siteLogo} alt="Abroad Advise Logo" className="w-32 h-10 object-contain sm:w-28 sm:h-8" />
         ) : (
-          <div className="w-32 h-10 bg-gray-200 rounded flex items-center justify-center">
-            <span className="text-2xl font-bold text-[#4c9bd5]">AA</span>
+          <div className="w-32 h-10 bg-gray-200 rounded flex items-center justify-center sm:w-28 sm:h-8">
+            <span className="text-2xl font-bold text-[#4c9bd5] sm:text-xl">AA</span>
           </div>
         )}
       </div>
@@ -105,7 +103,7 @@ const AdminSidebar = () => {
                       }`}
                     >
                       {item.icon}
-                      <span className="text-sm font-medium">{item.name}</span>
+                      <span className="text-sm font-medium sm:text-xs">{item.name}</span>
                     </span>
                   </Link>
                 </li>

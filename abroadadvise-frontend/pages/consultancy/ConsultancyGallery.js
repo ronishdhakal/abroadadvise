@@ -4,9 +4,9 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 const ConsultancyGallery = ({ gallery }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
+  if (!gallery || gallery.length === 0) return null; // ✅ Prevent crash if gallery is undefined
 
-  if (!gallery || gallery.length === 0) return null;
+  const [selectedImage, setSelectedImage] = useState(null);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">

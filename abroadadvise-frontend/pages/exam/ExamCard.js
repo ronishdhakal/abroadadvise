@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-const ConsultancyCard = ({ exam }) => {
+const ExamCard = ({ exam }) => {
+  if (!exam || !exam.slug || !exam.name) return null;
+
   return (
     <Link href={`/exam/${exam.slug}`} passHref>
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all transform hover:-translate-y-1 p-5 cursor-pointer flex flex-col items-center">
@@ -19,10 +21,12 @@ const ConsultancyCard = ({ exam }) => {
         </div>
 
         {/* 📖 Exam Name */}
-        <h2 className="mt-4 text-lg font-semibold text-center text-gray-900">{exam.name}</h2>
+        <h2 className="mt-4 text-lg font-semibold text-center text-gray-900">
+          {exam.name}
+        </h2>
       </div>
     </Link>
   );
 };
 
-export default ConsultancyCard;
+export default ExamCard;

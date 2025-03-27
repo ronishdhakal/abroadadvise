@@ -1,38 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import InquiryModal from "@/components/InquiryModal"; // ✅ Import Inquiry Modal
+import InquiryModal from "@/components/InquiryModal";
 
 const DestinationUniversities = ({ universities = [], destination }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const universitiesPerPage = 6; // Show 6 universities per page
+  if (!destination) return null; // ✅ Prevent crash if destination is undefined
 
-  // ✅ Inquiry Modal State
+  const [currentPage, setCurrentPage] = useState(1);
+  const universitiesPerPage = 6;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
 
-  // ✅ Filter universities that belong to this destination
   const matchedUniversities = universities.filter(
     (university) => university.country === destination.title
   );
 
-  // ✅ Pagination logic
   const indexOfLastUniversity = currentPage * universitiesPerPage;
   const indexOfFirstUniversity = indexOfLastUniversity - universitiesPerPage;
   const currentUniversities = matchedUniversities.slice(indexOfFirstUniversity, indexOfLastUniversity);
   const totalPages = Math.ceil(matchedUniversities.length / universitiesPerPage);
 
-  // ✅ Handle page change
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  // ✅ Open Inquiry Modal with Both University & Destination Data
   const handleApplyNow = (university) => {
     setSelectedEntity({
       entityType: "university",
       universityId: university.id,
       universityName: university.name,
-      destinationId: destination.id, // ✅ Track Destination ID
-      destinationName: destination.title, // ✅ Track Destination Name
+      destinationId: destination.id,
+      destinationName: destination.title,
     });
     setIsModalOpen(true);
   };
@@ -43,7 +40,6 @@ const DestinationUniversities = ({ universities = [], destination }) => {
         Top Universities in {destination.title}
       </h2>
 
-      {/* ✅ Updated Layout for Desktop & Mobile */}
       <div className="flex flex-col space-y-4">
         {currentUniversities.length > 0 ? (
           currentUniversities.map((university) => (
@@ -51,7 +47,6 @@ const DestinationUniversities = ({ universities = [], destination }) => {
               key={university.id}
               className="bg-gray-100 rounded-lg p-4 shadow flex items-center justify-between"
             >
-              {/* ✅ Wrap Entire Card in Link */}
               <a
                 href={`/university/${university.slug}`}
                 className="flex items-center flex-grow gap-4 cursor-pointer"
@@ -71,7 +66,6 @@ const DestinationUniversities = ({ universities = [], destination }) => {
                 </p>
               </a>
 
-              {/* ✅ Apply Now Button */}
               <button
                 onClick={() => handleApplyNow(university)}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-all"
@@ -87,7 +81,6 @@ const DestinationUniversities = ({ universities = [], destination }) => {
         )}
       </div>
 
-      {/* ✅ Pagination Controls */}
       {matchedUniversities.length > universitiesPerPage && (
         <div className="mt-4 flex justify-center items-center space-x-4">
           {Array.from({ length: totalPages }, (_, index) => (
@@ -104,7 +97,6 @@ const DestinationUniversities = ({ universities = [], destination }) => {
         </div>
       )}
 
-      {/* ✅ Inquiry Modal (Now Tracking Destination & University) */}
       {selectedEntity && (
         <InquiryModal
           isModalOpen={isModalOpen}
@@ -113,8 +105,8 @@ const DestinationUniversities = ({ universities = [], destination }) => {
           entityId={selectedEntity.universityId}
           entityName={selectedEntity.universityName}
           additionalData={{
-            destinationId: selectedEntity.destinationId, // ✅ Send Destination ID
-            destinationName: selectedEntity.destinationName, // ✅ Send Destination Name
+            destinationId: selectedEntity.destinationId,
+            destinationName: selectedEntity.destinationName,
           }}
         />
       )}

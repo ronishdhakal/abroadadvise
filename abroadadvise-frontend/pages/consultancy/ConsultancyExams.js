@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-const ConsultancyExams = ({ exams, openInquiryModal, consultancyId, consultancyName, verified }) => { // ✅ Add verified prop
+const ConsultancyExams = ({ exams = [], openInquiryModal, consultancyId, consultancyName, verified }) => {
   const [showAll, setShowAll] = useState(false);
 
   if (!exams || exams.length === 0) return null;
@@ -22,17 +22,16 @@ const ConsultancyExams = ({ exams, openInquiryModal, consultancyId, consultancyN
             key={exam.id}
             className="flex flex-col items-start p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
           >
-            <Link href={`/exam/${exam.slug}`} className="flex items-center gap-3 w-full">
+            <Link href={`/exam/${exam.slug || "#"}`} className="flex items-center gap-3 w-full">
               <img
                 src={exam.icon || "/placeholder-icon.png"}
-                alt={exam.name}
+                alt={exam.name || "Exam"}
                 className="w-8 h-8 object-cover rounded-full border"
               />
-              <span className="text-gray-800 font-medium">{exam.name}</span>
+              <span className="text-gray-800 font-medium">{exam.name || "Unnamed Exam"}</span>
             </Link>
 
-            {/* Apply Now Button (Conditional Display) */}
-            {verified && ( // ✅ Show only if consultancy is verified
+            {verified && (
               <button
                 onClick={() =>
                   openInquiryModal("exam", exam.id, exam.name, consultancyId, consultancyName)
@@ -46,7 +45,6 @@ const ConsultancyExams = ({ exams, openInquiryModal, consultancyId, consultancyN
         ))}
       </div>
 
-      {/* Show More/Less Button */}
       {exams.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}

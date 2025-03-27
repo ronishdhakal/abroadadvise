@@ -6,36 +6,32 @@ import { Trash, Plus } from "lucide-react";
 const ConsultancyBranches = ({ formData, setFormData, onUpdate }) => {
   const [branches, setBranches] = useState([]);
 
-  // ✅ Load branches from formData when available
   useEffect(() => {
     setBranches(formData.branches || []);
   }, [formData]);
 
-  // ✅ Add a new branch
   const handleAddBranch = () => {
     const newBranch = { id: Date.now(), branch_name: "", location: "", phone: "", email: "" };
     const updatedBranches = [...branches, newBranch];
 
     setBranches(updatedBranches);
-    onUpdate({ branches: updatedBranches }); // Pass changes to parent
+    onUpdate({ branches: updatedBranches });
   };
 
-  // ✅ Update a specific branch field
   const handleBranchChange = (index, field, value) => {
     const updatedBranches = branches.map((branch, i) =>
       i === index ? { ...branch, [field]: value } : branch
     );
 
     setBranches(updatedBranches);
-    onUpdate({ branches: updatedBranches }); // Pass changes to parent
+    onUpdate({ branches: updatedBranches });
   };
 
-  // ✅ Delete a branch
   const handleDeleteBranch = (index) => {
     const updatedBranches = branches.filter((_, i) => i !== index);
 
     setBranches(updatedBranches);
-    onUpdate({ branches: updatedBranches }); // Pass changes to parent
+    onUpdate({ branches: updatedBranches });
   };
 
   return (
@@ -44,7 +40,7 @@ const ConsultancyBranches = ({ formData, setFormData, onUpdate }) => {
 
       <div className="space-y-4">
         {branches.length === 0 && (
-          <p className="text-gray-500">No branches added yet. Click "Add Branch" to add one.</p>
+          <p className="text-gray-500">No branches added yet. Click &quot;Add Branch&quot; to add one.</p>
         )}
 
         {branches.map((branch, index) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Upload, Trash } from "lucide-react";
 import { updateUniversityDashboard } from "@/utils/api";
 
@@ -8,9 +8,14 @@ const UniversityOverview = ({ formData, setFormData }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [brochureName, setBrochureName] = useState(
-    typeof formData.brochure === "string" ? formData.brochure.split("/").pop() : null
-  );
+  const [brochureName, setBrochureName] = useState(null);
+
+  // ✅ Initialize brochureName only when formData is ready
+  useEffect(() => {
+    if (formData?.brochure && typeof formData.brochure === "string") {
+      setBrochureName(formData.brochure.split("/").pop());
+    }
+  }, [formData?.brochure]);
 
   // ✅ Handle input changes
   const handleInputChange = (e) => {
@@ -28,7 +33,7 @@ const UniversityOverview = ({ formData, setFormData }) => {
       setBrochureName(file.name);
       setFormData((prev) => ({
         ...prev,
-        brochure: file, // ✅ Store file for upload
+        brochure: file,
       }));
     }
   };
@@ -38,7 +43,7 @@ const UniversityOverview = ({ formData, setFormData }) => {
     setBrochureName(null);
     setFormData((prev) => ({
       ...prev,
-      brochure: null, // ✅ Remove brochure
+      brochure: null,
     }));
   };
 
@@ -47,22 +52,15 @@ const UniversityOverview = ({ formData, setFormData }) => {
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
-  
+
     try {
       const updateData = new FormData();
-      updateData.append("tuition_fees", formData.tuition_fees);
-  
-      // ✅ Upload brochure if a new one is selected
+      updateData.append("tuition_fees", formData.tuition_fees || "");
+
       if (formData.brochure instanceof File) {
         updateData.append("brochure", formData.brochure);
       }
-  
-      // 🔥 Debugging: Log FormData Before Sending
-      console.log("📤 Sending FormData:");
-      for (let [key, value] of updateData.entries()) {
-        console.log(`🔹 ${key}:`, value);
-      }
-  
+
       await updateUniversityDashboard(updateData);
       setSuccessMessage("University overview updated successfully!");
     } catch (err) {
@@ -72,7 +70,10 @@ const UniversityOverview = ({ formData, setFormData }) => {
       setLoading(false);
     }
   };
-  
+
+  if (!formData) {
+    return <p className="text-gray-500 italic">Loading university data...</p>;
+  }
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
@@ -94,8 +95,18 @@ const UniversityOverview = ({ formData, setFormData }) => {
       {/* Brochure Upload */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Brochure (PDF)</label>
-        <input type="file" name="brochure" accept="application/pdf" onChange={handleFileChange} className="hidden" id="brochure-upload" />
-        <label htmlFor="brochure-upload" className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+        <input
+          type="file"
+          name="brochure"
+          accept="application/pdf"
+          onChange={handleFileChange}
+          className="hidden"
+          id="brochure-upload"
+        />
+        <label
+          htmlFor="brochure-upload"
+          className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center"
+        >
           <Upload className="w-5 h-5 mr-2" /> Upload Brochure
         </label>
 
@@ -110,7 +121,11 @@ const UniversityOverview = ({ formData, setFormData }) => {
       </div>
 
       {/* Update Button */}
-      <button onClick={handleUpdate} className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full" disabled={loading}>
+      <button
+        onClick={handleUpdate}
+        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
+        disabled={loading}
+      >
         {loading ? "Updating..." : "Update Overview"}
       </button>
 

@@ -9,21 +9,23 @@ const ConsultancyBranches = ({ branches }) => {
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">Branches</h2>
 
-      {/* Branches Grid */}
+      {/* Branches List */}
       <div className="space-y-4">
         {branches.map((branch) => (
           <div
-            key={branch.id}
+            key={branch.id || branch.branch_name}
             className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm"
           >
             {/* Branch Name */}
-            <h3 className="text-lg font-semibold">{branch.branch_name}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{branch.branch_name}</h3>
 
             {/* Location */}
-            <p className="text-gray-600 flex items-center mt-1">
-              <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-              {branch.location}
-            </p>
+            {branch.location && (
+              <p className="text-gray-600 flex items-center mt-1">
+                <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                {branch.location}
+              </p>
+            )}
 
             {/* Phone */}
             {branch.phone && (

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { MapPin, BadgeCheck } from "lucide-react";
 
 const ConsultancyCard = ({ consultancy }) => {
+  if (!consultancy) return null; // ✅ Prevent crash if consultancy is undefined
+
   return (
     <Link href={`/consultancy/${consultancy.slug}`} className="block h-full max-w-[100%] sm:max-w-none">
       <div className="h-full rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white border border-gray-100 flex flex-col group">

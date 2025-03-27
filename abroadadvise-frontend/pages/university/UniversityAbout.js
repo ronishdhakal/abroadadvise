@@ -1,31 +1,34 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
-const UniversityAbout = ({ university }) => {
+const UniversityAbout = ({ university = {} }) => {
   const [aboutContent, setAboutContent] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    if (university.about) {
+    if (university?.about) {
       setAboutContent(university.about);
     }
-  }, [university.about]);
-
-  const [isExpanded, setIsExpanded] = useState(false);
+  }, [university?.about]);
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">About {university.name}</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        About {university?.name || "this university"}
+      </h2>
 
-      {/* Prevent Hydration Error by Checking Content */}
+      {/* ✅ Safely render About content */}
       {aboutContent ? (
-        <p
+        <div
           className={`text-sm text-gray-700 ${isExpanded ? "" : "line-clamp-3"}`}
           dangerouslySetInnerHTML={{ __html: aboutContent }}
-        ></p>
+        ></div>
       ) : (
         <p className="text-sm text-gray-500">No content available.</p>
       )}
 
-      {/* Show More / Show Less Button */}
+      {/* ✅ Toggle if long content */}
       {aboutContent.length > 300 && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { MessageCircle, Send } from "lucide-react";
 
@@ -7,7 +9,15 @@ const NewsComment = ({ newsSlug }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const token = localStorage.getItem("token");
+  const [token, setToken] = useState(null); // ✅ Avoid SSR crash
+
+  // ✅ Access localStorage safely on client side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedToken = localStorage.getItem("token");
+      setToken(storedToken);
+    }
+  }, []);
 
   // ✅ Fetch existing comments
   useEffect(() => {
@@ -31,8 +41,7 @@ const NewsComment = ({ newsSlug }) => {
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    
-    // ✅ Ensure user is logged in
+
     if (!token) {
       setError("You must be logged in to comment.");
       return;
@@ -47,7 +56,7 @@ const NewsComment = ({ newsSlug }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Ensure the user is authenticated
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ comment: newComment }),
       });
@@ -55,7 +64,7 @@ const NewsComment = ({ newsSlug }) => {
       if (!response.ok) throw new Error("Failed to submit comment");
 
       const data = await response.json();
-      setComments([data, ...comments]); // ✅ Update UI instantly
+      setComments([data, ...comments]);
       setNewComment("");
       setSuccess("Comment submitted successfully and is pending approval.");
     } catch (err) {

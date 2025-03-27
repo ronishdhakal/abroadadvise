@@ -1,8 +1,13 @@
+"use client";
+
 import { Globe, Mail, Phone, Landmark, CheckCircle } from "lucide-react";
 
 const UniversityContact = ({ university }) => {
+  // ✅ Prevent crash if university is undefined
+  if (!university || typeof university !== "object") return null;
+
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md mx-auto border border-gray-200"> {/* Adjusted width and border */}
+    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md mx-auto border border-gray-200">
       <h2 className="text-lg font-semibold text-gray-900 mb-5">Contact Information</h2>
 
       {/* Website */}
@@ -50,15 +55,17 @@ const UniversityContact = ({ university }) => {
       )}
 
       {/* University Type */}
-      <div className="text-sm text-gray-700 mb-4">
-        <div className="flex items-center mb-1">
-          <Landmark className="h-5 w-5 text-gray-500 mr-2" />
-          <span className="font-medium text-gray-600">Type</span>
+      {university.type && (
+        <div className="text-sm text-gray-700 mb-4">
+          <div className="flex items-center mb-1">
+            <Landmark className="h-5 w-5 text-gray-500 mr-2" />
+            <span className="font-medium text-gray-600">Type</span>
+          </div>
+          <span className="block ml-7 font-medium text-gray-800">
+            {university.type === "private" ? "Private University" : "Community University"}
+          </span>
         </div>
-        <span className="block ml-7 font-medium text-gray-800">
-          {university.type === "private" ? "Private University" : "Community University"}
-        </span>
-      </div>
+      )}
 
       {/* Verification Badge */}
       {university.verified && (

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 
-const DestinationOtherDestinations = ({ destinations, currentSlug }) => {
-  // ✅ Filter out the current destination
-  const otherDestinations = destinations.filter((dest) => dest.slug !== currentSlug).slice(0, 6);
+const DestinationOtherDestinations = ({ destinations = [], currentSlug }) => {
+  // ✅ Filter out the current destination safely
+  const otherDestinations = Array.isArray(destinations)
+    ? destinations.filter((dest) => dest?.slug !== currentSlug).slice(0, 6)
+    : [];
 
   if (otherDestinations.length === 0) {
     return null; // ✅ Hide section if no other destinations
@@ -16,12 +18,12 @@ const DestinationOtherDestinations = ({ destinations, currentSlug }) => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {otherDestinations.map((destination) => (
-          <div key={destination.slug} className="flex flex-col bg-gray-100 rounded-lg p-4 shadow">
+          <div key={destination?.slug || destination?.id} className="flex flex-col bg-gray-100 rounded-lg p-4 shadow">
             <div className="flex items-center gap-3">
-              {destination.country_logo ? (
+              {destination?.country_logo ? (
                 <img
                   src={destination.country_logo}
-                  alt={destination.title}
+                  alt={destination?.title || "Country Logo"}
                   className="h-12 w-12 object-cover rounded-md"
                 />
               ) : (
@@ -29,9 +31,11 @@ const DestinationOtherDestinations = ({ destinations, currentSlug }) => {
               )}
 
               <div>
-                {/* ✅ Link destination name to its detail page */}
-                <Link href={`/destination/${destination.slug}`} className="text-sm font-medium text-gray-800 hover:text-blue-600">
-                  {destination.title}
+                <Link
+                  href={`/destination/${destination?.slug}`}
+                  className="text-sm font-medium text-gray-800 hover:text-blue-600"
+                >
+                  {destination?.title || "Untitled Destination"}
                 </Link>
               </div>
             </div>
@@ -39,7 +43,6 @@ const DestinationOtherDestinations = ({ destinations, currentSlug }) => {
         ))}
       </div>
 
-      {/* ✅ View More Button */}
       <div className="mt-6 text-center">
         <Link href="/destination/">
           <button className="px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">

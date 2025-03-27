@@ -22,7 +22,7 @@ const ConsultancyTestPrep = ({ formData, setFormData, onUpdate }) => {
 
   // ✅ Prefill selected test preparation exams
   useEffect(() => {
-    if (formData.test_preparation?.length && exams.length > 0) {
+    if (formData?.test_preparation?.length && exams.length > 0) {
       const preselected = exams
         .filter((exam) => formData.test_preparation.includes(exam.id))
         .map((exam) => ({
@@ -32,7 +32,7 @@ const ConsultancyTestPrep = ({ formData, setFormData, onUpdate }) => {
 
       setSelectedExams(preselected);
     }
-  }, [formData.test_preparation, exams]);
+  }, [formData?.test_preparation, exams]);
 
   // ✅ Handle test preparation selection
   const handleTestPrepChange = (selectedOptions) => {

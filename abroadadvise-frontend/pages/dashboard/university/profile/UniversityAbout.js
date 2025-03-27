@@ -9,15 +9,15 @@ const UniversityAbout = ({ formData, setFormData }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // ✅ Local states for content fields
   const [aboutContent, setAboutContent] = useState("");
   const [eligibilityContent, setEligibilityContent] = useState("");
   const [facilitiesContent, setFacilitiesContent] = useState("");
   const [scholarshipContent, setScholarshipContent] = useState("");
   const [faqsContent, setFaqsContent] = useState(""); 
 
-  // ✅ Sync form data when editing
+  // ✅ Sync form data when editing (with safe fallback)
   useEffect(() => {
+    if (!formData) return;
     setAboutContent(formData.about || "");
     setEligibilityContent(formData.eligibility || "");
     setFacilitiesContent(formData.facilities_features || "");
@@ -25,7 +25,6 @@ const UniversityAbout = ({ formData, setFormData }) => {
     setFaqsContent(formData.faqs || ""); 
   }, [formData]);
 
-  // ✅ Handle update request
   const handleUpdate = async () => {
     setLoading(true);
     setError(null);
@@ -47,6 +46,15 @@ const UniversityAbout = ({ formData, setFormData }) => {
       setLoading(false);
     }
   };
+
+  // ✅ SSR safeguard
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">Loading university details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
@@ -153,7 +161,11 @@ const UniversityAbout = ({ formData, setFormData }) => {
       </div>
 
       {/* Update Button */}
-      <button onClick={handleUpdate} className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full" disabled={loading}>
+      <button
+        onClick={handleUpdate}
+        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
+        disabled={loading}
+      >
         {loading ? "Updating..." : "Update Details"}
       </button>
 

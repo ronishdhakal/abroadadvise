@@ -5,6 +5,8 @@ import { GraduationCap, MessageSquare } from "lucide-react";
 import InquiryModal from "@/components/InquiryModal"; // ✅ Importing InquiryModal
 
 const CourseHeader = ({ course }) => {
+  if (!course) return null; // ✅ Prevent crash if course is undefined
+
   const [isScrolled, setIsScrolled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
@@ -53,7 +55,7 @@ const CourseHeader = ({ course }) => {
             style={{
               maxWidth: "2000px",
               height: "auto",
-              objectFit: "contain", // ✅ Ensures full image is visible, no cropping
+              objectFit: "contain",
             }}
           />
         ) : (

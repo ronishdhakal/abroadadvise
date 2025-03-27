@@ -1,36 +1,40 @@
+"use client";
+
 import { Search, MapPin } from "lucide-react";
-import Select from "react-select"; // ✅ Import react-select for multi-select
+import Select from "react-select";
 
 const UniversityFilters = ({
-  searchQuery,
-  setSearchQuery,
-  countryQuery,
-  setCountryQuery,
-  selectedDisciplines,
-  setSelectedDisciplines,
-  disciplines,
+  searchQuery = "",
+  setSearchQuery = () => {},
+  countryQuery = "",
+  setCountryQuery = () => {},
+  selectedDisciplines = [],
+  setSelectedDisciplines = () => {},
+  disciplines = [],
 }) => {
-  // ✅ Convert disciplines to react-select options
-  const disciplineOptions = disciplines.map((discipline) => ({
-    value: discipline.id,
-    label: discipline.name,
-  }));
+  // ✅ Convert disciplines to react-select options safely
+  const disciplineOptions = Array.isArray(disciplines)
+    ? disciplines.map((discipline) => ({
+        value: discipline.id,
+        label: discipline.name,
+      }))
+    : [];
 
-  // ✅ Custom styles to make dropdown text **black**
+  // ✅ Custom styles for react-select
   const customStyles = {
     control: (provided) => ({
       ...provided,
       borderRadius: "8px",
-      borderColor: "#D1D5DB", // Gray border
+      borderColor: "#D1D5DB",
       boxShadow: "none",
-      "&:hover": { borderColor: "#2563EB" }, // Blue on hover
+      "&:hover": { borderColor: "#2563EB" },
     }),
     option: (provided, state) => ({
       ...provided,
-      color: state.isSelected ? "#fff" : "#000", // White for selected, Black for others
-      backgroundColor: state.isSelected ? "#2563EB" : "#fff", // Blue for selected
+      color: state.isSelected ? "#fff" : "#000",
+      backgroundColor: state.isSelected ? "#2563EB" : "#fff",
       "&:hover": {
-        backgroundColor: "#E5E7EB", // Light gray hover effect
+        backgroundColor: "#E5E7EB",
       },
     }),
     menu: (provided) => ({
@@ -57,7 +61,7 @@ const UniversityFilters = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* University Search Field */}
+        {/* 🔍 University Name Search */}
         <div className="relative">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -69,7 +73,7 @@ const UniversityFilters = ({
           />
         </div>
 
-        {/* Country Name Search Field */}
+        {/* 🌍 Country Filter */}
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -81,19 +85,21 @@ const UniversityFilters = ({
           />
         </div>
 
-        {/* Discipline Multi-Select */}
-        <div className="col-span-full">
-          <label className="text-sm font-medium text-gray-700">Discipline</label>
-          <Select
-            options={disciplineOptions}
-            isMulti
-            value={selectedDisciplines}
-            onChange={setSelectedDisciplines}
-            placeholder="Select disciplines..."
-            styles={customStyles} // ✅ Apply custom styles
-            className="mt-1"
-          />
-        </div>
+        {/* 📘 Discipline Filter */}
+        {disciplineOptions.length > 0 && (
+          <div className="col-span-full">
+            <label className="text-sm font-medium text-gray-700">Discipline</label>
+            <Select
+              options={disciplineOptions}
+              isMulti
+              value={selectedDisciplines}
+              onChange={setSelectedDisciplines}
+              placeholder="Select disciplines..."
+              styles={customStyles}
+              className="mt-1"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import Header from "@/components/header";
@@ -15,13 +15,7 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(query || "");
 
-  useEffect(() => {
-    if (query) {
-      fetchSearchResults(query);
-    }
-  }, [query]);
-
-  const fetchSearchResults = async (searchTerm) => {
+  const fetchSearchResults = useCallback(async (searchTerm) => {
     setLoading(true);
     try {
       const res = await fetch(`http://127.0.0.1:8000/search/?query=${searchTerm}`);
@@ -31,7 +25,13 @@ export default function SearchResults() {
       console.error("Error fetching search results:", error);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (query) {
+      fetchSearchResults(query);
+    }
+  }, [query, fetchSearchResults]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -66,12 +66,12 @@ export default function SearchResults() {
         {/* Results Section */}
         <div className="mt-8">
           <h1 className="text-2xl font-semibold mb-6 text-gray-800">
-            Search Results for "{query}"
+            {`Search Results for "${query}"`}
           </h1>
 
           {loading && <p className="text-center text-gray-600">Loading...</p>}
 
-          {results && Object.values(results).every(arr => arr.length === 0) && (
+          {results && Object.values(results).every((arr) => arr.length === 0) && (
             <p className="text-center text-gray-500">No results found.</p>
           )}
 

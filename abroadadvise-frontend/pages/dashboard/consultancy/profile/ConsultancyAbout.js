@@ -12,7 +12,6 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
   const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
-    // Ensure formData is correctly initialized as an object
     if (formData) {
       setAboutContent(formData.about || "");
       setServicesContent(formData.services || "");
@@ -29,10 +28,8 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
       updateData.append("about", aboutContent);
       updateData.append("services", servicesContent);
 
-      // API Call: Only update about/services, leaving other fields untouched
       await updateConsultancyDashboard(updateData);
 
-      // Update local state to reflect changes
       setFormData((prev) => ({
         ...prev,
         about: aboutContent,
@@ -47,11 +44,19 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
     }
   };
 
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">Consultancy data not available.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">About & Services</h2>
 
-      {/* About Consultancy */}
+      {/* About Section */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">About Consultancy</label>
         <Editor
@@ -68,7 +73,7 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
         />
       </div>
 
-      {/* Consultancy Services */}
+      {/* Services Section */}
       <div>
         <label className="block text-gray-700 font-medium mb-2">Our Services</label>
         <Editor
@@ -96,7 +101,7 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
         </button>
       </div>
 
-      {/* Success & Error Messages */}
+      {/* Status Messages */}
       {successMessage && <p className="text-green-600 mt-3">{successMessage}</p>}
       {error && <p className="text-red-600 mt-3">{error}</p>}
     </div>

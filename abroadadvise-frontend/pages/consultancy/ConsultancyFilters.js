@@ -1,20 +1,22 @@
+"use client";
+
 import { Search, Award, FileText, MapPin, Globe } from "lucide-react";
 import Select from "react-select";
 
 const ConsultancyFilters = ({
-  search,
-  setSearch,
-  selectedDistricts,
-  setSelectedDistricts,
-  destination,
-  setDestination,
-  exam,
-  setExam,
-  moeCertified,
-  setMoeCertified,
-  exams,
-  destinations,
-  districts,
+  search = "",
+  setSearch = () => {},
+  selectedDistricts = [],
+  setSelectedDistricts = () => {},
+  destination = "",
+  setDestination = () => {},
+  exam = "",
+  setExam = () => {},
+  moeCertified = "",
+  setMoeCertified = () => {},
+  exams = [],
+  destinations = [],
+  districts = [],
 }) => {
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
@@ -67,10 +69,7 @@ const ConsultancyFilters = ({
           <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={destination}
-            onChange={(e) => {
-              console.log("Selected Destination:", e.target.value); // Debugging log
-              setDestination(e.target.value);
-            }}
+            onChange={(e) => setDestination(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
             aria-label="Select Destination"
           >

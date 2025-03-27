@@ -4,7 +4,13 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
-const ConsultancyUniversities = ({ universities, openInquiryModal, consultancyId, consultancyName, verified }) => { // ✅ Add verified prop
+const ConsultancyUniversities = ({
+  universities,
+  openInquiryModal,
+  consultancyId,
+  consultancyName,
+  verified,
+}) => {
   const [showAll, setShowAll] = useState(false);
 
   if (!universities || universities.length === 0) return null;
@@ -22,8 +28,10 @@ const ConsultancyUniversities = ({ universities, openInquiryModal, consultancyId
             key={university.id}
             className="flex flex-col items-center p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
           >
-            {/* University Logo */}
-            <Link href={`/university/${university.slug}`} className="flex items-center gap-3">
+            <Link
+              href={`/university/${university.slug}`}
+              className="flex items-center gap-3 w-full"
+            >
               <img
                 src={university.logo || "/placeholder-university.png"}
                 alt={university.name}
@@ -31,15 +39,25 @@ const ConsultancyUniversities = ({ universities, openInquiryModal, consultancyId
               />
               <div>
                 <p className="text-gray-800 font-semibold">{university.name}</p>
-                <span className="text-gray-500 text-sm">{university.country || "Unknown Country"}</span>
+                <span className="text-gray-500 text-sm">
+                  {university.country || "Unknown Country"}
+                </span>
               </div>
             </Link>
 
-            {/* Apply Now Button (Conditional Display) */}
-            {verified && ( // ✅ Show only if consultancy is verified
+            {/* Apply Now Button */}
+            {verified && (
               <button
-                onClick={() => openInquiryModal("university", university.id, university.name, consultancyId, consultancyName)}
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200"
+                onClick={() =>
+                  openInquiryModal(
+                    "university",
+                    university.id,
+                    university.name,
+                    consultancyId,
+                    consultancyName
+                  )
+                }
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full"
               >
                 Apply Now
               </button>

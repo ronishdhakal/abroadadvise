@@ -9,7 +9,14 @@ const UniversityContact = ({ formData, setFormData }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // ✅ Handle input changes
+  if (!formData) {
+    return (
+      <div className="p-6 bg-white shadow-lg rounded-xl">
+        <p className="text-gray-500 italic">Loading university contact details...</p>
+      </div>
+    );
+  }
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -18,7 +25,6 @@ const UniversityContact = ({ formData, setFormData }) => {
     }));
   };
 
-  // ✅ Handle update request
   const handleUpdate = async () => {
     setLoading(true);
     setError(null);
@@ -26,12 +32,12 @@ const UniversityContact = ({ formData, setFormData }) => {
 
     try {
       const updateData = new FormData();
-      updateData.append("country", formData.country);
-      updateData.append("address", formData.address);
-      updateData.append("website", formData.website);
-      updateData.append("email", formData.email);
-      updateData.append("phone", formData.phone);
-      updateData.append("type", formData.type);
+      updateData.append("country", formData.country || "");
+      updateData.append("address", formData.address || "");
+      updateData.append("website", formData.website || "");
+      updateData.append("email", formData.email || "");
+      updateData.append("phone", formData.phone || "");
+      updateData.append("type", formData.type || "");
 
       await updateUniversityDashboard(updateData);
       setSuccessMessage("University contact details updated successfully!");
@@ -150,7 +156,11 @@ const UniversityContact = ({ formData, setFormData }) => {
       </div>
 
       {/* Update Button */}
-      <button onClick={handleUpdate} className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full" disabled={loading}>
+      <button
+        onClick={handleUpdate}
+        className="mt-4 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-xl shadow-lg w-full"
+        disabled={loading}
+      >
         {loading ? "Updating..." : "Update Contact"}
       </button>
 

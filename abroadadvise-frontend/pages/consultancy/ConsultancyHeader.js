@@ -4,6 +4,8 @@ import { MessageSquare, MapPin, BadgeCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) => {
+  if (!consultancy) return null; // ✅ Prevent crash if consultancy is undefined
+
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
             style={{
               maxWidth: "2000px",
               height: "auto",
-              objectFit: "contain", // ✅ Ensures full image is visible, no cropping
+              objectFit: "contain",
             }}
           />
         ) : (
@@ -55,14 +57,18 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
         <div className="flex items-center gap-5 w-full sm:w-auto">
           {consultancy.logo && (
             <div className="relative -mt-16 sm:-mt-24 w-24 h-24 sm:w-28 sm:h-28 bg-white p-2.5 rounded-2xl shadow-xl border-4 border-white transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
-              <img src={consultancy.logo} alt={`${consultancy.name} logo`} className="w-full h-full object-contain rounded-xl" />
+              <img
+                src={consultancy.logo}
+                alt={`${consultancy.name} logo`}
+                className="w-full h-full object-contain rounded-xl"
+              />
             </div>
           )}
 
           <div className="flex-1 pt-2 sm:pt-0">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 flex items-center flex-wrap">
               {consultancy.name}
-              {consultancy.verified && (  // ✅ Changed from is_verified to verified
+              {consultancy.verified && (
                 <span className="inline-flex ml-2 items-center" title="Verified Consultancy">
                   <BadgeCheck className="h-6 w-6 md:h-7 md:w-7 text-blue-500" />
                 </span>
@@ -75,7 +81,6 @@ const ConsultancyHeader = ({ consultancy, setIsModalOpen, setSelectedEntity }) =
           </div>
         </div>
 
-        {/* ✅ Show the "Ask a Question" button **only if the consultancy is verified** */}
         {consultancy.verified && (
           <button
             onClick={handleInquiry}

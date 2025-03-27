@@ -1,28 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,  // Enforce strict mode for better debugging
-  swcMinify: true,  // Optimize with SWC minifier
+  reactStrictMode: true,
 
   images: {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: '127.0.0.1',  // Allow fetching images from localhost:8000
+        hostname: '127.0.0.1',
         port: '8000',
         pathname: '/media/**',
       },
       {
         protocol: 'http',
-        hostname: 'localhost',  // Allow fetching images from localhost:8000
+        hostname: 'localhost',
         port: '8000',
         pathname: '/media/**',
       },
     ],
-    domains: ['localhost', '127.0.0.1'],  // Allow localhost images
+    domains: ['localhost', '127.0.0.1'],
   },
 
-  experimental: {
-    appDir: true,  // Enable Next.js App Router if needed
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 

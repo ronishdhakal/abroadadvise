@@ -1,7 +1,19 @@
-import { Globe, Hash, Share2, Facebook, Twitter, Linkedin, Mail, Copy, MessageSquare } from "lucide-react"; // ✅ Import necessary icons
+"use client";
+
+import {
+  Globe,
+  Hash,
+  Share2,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Mail,
+  Copy,
+  MessageSquare,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-const UniversityOverview = ({ university }) => {
+const UniversityOverview = ({ university = {} }) => {
   const [isShareOpen, setIsShareOpen] = useState(false);
   const shareRef = useRef(null);
 
@@ -16,18 +28,25 @@ const UniversityOverview = ({ university }) => {
         setIsShareOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Generate share URL
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  // ✅ SSR-safe share URL
+  const [shareUrl, setShareUrl] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setShareUrl(window.location.href);
+    }
+  }, []);
 
   // ✅ Copy to Clipboard
   const handleCopyClick = () => {
-    navigator.clipboard.writeText(shareUrl);
-    setIsShareOpen(false); // Close dropdown after copying
+    if (shareUrl) {
+      navigator.clipboard.writeText(shareUrl);
+      setIsShareOpen(false); // Close dropdown after copying
+    }
   };
 
   return (
@@ -35,9 +54,13 @@ const UniversityOverview = ({ university }) => {
       {/* Left Section: University Type, Tuition Fees, & QS Ranking */}
       <div className="flex flex-wrap items-center gap-3 text-gray-700">
         {/* University Type Badge */}
-        <span className="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full">
-          {university.type === "private" ? "Private University" : "Community University"}
-        </span>
+        {university.type && (
+          <span className="px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full">
+            {university.type === "private"
+              ? "Private University"
+              : "Community University"}
+          </span>
+        )}
 
         {/* Tuition Fees */}
         {university.tuition_fees && (
@@ -45,10 +68,11 @@ const UniversityOverview = ({ university }) => {
             Tuition: {university.tuition_fees} per year
           </span>
         )}
+
         {/* QS World Ranking */}
         {university.qs_world_ranking && (
           <span className="flex items-center px-3 py-1 text-sm font-medium text-purple-700 bg-purple-100 rounded-full">
-            <Hash className="h-4 w-4 mr-1 text-purple-500" /> {/* QS Ranking Icon */}
+            <Hash className="h-4 w-4 mr-1 text-purple-500" />
             QS Ranking: {university.qs_world_ranking}
           </span>
         )}
@@ -80,7 +104,7 @@ const UniversityOverview = ({ university }) => {
           </a>
         )}
 
-        {/* Share Button (Desktop & Mobile) */}
+        {/* Share Button */}
         <div className="relative">
           <button
             onClick={handleShareClick}
@@ -89,14 +113,16 @@ const UniversityOverview = ({ university }) => {
             <Share2 className="h-4 w-4" />
           </button>
 
-          {/* Share Dropdown (Desktop) */}
+          {/* Share Dropdown */}
           {isShareOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
               <ul className="py-1">
                 {/* Facebook */}
                 <li>
                   <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                      shareUrl
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -105,10 +131,13 @@ const UniversityOverview = ({ university }) => {
                     Facebook
                   </a>
                 </li>
-                {/* X */}
+
+                {/* X / Twitter */}
                 <li>
                   <a
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`}
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                      shareUrl
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -117,10 +146,13 @@ const UniversityOverview = ({ university }) => {
                     X
                   </a>
                 </li>
+
                 {/* LinkedIn */}
                 <li>
                   <a
-                    href={`https://www.linkedin.com/shareArticle?url=${encodeURIComponent(shareUrl)}`}
+                    href={`https://www.linkedin.com/shareArticle?url=${encodeURIComponent(
+                      shareUrl
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -129,10 +161,13 @@ const UniversityOverview = ({ university }) => {
                     LinkedIn
                   </a>
                 </li>
+
                 {/* WhatsApp */}
                 <li>
                   <a
-                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`}
+                    href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                      shareUrl
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -141,6 +176,7 @@ const UniversityOverview = ({ university }) => {
                     WhatsApp
                   </a>
                 </li>
+
                 {/* Email */}
                 <li>
                   <a
@@ -151,6 +187,7 @@ const UniversityOverview = ({ university }) => {
                     Email
                   </a>
                 </li>
+
                 {/* Copy Link */}
                 <li>
                   <button
