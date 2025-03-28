@@ -2,32 +2,55 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { PlusCircle, Trash2 } from "lucide-react";
 
-// ✅ Dynamically import TinyMCE to prevent SSR issues
+// Dynamically import TinyMCE to prevent SSR issues
 const Editor = dynamic(() => import("@tinymce/tinymce-react").then((mod) => mod.Editor), {
   ssr: false,
 });
 
 const DestinationAbout = ({ formData, setFormData }) => {
-  // ✅ Local states to track editor content
   const [whyChoose, setWhyChoose] = useState("");
   const [requirements, setRequirements] = useState("");
   const [documentsRequired, setDocumentsRequired] = useState("");
   const [scholarships, setScholarships] = useState("");
   const [moreInformation, setMoreInformation] = useState("");
-  const [faqs, setFaqs] = useState("");
+  const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
 
-  // ✅ Sync initial form data when editing a destination
   useEffect(() => {
     setWhyChoose(formData.why_choose || "");
     setRequirements(formData.requirements || "");
     setDocumentsRequired(formData.documents_required || "");
     setScholarships(formData.scholarships || "");
     setMoreInformation(formData.more_information || "");
-    setFaqs(formData.faqs || "");
+
+    try {
+      const parsed = JSON.parse(formData.faqs);
+      setFaqs(Array.isArray(parsed) ? parsed : [{ question: "", answer: "" }]);
+    } catch {
+      setFaqs([{ question: "", answer: "" }]);
+    }
   }, [formData]);
 
-  // ✅ Common TinyMCE Configuration
+  const handleFaqChange = (index, field, value) => {
+    const updated = [...faqs];
+    updated[index][field] = value;
+    setFaqs(updated);
+    setFormData((prev) => ({ ...prev, faqs: JSON.stringify(updated) }));
+  };
+
+  const addFaq = () => {
+    const updated = [...faqs, { question: "", answer: "" }];
+    setFaqs(updated);
+    setFormData((prev) => ({ ...prev, faqs: JSON.stringify(updated) }));
+  };
+
+  const removeFaq = (index) => {
+    const updated = faqs.filter((_, i) => i !== index);
+    setFaqs(updated.length ? updated : [{ question: "", answer: "" }]);
+    setFormData((prev) => ({ ...prev, faqs: JSON.stringify(updated) }));
+  };
+
   const editorConfig = {
     height: 250,
     menubar: false,
@@ -39,91 +62,77 @@ const DestinationAbout = ({ formData, setFormData }) => {
   };
 
   return (
-    <div className="bg-gray-100 p-4 rounded-lg">
-      <h2 className="text-xl font-bold mb-2">Destination Details</h2>
+    <div className="bg-white p-6 rounded-2xl shadow-md space-y-6">
+      <h2 className="text-xl font-bold text-gray-800">Destination Details</h2>
 
-      {/* ✅ Why Choose This Destination */}
-      <div className="mb-4">
-        <label className="block text-gray-700">Why Choose This Destination?</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={whyChoose}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setWhyChoose(content);
-            setFormData((prev) => ({ ...prev, why_choose: content }));
-          }}
-        />
-      </div>
+      {[
+        { label: "Why Choose This Destination?", value: whyChoose, set: setWhyChoose, key: "why_choose" },
+        { label: "Requirements", value: requirements, set: setRequirements, key: "requirements" },
+        { label: "Required Documents", value: documentsRequired, set: setDocumentsRequired, key: "documents_required" },
+        { label: "Scholarships", value: scholarships, set: setScholarships, key: "scholarships" },
+        { label: "More Information", value: moreInformation, set: setMoreInformation, key: "more_information" },
+      ].map(({ label, value, set, key }, idx) => (
+        <div key={idx}>
+          <label className="block text-gray-700 font-medium mb-1">{label}</label>
+          <Editor
+            apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+            value={value}
+            init={editorConfig}
+            onEditorChange={(content) => {
+              set(content);
+              setFormData((prev) => ({ ...prev, [key]: content }));
+            }}
+          />
+        </div>
+      ))}
 
-      {/* ✅ Requirements */}
-      <div className="mb-4">
-        <label className="block text-gray-700">Requirements</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={requirements}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setRequirements(content);
-            setFormData((prev) => ({ ...prev, requirements: content }));
-          }}
-        />
-      </div>
+      {/* FAQs Section */}
+      <div>
+        <label className="block text-gray-700 font-semibold mb-2 text-lg">FAQs</label>
+        {faqs.map((faq, index) => (
+          <div
+            key={index}
+            className="mb-4 bg-gray-50 p-4 border border-gray-200 rounded-lg space-y-3"
+          >
+            <div>
+              <label className="block text-sm font-medium mb-1">Question</label>
+              <input
+                type="text"
+                value={faq.question}
+                onChange={(e) => handleFaqChange(index, "question", e.target.value)}
+                placeholder="Enter question"
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#4c9bd5] focus:border-[#4c9bd5]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Answer</label>
+              <textarea
+                value={faq.answer}
+                onChange={(e) => handleFaqChange(index, "answer", e.target.value)}
+                placeholder="Enter answer"
+                rows={3}
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-[#4c9bd5] focus:border-[#4c9bd5]"
+              />
+            </div>
+            {faqs.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeFaq(index)}
+                className="text-red-500 text-sm flex items-center gap-1 hover:underline"
+              >
+                <Trash2 className="w-4 h-4" /> Remove
+              </button>
+            )}
+          </div>
+        ))}
 
-      {/* ✅ Required Documents */}
-      <div className="mb-4">
-        <label className="block text-gray-700">Required Documents</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={documentsRequired}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setDocumentsRequired(content);
-            setFormData((prev) => ({ ...prev, documents_required: content }));
-          }}
-        />
-      </div>
-
-      {/* ✅ Scholarships */}
-      <div className="mb-4">
-        <label className="block text-gray-700">Scholarships</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={scholarships}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setScholarships(content);
-            setFormData((prev) => ({ ...prev, scholarships: content }));
-          }}
-        />
-      </div>
-
-      {/* ✅ More Information */}
-      <div className="mb-4">
-        <label className="block text-gray-700">More Information</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={moreInformation}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setMoreInformation(content);
-            setFormData((prev) => ({ ...prev, more_information: content }));
-          }}
-        />
-      </div>
-
-      {/* ✅ FAQs */}
-      <div className="mb-4">
-        <label className="block text-gray-700">FAQs</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={faqs}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setFaqs(content);
-            setFormData((prev) => ({ ...prev, faqs: content }));
-          }}
-        />
+        <button
+          type="button"
+          onClick={addFaq}
+          className="text-[#4c9bd5] font-medium text-sm flex items-center gap-2 hover:underline mt-2"
+        >
+          <PlusCircle className="w-5 h-5" /> Add New FAQ
+        </button>
       </div>
     </div>
   );

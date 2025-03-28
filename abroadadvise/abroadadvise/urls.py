@@ -33,6 +33,8 @@ urlpatterns = [
 
     # ✅ Text Editor (TinyMCE)
     path("tinymce/", include("tinymce.urls")),
+    
+
 ]
 
 # ✅ Optional: API format suffixes (e.g., .json, .api)

@@ -4,23 +4,38 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { API_BASE_URL } from "@/utils/api";
-import { User, MessageSquare } from "lucide-react";
+import { User, MessageSquare, Home } from "lucide-react"; // ✅ Imported Home icon
 
 const sections = [
   {
     title: "University",
     items: [
-      { key: "profile", label: "Profile", href: "/dashboard/university/profile", icon: <User className="w-4 h-4" /> },
-      { key: "inquiries", label: "Inquiries", href: "/dashboard/university/inquiries", icon: <MessageSquare className="w-4 h-4" /> },
+      {
+        key: "home",
+        label: "Home",
+        href: "/dashboard/university",
+        icon: <Home className="w-4 h-4" />,
+      },
+      {
+        key: "profile",
+        label: "Profile",
+        href: "/dashboard/university/profile",
+        icon: <User className="w-4 h-4" />,
+      },
+      {
+        key: "inquiries",
+        label: "Inquiries",
+        href: "/dashboard/university/inquiries",
+        icon: <MessageSquare className="w-4 h-4" />,
+      },
     ],
   },
 ];
 
 const UniversitySidebar = () => {
-  const pathname = usePathname(); // Get the current route
+  const pathname = usePathname();
   const [siteLogo, setSiteLogo] = useState(null);
 
-  // Fetch Site Logo
   useEffect(() => {
     const fetchSiteLogo = async () => {
       try {

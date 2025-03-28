@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'core',
     'inquiry',
     'blog',
+
 ]
 
 from datetime import timedelta
@@ -68,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+ 
 ]
 
 # ✅ Root URL Configuration

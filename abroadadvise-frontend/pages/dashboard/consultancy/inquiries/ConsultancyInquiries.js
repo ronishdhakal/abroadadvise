@@ -124,7 +124,6 @@ const ConsultancyInquiries = () => {
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Contact Number</th>
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Phone</th>
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Message</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Entity Type</th>
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Consultancy</th>
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">University</th>
                   <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Destination</th>
@@ -150,7 +149,6 @@ const ConsultancyInquiries = () => {
                     >
                       {inquiry.message || "-"}
                     </td>
-                    <td className="p-3 text-gray-800">{inquiry.entity_type}</td>
                     <td className="p-3 text-gray-800">{inquiry.consultancy_name || "-"}</td>
                     <td className="p-3 text-gray-800">{inquiry.university_name || "-"}</td>
                     <td className="p-3 text-gray-800">{inquiry.destination_name || "-"}</td>

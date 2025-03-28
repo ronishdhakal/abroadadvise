@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { API_BASE_URL } from "@/utils/api";
-import { User, MessageSquare } from "lucide-react";
+import { User, MessageSquare, Home } from "lucide-react";
 
 const sections = [
   {
     title: "Consultancy",
     items: [
+      { key: "home", label: "Home", href: "/dashboard/consultancy/", icon: <Home className="w-4 h-4" /> },
       { key: "profile", label: "Profile", href: "/dashboard/consultancy/profile", icon: <User className="w-4 h-4" /> },
       { key: "inquiries", label: "Inquiries", href: "/dashboard/consultancy/inquiries", icon: <MessageSquare className="w-4 h-4" /> },
     ],
