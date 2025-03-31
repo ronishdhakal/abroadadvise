@@ -1,115 +1,107 @@
 "use client";
 
 import { useState } from "react";
-import InquiryModal from "@/components/InquiryModal"; // ✅ Import Inquiry Modal
-import { BadgeCheck } from "lucide-react"; // Import BadgeCheck icon
+import InquiryModal from "@/components/InquiryModal";
+import { BadgeCheck } from "lucide-react";
 
 const DestinationConsultancies = ({ consultancies = [], destination }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const consultanciesPerPage = 5; // Show 5 consultancies per page
+  const consultanciesPerPage = 5;
 
-  // ✅ Inquiry Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
 
-  // ✅ Safe check for consultancies linked to this destination AND are verified
   const matchedConsultancies = consultancies.filter(
     (consultancy) =>
-      consultancy.verified && // ✅ Only include verified consultancies
-      Array.isArray(consultancy.study_abroad_destinations) && // Ensure it's an array
-      consultancy.study_abroad_destinations.some((dest) => dest.id === destination.id) // Check destination match
+      consultancy.verified &&
+      Array.isArray(consultancy.study_abroad_destinations) &&
+      consultancy.study_abroad_destinations.some((dest) => dest.id === destination.id)
   );
 
-  // ✅ Pagination logic
-  const indexOfLastConsultancy = currentPage * consultanciesPerPage;
-  const indexOfFirstConsultancy = indexOfLastConsultancy - consultanciesPerPage;
-  const currentConsultancies = matchedConsultancies.slice(indexOfFirstConsultancy, indexOfLastConsultancy);
+  const indexOfLast = currentPage * consultanciesPerPage;
+  const indexOfFirst = indexOfLast - consultanciesPerPage;
+  const currentConsultancies = matchedConsultancies.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(matchedConsultancies.length / consultanciesPerPage);
 
-  // ✅ Open Inquiry Modal with Both Consultancy & Destination Data
   const handleApplyNow = (consultancy) => {
     setSelectedEntity({
       entityType: "consultancy",
       consultancyId: consultancy.id,
       consultancyName: consultancy.name,
-      destinationId: destination.id, // ✅ Track Destination ID
-      destinationName: destination.title, // ✅ Track Destination Name
+      destinationId: destination.id,
+      destinationName: destination.title,
     });
     setIsModalOpen(true);
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-md">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Apply Through</h2>
+    <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-800 mb-5">Apply Through</h2>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {currentConsultancies.length > 0 ? (
           currentConsultancies.map((consultancy) => (
             <div
               key={consultancy.id}
-              className="bg-gray-100 rounded-lg p-4 shadow flex items-center justify-between"
+              className="flex items-center justify-between p-4 bg-[#f9fbfc] border border-gray-200 rounded-xl hover:shadow-md transition"
             >
-              {/* ✅ Wrap Entire Card in Link */}
               <a
                 href={`/consultancy/${consultancy.slug}`}
-                className="flex items-center gap-3 flex-grow cursor-pointer"
+                className="flex items-center gap-3 flex-grow group"
               >
                 {consultancy.logo ? (
                   <img
                     src={consultancy.logo}
                     alt={consultancy.name}
-                    className="h-12 w-12 object-cover rounded-md"
+                    className="h-12 w-12 object-cover rounded-md border"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
+                  <div className="h-12 w-12 bg-gray-300 rounded-md" />
                 )}
 
-                {/* Container for name and tick */}
-                 <div className="flex items-center gap-1">
-                   {/* Name and tick here */}
-                    <span className="text-sm font-medium text-gray-800 hover:text-blue-600 flex items-center">
-                      {consultancy.name}
-                      {consultancy.verified && (
-                        <BadgeCheck className="h-4 w-4 text-blue-500 ml-1" />
-                      )}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-medium text-gray-800 group-hover:text-[#4c9bd5] flex items-center">
+                    {consultancy.name}
+                    <BadgeCheck className="h-4 w-4 text-[#4c9bd5] ml-1" />
+                  </span>
+                </div>
               </a>
 
-              {/* ✅ Apply Now Button (Only for verified consultancies) */}
-              {consultancy.verified && (
-                <button
-                  onClick={() => handleApplyNow(consultancy)}
-                  className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
-                >
-                  Apply
-                </button>
-              )}
+              <button
+                onClick={() => handleApplyNow(consultancy)}
+                className="px-4 py-2 bg-[#4c9bd5] hover:bg-[#3e8bc5] text-white text-sm font-medium rounded-md transition shadow-sm"
+              >
+                Apply
+              </button>
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">No verified consultancies available for this destination.</p>
+          <p className="text-sm text-gray-500">
+            No verified consultancies available for this destination.
+          </p>
         )}
       </div>
 
-      {/* ✅ Pagination Controls */}
+      {/* Pagination */}
       {matchedConsultancies.length > consultanciesPerPage && (
-        <div className="mt-4 flex justify-center items-center space-x-4">
-          {Array.from({ length: totalPages }, (_, index) => (
+        <div className="mt-6 flex justify-center items-center space-x-2">
+          {Array.from({ length: totalPages }, (_, i) => (
             <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className={`px-3 py-2 text-sm rounded-md ${
-                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-              } hover:bg-blue-500 hover:text-white`}
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1.5 text-sm rounded-md font-medium transition ${
+                currentPage === i + 1
+                  ? "bg-[#4c9bd5] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-[#4c9bd5]/10"
+              }`}
             >
-              {index + 1}
+              {i + 1}
             </button>
           ))}
         </div>
       )}
 
-      {/* ✅ Inquiry Modal (Now Tracking Destination & Consultancy) */}
+      {/* Inquiry Modal */}
       {selectedEntity && (
         <InquiryModal
           isModalOpen={isModalOpen}
@@ -118,8 +110,8 @@ const DestinationConsultancies = ({ consultancies = [], destination }) => {
           entityId={selectedEntity.consultancyId}
           entityName={selectedEntity.consultancyName}
           additionalData={{
-            destinationId: selectedEntity.destinationId, // ✅ Send Destination ID
-            destinationName: selectedEntity.destinationName, // ✅ Send Destination Name
+            destinationId: selectedEntity.destinationId,
+            destinationName: selectedEntity.destinationName,
           }}
         />
       )}

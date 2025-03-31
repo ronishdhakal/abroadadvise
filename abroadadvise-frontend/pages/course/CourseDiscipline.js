@@ -10,7 +10,7 @@ const CourseDiscipline = ({ disciplines }) => {
           disciplines.map((discipline) => (
             <div
               key={discipline.id}
-              className="w-full px-4 py-3 border border-gray-200 rounded-md text-gray-800 font-medium text-sm sm:text-base transition hover:bg-gray-50 hover:border-gray-300"
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-md text-gray-700 font-medium text-sm sm:text-base bg-gray-50 hover:bg-[#e6f3fc] hover:border-[#4c9bd5] transition-all"
             >
               {discipline.name}
             </div>

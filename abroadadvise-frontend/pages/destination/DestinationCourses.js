@@ -90,8 +90,8 @@ const DestinationCourses = ({ destination }) => {
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                         course.level === "Undergraduate"
-                          ? "bg-blue-100 text-blue-600"
-                          : "bg-purple-100 text-purple-600"
+                          ? "bg-[#5689ae] -100 text-blue-600"
+                          : "bg-purple-100 text-black-600"
                       }`}
                     >
                       {course.level || "N/A"}
@@ -106,7 +106,7 @@ const DestinationCourses = ({ destination }) => {
               {/* ✅ Apply Now Button */}
               <button
                 onClick={() => handleApplyNow(course)}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-all"
+                className="px-4 py-2 bg-[#4c9bd5] -600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-all"
               >
                 Apply
               </button>

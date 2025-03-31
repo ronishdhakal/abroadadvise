@@ -131,10 +131,8 @@ def get_event(request, slug):
 def update_event(request, slug):
     try:
         event = Event.objects.get(slug=slug)
-        data = request.data  # ✅ Do not use .copy()
+        data = request.data.copy()  # ✅ MAKE IT MUTABLE
 
-
-        print(data)
         # ✅ Extract ManyToMany Fields (Expecting JSON strings)
         try:
             related_universities_slugs = json.loads(data.pop("related_universities", "[]")[0])
@@ -143,9 +141,10 @@ def update_event(request, slug):
         except (json.JSONDecodeError, IndexError) as e:
             return Response({"error": "Invalid JSON format for ManyToMany fields", "details": str(e)},
                             status=status.HTTP_400_BAD_REQUEST)
+
         # ✅ Handle Organizer Using Slug (Strings)
-        organizer_slug = data.pop("organizer_slug", [None])[0] # Get the first item
-        organizer_type = data.pop("organizer_type", [None])[0] # Get the first item
+        organizer_slug = data.pop("organizer_slug", [None])[0]
+        organizer_type = data.pop("organizer_type", [None])[0]
 
         serializer = EventSerializer(event, data=data, partial=True, context={'request': request})
 

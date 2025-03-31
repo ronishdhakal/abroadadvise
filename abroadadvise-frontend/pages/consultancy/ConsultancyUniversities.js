@@ -19,33 +19,34 @@ const ConsultancyUniversities = ({
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4">Partner Universities</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">Partner Universities</h2>
 
       {/* Universities Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {visibleUniversities.map((university) => (
           <div
             key={university.id}
-            className="flex flex-col items-center p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
+            className="flex flex-col items-start p-5 border border-gray-200 rounded-xl bg-gray-50 hover:shadow-md transition-all duration-200"
           >
             <Link
               href={`/university/${university.slug}`}
-              className="flex items-center gap-3 w-full"
+              className="flex items-center gap-4 w-full"
             >
               <img
                 src={university.logo || "/placeholder-university.png"}
                 alt={university.name}
-                className="w-12 h-12 object-cover rounded-md border"
+                className="w-12 h-12 object-cover rounded-md border border-gray-300"
               />
               <div>
-                <p className="text-gray-800 font-semibold">{university.name}</p>
-                <span className="text-gray-500 text-sm">
+                <p className="text-gray-800 font-semibold text-base">
+                  {university.name}
+                </p>
+                <span className="text-sm text-gray-500">
                   {university.country || "Unknown Country"}
                 </span>
               </div>
             </Link>
 
-            {/* Apply Now Button */}
             {verified && (
               <button
                 onClick={() =>
@@ -57,7 +58,7 @@ const ConsultancyUniversities = ({
                     consultancyName
                   )
                 }
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200 w-full"
+                className="mt-4 w-full px-4 py-2 bg-[#4c9bd5] hover:bg-[#3b8ac2] text-white text-sm font-medium rounded-md transition duration-200"
               >
                 Apply Now
               </button>
@@ -70,7 +71,7 @@ const ConsultancyUniversities = ({
       {universities.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-4 flex items-center justify-center text-blue-600 hover:underline"
+          className="w-full mt-6 flex items-center justify-center text-[#4c9bd5] font-medium hover:underline"
         >
           {showAll ? (
             <>

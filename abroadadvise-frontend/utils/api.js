@@ -913,6 +913,7 @@ const convertToSlugJson = (formData, key) => {
  * @param {FormData} formData - Event data
  * @returns {Promise} - API response
  */
+// ✅ Create Event
 export const createEvent = async (formData) => {
   try {
     console.log("📤 Sending Event FormData:");
@@ -920,14 +921,15 @@ export const createEvent = async (formData) => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
-    // ✅ Convert slug-based fields to JSON
     convertToSlugJson(formData, "targeted_destinations");
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
     const response = await fetch(`${API_BASE_URL}/event/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: {
+        Authorization: getAuthHeaders().Authorization, // ✅ Only auth, no Content-Type
+      },
       body: formData,
     });
 
@@ -944,12 +946,7 @@ export const createEvent = async (formData) => {
   }
 };
 
-/**
- * ✅ Update Event (Handles FormData & File Uploads)
- * @param {string} slug - Event slug
- * @param {FormData} formData - Updated event data
- * @returns {Promise} - API response
- */
+// ✅ Update Event
 export const updateEvent = async (slug, formData) => {
   try {
     console.log("📤 Updating Event FormData:");
@@ -957,15 +954,15 @@ export const updateEvent = async (slug, formData) => {
       console.log(`${pair[0]}:`, pair[1]);
     }
 
-    // ✅ Convert slug-based fields to JSON
     convertToSlugJson(formData, "targeted_destinations");
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
-
     const response = await fetch(`${API_BASE_URL}/event/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(),// ✅ Include authentication headers
+      headers: {
+        Authorization: getAuthHeaders().Authorization, // ✅ No Content-Type!
+      },
       body: formData,
     });
 

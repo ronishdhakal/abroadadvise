@@ -12,37 +12,43 @@ const CourseSummary = ({ course }) => {
   }
 
   return (
-    <div className="w-full max-w-[1000px] md:max-w-[1200px] lg:max-w-[1400px] mx-auto px-4 sm:px-8 md:px-12 py-3 sm:py-4 flex flex-wrap items-center justify-center gap-4 md:gap-16 border-b">
-      {/* ✅ Course Duration */}
-      <div className="flex items-center gap-3 text-gray-700 text-sm sm:text-base">
-        <Clock className="h-5 w-5 text-gray-500" />
-        <div>
-          <span className="block text-gray-500 text-xs sm:text-sm text-center">Duration</span>
-          <span className="font-semibold text-gray-900 text-sm sm:text-base">
+    <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 py-6 flex flex-wrap items-center justify-center gap-6 sm:gap-10 border-b border-gray-200 bg-white">
+      {/* Duration */}
+      <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700 min-w-[150px] justify-center">
+        <div className="bg-[#e6f3fc] p-2 rounded-full">
+          <Clock className="h-5 w-5 text-[#4c9bd5]" />
+        </div>
+        <div className="text-left">
+          <p className="text-xs text-gray-500">Duration</p>
+          <p className="font-semibold text-gray-800">
             {course.duration || "N/A"}
-          </span>
+          </p>
         </div>
       </div>
 
-      {/* ✅ Course Fee */}
-      <div className="flex items-center gap-3 text-gray-700 text-sm sm:text-base">
-        <DollarSign className="h-5 w-5 text-gray-500" />
-        <div>
-          <span className="block text-gray-500 text-xs sm:text-sm text-center">Fee</span>
-          <span className="font-semibold text-gray-900 text-sm sm:text-base">
+      {/* Fee */}
+      <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700 min-w-[150px] justify-center">
+        <div className="bg-[#e6f3fc] p-2 rounded-full">
+          <DollarSign className="h-5 w-5 text-[#4c9bd5]" />
+        </div>
+        <div className="text-left">
+          <p className="text-xs text-gray-500">Fee</p>
+          <p className="font-semibold text-gray-800">
             {course.fee || "Contact for Details"}
-          </span>
+          </p>
         </div>
       </div>
 
-      {/* ✅ Course Level */}
-      <div className="flex items-center gap-3 text-gray-700 text-sm sm:text-base">
-        <GraduationCap className="h-5 w-5 text-gray-500" />
-        <div>
-          <span className="block text-gray-500 text-xs sm:text-sm text-center">Level</span>
-          <span className="font-semibold text-gray-900 text-sm sm:text-base">
+      {/* Level */}
+      <div className="flex items-center gap-3 text-sm sm:text-base text-gray-700 min-w-[150px] justify-center">
+        <div className="bg-[#e6f3fc] p-2 rounded-full">
+          <GraduationCap className="h-5 w-5 text-[#4c9bd5]" />
+        </div>
+        <div className="text-left">
+          <p className="text-xs text-gray-500">Level</p>
+          <p className="font-semibold text-gray-800">
             {course.level || "N/A"}
-          </span>
+          </p>
         </div>
       </div>
     </div>

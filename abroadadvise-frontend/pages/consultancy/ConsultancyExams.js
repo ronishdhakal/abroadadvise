@@ -13,22 +13,23 @@ const ConsultancyExams = ({ exams = [], openInquiryModal, consultancyId, consult
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
+      {/* Title stays the same */}
       <h2 className="text-xl font-semibold mb-4">Test Preparation</h2>
 
-      {/* Exam Grid */}
+      {/* Updated Card Design */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {visibleExams.map((exam) => (
           <div
             key={exam.id}
-            className="flex flex-col items-start p-4 border rounded-lg bg-gray-50 shadow-sm hover:bg-gray-100 transition duration-200"
+            className="flex flex-col items-start p-5 border border-gray-200 rounded-xl bg-gray-50 hover:shadow-md transition-all duration-200"
           >
-            <Link href={`/exam/${exam.slug || "#"}`} className="flex items-center gap-3 w-full">
+            <Link href={`/exam/${exam.slug || "#"}`} className="flex items-center gap-4 w-full">
               <img
                 src={exam.icon || "/placeholder-icon.png"}
                 alt={exam.name || "Exam"}
-                className="w-8 h-8 object-cover rounded-full border"
+                className="w-10 h-10 object-cover rounded-full border border-gray-300"
               />
-              <span className="text-gray-800 font-medium">{exam.name || "Unnamed Exam"}</span>
+              <span className="text-gray-800 font-medium text-base">{exam.name || "Unnamed Exam"}</span>
             </Link>
 
             {verified && (
@@ -36,7 +37,7 @@ const ConsultancyExams = ({ exams = [], openInquiryModal, consultancyId, consult
                 onClick={() =>
                   openInquiryModal("exam", exam.id, exam.name, consultancyId, consultancyName)
                 }
-                className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow-md transition duration-200 w-full text-center"
+                className="mt-4 w-full px-4 py-2 bg-[#4c9bd5] hover:bg-[#3b8ac2] text-white text-sm font-medium rounded-md transition duration-200"
               >
                 Apply Now
               </button>
@@ -48,7 +49,7 @@ const ConsultancyExams = ({ exams = [], openInquiryModal, consultancyId, consult
       {exams.length > 6 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-4 flex items-center justify-center text-blue-600 hover:underline"
+          className="w-full mt-4 flex items-center justify-center text-[#4c9bd5] hover:underline font-medium"
         >
           {showAll ? (
             <>

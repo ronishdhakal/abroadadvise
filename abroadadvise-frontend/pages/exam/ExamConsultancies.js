@@ -5,7 +5,7 @@ import InquiryModal from "@/components/InquiryModal";
 import { BadgeCheck } from "lucide-react";
 
 const ExamConsultancies = ({ exam }) => {
-  if (!exam) return null; // ✅ Prevent crash if exam is undefined
+  if (!exam) return null;
 
   const [allConsultancies, setAllConsultancies] = useState([]);
   const [filteredConsultancies, setFilteredConsultancies] = useState([]);
@@ -23,7 +23,6 @@ const ExamConsultancies = ({ exam }) => {
           throw new Error(`Failed to fetch consultancies: ${response.status}`);
         }
         const data = await response.json();
-        console.log("🔍 All Consultancies API Response:", data);
         setAllConsultancies(data.results || []);
       } catch (err) {
         console.error("❌ Error fetching consultancies:", err);
@@ -79,61 +78,61 @@ const ExamConsultancies = ({ exam }) => {
         Top {exam.name} Preparation Institutes in Kathmandu
       </h2>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {currentConsultancies.length > 0 ? (
           currentConsultancies.map((consultancy) => (
             <div
               key={consultancy.id}
-              className="flex items-center justify-between bg-gray-100 rounded-lg p-4 shadow"
+              className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-sm transition"
             >
               <div className="flex items-center gap-4">
                 {consultancy.logo ? (
                   <img
                     src={consultancy.logo}
                     alt={consultancy.name}
-                    className="h-12 w-12 object-cover rounded-md shadow-sm"
+                    className="h-12 w-12 object-cover rounded-md border"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
+                  <div className="h-12 w-12 bg-gray-300 rounded-md" />
                 )}
 
-                <div className="flex items-center gap-1">
-                  <a
-                    href={`/consultancy/${consultancy.slug}`}
-                    className="text-sm font-medium text-gray-800 hover:text-blue-600 flex items-center"
-                  >
-                    {consultancy.name}
-                    {consultancy.verified && (
-                      <BadgeCheck className="h-4 w-4 text-blue-500 ml-1" />
-                    )}
-                  </a>
-                </div>
+                <a
+                  href={`/consultancy/${consultancy.slug}`}
+                  className="text-sm font-medium text-gray-800 hover:text-[#4c9bd5] flex items-center"
+                >
+                  {consultancy.name}
+                  {consultancy.verified && (
+                    <BadgeCheck className="h-4 w-4 text-[#4c9bd5] ml-1" />
+                  )}
+                </a>
               </div>
 
-              {consultancy.verified && (
-                <button
-                  onClick={() => handleInquiry(consultancy)}
-                  className="px-5 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition"
-                >
-                  Apply
-                </button>
-              )}
+              <button
+                onClick={() => handleInquiry(consultancy)}
+                className="px-4 py-2 bg-[#4c9bd5] hover:bg-[#3b87c4] text-white text-sm font-semibold rounded-md transition"
+              >
+                Apply
+              </button>
             </div>
           ))
         ) : (
-          <p className="text-sm text-gray-500">No verified consultancies available for this exam.</p>
+          <p className="text-sm text-gray-500">
+            No verified consultancies available for this exam.
+          </p>
         )}
       </div>
 
       {filteredConsultancies.length > consultanciesPerPage && (
-        <div className="mt-4 flex justify-center items-center space-x-2">
+        <div className="mt-5 flex justify-center gap-2 flex-wrap">
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index + 1}
               onClick={() => paginate(index + 1)}
-              className={`px-3 py-2 text-sm rounded-md ${
-                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-              } hover:bg-blue-500 hover:text-white`}
+              className={`px-3 py-1.5 text-sm rounded-md border ${
+                currentPage === index + 1
+                  ? "bg-[#4c9bd5] text-white border-[#4c9bd5]"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+              }`}
             >
               {index + 1}
             </button>

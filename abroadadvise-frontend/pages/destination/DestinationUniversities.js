@@ -4,7 +4,7 @@ import { useState } from "react";
 import InquiryModal from "@/components/InquiryModal";
 
 const DestinationUniversities = ({ universities = [], destination }) => {
-  if (!destination) return null; // ✅ Prevent crash if destination is undefined
+  if (!destination) return null;
 
   const [currentPage, setCurrentPage] = useState(1);
   const universitiesPerPage = 6;
@@ -16,12 +16,10 @@ const DestinationUniversities = ({ universities = [], destination }) => {
     (university) => university.country === destination.title
   );
 
-  const indexOfLastUniversity = currentPage * universitiesPerPage;
-  const indexOfFirstUniversity = indexOfLastUniversity - universitiesPerPage;
-  const currentUniversities = matchedUniversities.slice(indexOfFirstUniversity, indexOfLastUniversity);
+  const indexOfLast = currentPage * universitiesPerPage;
+  const indexOfFirst = indexOfLast - universitiesPerPage;
+  const currentUniversities = matchedUniversities.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(matchedUniversities.length / universitiesPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleApplyNow = (university) => {
     setSelectedEntity({
@@ -35,40 +33,40 @@ const DestinationUniversities = ({ universities = [], destination }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-5xl mx-auto mt-8">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="bg-white rounded-2xl shadow-md p-6 w-full max-w-5xl mx-auto mt-8 border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-800 mb-5">
         Top Universities in {destination.title}
       </h2>
 
-      <div className="flex flex-col space-y-4">
+      <div className="flex flex-col gap-4">
         {currentUniversities.length > 0 ? (
           currentUniversities.map((university) => (
             <div
               key={university.id}
-              className="bg-gray-100 rounded-lg p-4 shadow flex items-center justify-between"
+              className="flex items-center justify-between p-4 bg-[#f9fbfc] border border-gray-200 rounded-xl hover:shadow-md transition"
             >
               <a
                 href={`/university/${university.slug}`}
-                className="flex items-center flex-grow gap-4 cursor-pointer"
+                className="flex items-center gap-4 flex-grow group"
               >
                 {university.logo ? (
                   <img
                     src={university.logo}
                     alt={university.name}
-                    className="h-12 w-12 object-cover rounded-md"
+                    className="h-12 w-12 object-cover rounded-md border"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-gray-300 rounded-md"></div>
+                  <div className="h-12 w-12 bg-gray-300 rounded-md" />
                 )}
 
-                <p className="text-sm font-medium text-gray-800 hover:text-blue-600">
+                <p className="text-sm font-medium text-gray-800 group-hover:text-[#4c9bd5] transition">
                   {university.name}
                 </p>
               </a>
 
               <button
                 onClick={() => handleApplyNow(university)}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow transition-all"
+                className="px-4 py-2 bg-[#4c9bd5] hover:bg-[#3e8bc5] text-white font-medium text-sm rounded-md transition"
               >
                 Apply
               </button>
@@ -81,22 +79,26 @@ const DestinationUniversities = ({ universities = [], destination }) => {
         )}
       </div>
 
+      {/* Pagination */}
       {matchedUniversities.length > universitiesPerPage && (
-        <div className="mt-4 flex justify-center items-center space-x-4">
-          {Array.from({ length: totalPages }, (_, index) => (
+        <div className="mt-6 flex justify-center items-center space-x-2">
+          {Array.from({ length: totalPages }, (_, i) => (
             <button
-              key={index + 1}
-              onClick={() => paginate(index + 1)}
-              className={`px-3 py-2 text-sm rounded-md ${
-                currentPage === index + 1 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
-              } hover:bg-blue-500 hover:text-white`}
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1.5 text-sm rounded-md font-medium transition ${
+                currentPage === i + 1
+                  ? "bg-[#4c9bd5] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-[#4c9bd5]/10"
+              }`}
             >
-              {index + 1}
+              {i + 1}
             </button>
           ))}
         </div>
       )}
 
+      {/* Inquiry Modal */}
       {selectedEntity && (
         <InquiryModal
           isModalOpen={isModalOpen}
