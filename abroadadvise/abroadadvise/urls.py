@@ -23,7 +23,8 @@ urlpatterns = [
     path("news/", include("news.urls")),
     path("exam/", include("exam.urls")),
     path("inquiry/", include("inquiry.urls")),
-    path("blog/", include("blog.urls")),  # ✅ Blog API added
+    path("blog/", include("blog.urls")),
+    path("college/", include("college.urls")),  # ✅ NEW: College API endpoints
 
     # ✅ Core and Reviews Paths
     path("", include("core.urls")),
@@ -33,8 +34,6 @@ urlpatterns = [
 
     # ✅ Text Editor (TinyMCE)
     path("tinymce/", include("tinymce.urls")),
-    
-
 ]
 
 # ✅ Optional: API format suffixes (e.g., .json, .api)

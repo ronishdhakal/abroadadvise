@@ -1421,6 +1421,214 @@ export const updateConsultancyDashboard = async (updateData) => {
 };
 
 
+// Fetch Colleges
+// ✅ Fetch Colleges with Pagination & Search
+export const fetchColleges = async (page = 1, search = "") => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/college/?page=${page}&search=${search}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch colleges");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching colleges:", error);
+    throw error;
+  }
+};
+
+// ✅ Fetch Single College Details
+export const fetchCollegeDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/college/${slug}/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch college details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching college details:", error);
+    throw error;
+  }
+};
+
+
+
+// ✅ Create College
+export const createCollege = async (formData) => {
+  formData.set("moe_certified", formData.get("moe_certified") === "true");
+  formData.set("verified", formData.get("verified") === "true");
+
+  // ✅ Convert JSON fields before sending
+  ["districts", "study_abroad_destinations", "affiliated_universities"].forEach((key) => {
+    convertToJson(formData, key);
+  });
+
+  const response = await fetch(`${API_BASE_URL}/college/create/`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("API Response Error:", errorData);
+    throw new Error(errorData.error || "Failed to create college");
+  }
+
+  return await response.json();
+};
+
+// ✅ Update College
+export const updateCollege = async (slug, formData) => {
+  ["districts", "study_abroad_destinations", "affiliated_universities"].forEach((key) => {
+    convertToJson(formData, key);
+  });
+
+  const response = await fetch(`${API_BASE_URL}/college/${slug}/update/`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("API Response Error:", errorData);
+    throw new Error(errorData.error || "Failed to update college");
+  }
+
+  return await response.json();
+};
+
+// ✅ Delete College
+export const deleteCollege = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/college/${slug}/delete/`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete College API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete college");
+    }
+
+    return { success: true, message: "✅ College deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting college:", error);
+    throw error;
+  }
+};
+
+// ✅ Fetch College Profile (used by Auth page)
+export const fetchCollegeProfile = async (token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/dashboard/college-profile/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching college profile:", error);
+    throw error;
+  }
+};
+
+// ✅ College Dashboard
+export const fetchCollegeDashboard = async () => {
+  const token = localStorage.getItem("accessToken");
+  const collegeId = localStorage.getItem("college_id");
+
+  console.log("🔍 Checking college_id in localStorage:", collegeId);
+
+  if (!token) throw new Error("User not logged in");
+  if (!collegeId) throw new Error("College ID is missing. Please log in again.");
+
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/college/dashboard/`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) throw new Error("Failed to fetch college profile");
+
+  let data = await response.json();
+
+  data = {
+    ...data,
+    study_abroad_destinations: Array.isArray(data.study_abroad_destinations)
+      ? data.study_abroad_destinations.map((d) => d.id)
+      : [],
+    affiliated_universities: Array.isArray(data.affiliated_universities)
+      ? data.affiliated_universities.map((u) => u.id)
+      : [],
+    inquiries: data.inquiries || [],
+  };
+
+  console.log("✅ Final College Dashboard Data:", data);
+  return data;
+};
+
+// ✅ Update College Profile (Dashboard)
+export const updateCollegeDashboard = async (updateData) => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) throw new Error("User not logged in");
+
+  // ✅ Manually fix: stringifying arrays for Django
+  const safeFields = ["branches", "districts", "study_abroad_destinations", "affiliated_universities"];
+  safeFields.forEach((key) => {
+    if (updateData.has(key)) {
+      const val = updateData.get(key);
+      if (typeof val !== "string") {
+        updateData.set(key, JSON.stringify(val));
+      }
+    }
+  });
+
+  try {
+    console.log("📤 Sending FormData to API:");
+    for (let [key, value] of updateData.entries()) {
+      console.log(`🔹 ${key}:`, value);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/college/dashboard/update/`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: updateData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ API Response Error:", errorData);
+      throw new Error(errorData.error || "Failed to update college profile");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Update Failed:", error);
+    throw error;
+  }
+};
+
+
+
 // ✅ Fetch University Dashboard
 export const fetchUniversityDashboard = async () => {
   const token = localStorage.getItem("access_token"); // ✅ Ensure consistency

@@ -1,6 +1,8 @@
+"use client";
+
 import { useState, useEffect } from "react";
 
-const ROLES = ["admin", "consultancy", "university", "student"];
+const ROLES = ["admin", "consultancy", "university", "student", "college"];  // Added "college" role
 
 const UserForm = ({ initialData = null, onSubmit, onCancel }) => {
   const [form, setForm] = useState({
@@ -30,7 +32,7 @@ const UserForm = ({ initialData = null, onSubmit, onCancel }) => {
     e.preventDefault();
     const data = { ...form };
 
-    // ✅ Don’t include password if it's empty (for update)
+    // Don’t include password if it's empty (for update)
     if (!data.password) {
       delete data.password;
     }

@@ -5,6 +5,7 @@ from destination.models import Destination
 from exam.models import Exam
 from event.models import Event
 from course.models import Course
+from college.models import College
 from django.core.exceptions import ValidationError
 
 
@@ -12,6 +13,7 @@ class Inquiry(models.Model):
     ENTITY_CHOICES = [
         ("university", "University"),
         ("consultancy", "Consultancy"),
+        ("college", "College"),
         ("destination", "Destination"),
         ("exam", "Exam"),
         ("event", "Event"),
@@ -24,6 +26,7 @@ class Inquiry(models.Model):
     # Foreign keys for different entities
     university = models.ForeignKey(University, on_delete=models.SET_NULL, null=True, blank=True)
     consultancy = models.ForeignKey(Consultancy, on_delete=models.SET_NULL, null=True, blank=True)
+    college = models.ForeignKey(College, on_delete=models.SET_NULL, null=True, blank=True)
     destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True)
     exam = models.ForeignKey(Exam, on_delete=models.SET_NULL, null=True, blank=True)
     event = models.ForeignKey(Event, on_delete=models.SET_NULL, null=True, blank=True)
@@ -40,18 +43,30 @@ class Inquiry(models.Model):
 
     def clean(self):
         """
-        ✅ Fix: Allow both university and consultancy if the inquiry originates from a university page.
+        Validate that required foreign keys are set based on entity_type.
         """
         if self.entity_type == "university" and not self.university:
             raise ValidationError("University field must be filled for a university inquiry.")
+
         if self.entity_type == "consultancy" and not self.consultancy:
             raise ValidationError("Consultancy field must be filled for a consultancy inquiry.")
-        if self.entity_type == "course" and not self.course:
-            raise ValidationError("Course field must be filled for a course inquiry.")
 
-        # ✅ Allow university tracking for consultancy applications
-        if self.entity_type == "consultancy" and self.university and not self.consultancy:
-            raise ValidationError("Consultancy field must be filled for a consultancy inquiry.")
+        if self.entity_type == "college" and not self.college:
+            raise ValidationError("College field must be filled for a college inquiry.")
 
-        if self.entity_type == "course" and self.university and not self.course:
-            raise ValidationError("Course field must be filled for a course inquiry.")
+        if self.entity_type == "destination" and not self.destination:
+            raise ValidationError("Destination field must be filled for a destination inquiry.")
+
+        if self.entity_type == "exam" and not self.exam:
+            raise ValidationError("Exam field must be filled for an exam inquiry.")
+
+        if self.entity_type == "event" and not self.event:
+            raise ValidationError("Event field must be filled for an event inquiry.")
+
+        if self.entity_type == "course":
+            if not self.course:
+                raise ValidationError("Course field must be filled for a course inquiry.")
+
+            # Ensure either college or university is attached to the course inquiry
+            if not self.college and not self.university:
+                raise ValidationError("Course inquiries must be linked to a university or college.")

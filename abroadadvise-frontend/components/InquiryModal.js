@@ -8,11 +8,13 @@ const InquiryModal = ({
   consultancyName,
   universityId,
   universityName,
+  collegeId, // ✅ College ID
+  collegeName, // ✅ College Name
   entityId,
   entityName,
   entityType,
-  destinationId, // ✅ Track Destination ID
-  destinationName, // ✅ Track Destination Name
+  destinationId,
+  destinationName,
   isModalOpen,
   setIsModalOpen,
 }) => {
@@ -29,8 +31,10 @@ const InquiryModal = ({
     consultancy_name: consultancyName || "",
     university_id: universityId || null,
     university_name: universityName || "",
-    destination_id: destinationId || null, // ✅ Added Destination ID
-    destination_name: destinationName || "", // ✅ Added Destination Name
+    college_id: collegeId || null, // ✅ Added College ID
+    college_name: collegeName || "", // ✅ Added College Name
+    destination_id: destinationId || null,
+    destination_name: destinationName || "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,8 +50,10 @@ const InquiryModal = ({
         consultancyName,
         universityId,
         universityName,
-        destinationId, // ✅ Logging Destination ID
-        destinationName, // ✅ Logging Destination Name
+        collegeId, // ✅ Log
+        collegeName, // ✅ Log
+        destinationId,
+        destinationName,
       });
 
       setInquiryData((prevData) => ({
@@ -58,11 +64,25 @@ const InquiryModal = ({
         consultancy_name: consultancyName || prevData.consultancy_name,
         university_id: universityId || prevData.university_id,
         university_name: universityName || prevData.university_name,
-        destination_id: destinationId || prevData.destination_id, // ✅ Ensure Destination ID is included
-        destination_name: destinationName || prevData.destination_name, // ✅ Ensure Destination Name is included
+        college_id: collegeId || prevData.college_id, // ✅ Include on open
+        college_name: collegeName || prevData.college_name, // ✅ Include on open
+        destination_id: destinationId || prevData.destination_id,
+        destination_name: destinationName || prevData.destination_name,
       }));
     }
-  }, [isModalOpen, entityType, entityId, consultancyId, consultancyName, universityId, universityName, destinationId, destinationName]);
+  }, [
+    isModalOpen,
+    entityType,
+    entityId,
+    consultancyId,
+    consultancyName,
+    universityId,
+    universityName,
+    collegeId,
+    collegeName,
+    destinationId,
+    destinationName,
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -131,6 +151,12 @@ const InquiryModal = ({
         {universityName && (
           <p className="text-sm text-center text-gray-600 mb-2">
             Inquiry related to <strong>{universityName}</strong>
+          </p>
+        )}
+
+        {collegeName && (
+          <p className="text-sm text-center text-gray-600 mb-2">
+            Inquiry related to <strong>{collegeName}</strong>
           </p>
         )}
 

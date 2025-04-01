@@ -120,6 +120,7 @@ const InquiriesPage = () => {
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">Entity ID</th>
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">Consultancy</th>
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">University</th>
+                    <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">College</th> {/* ✅ NEW */}
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">Destination</th>
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">Exam</th>
                     <th className="p-4 font-medium text-left uppercase text-xs tracking-wide">Event</th>
@@ -138,16 +139,14 @@ const InquiriesPage = () => {
                         <td className="p-4 text-gray-800">{inquiry.email}</td>
                         <td className="p-4 text-gray-800">{inquiry.phone || "-"}</td>
                         <td className="p-4 text-gray-800">{inquiry.phone || "-"}</td>
-                        <td
-                          className="p-4 text-gray-800 max-w-[200px] truncate"
-                          title={inquiry.message}
-                        >
+                        <td className="p-4 text-gray-800 max-w-[200px] truncate" title={inquiry.message}>
                           {inquiry.message || "-"}
                         </td>
                         <td className="p-4 text-gray-800">{inquiry.entity_type}</td>
                         <td className="p-4 text-gray-800">{inquiry.entity_id}</td>
                         <td className="p-4 text-gray-800">{inquiry.consultancy_name || "-"}</td>
                         <td className="p-4 text-gray-800">{inquiry.university_name || "-"}</td>
+                        <td className="p-4 text-gray-800">{inquiry.college_name || "-"}</td> {/* ✅ NEW */}
                         <td className="p-4 text-gray-800">{inquiry.destination_name || "-"}</td>
                         <td className="p-4 text-gray-800">{inquiry.exam_name || "-"}</td>
                         <td className="p-4 text-gray-800">{inquiry.event_name || "-"}</td>
@@ -159,7 +158,7 @@ const InquiriesPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="14" className="text-center p-8 text-gray-500">
+                      <td colSpan="15" className="text-center p-8 text-gray-500">
                         No inquiries found.
                       </td>
                     </tr>

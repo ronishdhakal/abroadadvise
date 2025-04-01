@@ -6,15 +6,15 @@ from destination.models import Destination
 from exam.models import Exam
 from event.models import Event
 from course.models import Course
+from college.models import College  # ✅ NEW
 
 class InquiryAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "email", "entity_type", "entity_id", "consultancy", "university",
+        "name", "email", "entity_type", "entity_id", "consultancy", "university", "college",  # ✅ Added college
         "destination", "exam", "event", "course", "created_at"
     )
     list_filter = ("entity_type", "created_at")
     search_fields = ("name", "email", "message")
-
     readonly_fields = ("created_at",)
 
     def get_fields(self, request, obj=None):
@@ -26,9 +26,11 @@ class InquiryAdmin(admin.ModelAdmin):
                 fields.append("consultancy")
             elif obj.entity_type == "consultancy":
                 fields.append("consultancy")
+            elif obj.entity_type == "college":
+                fields.append("college")  # ✅ NEW
             elif obj.entity_type == "destination":
                 fields.append("destination")
-                fields.append("consultancy")  
+                fields.append("consultancy")
             elif obj.entity_type == "exam":
                 fields.append("exam")
                 fields.append("consultancy")
@@ -62,9 +64,11 @@ class InquiryAdmin(admin.ModelAdmin):
         return consultancy.name if consultancy else "Not Applicable"
     consultancy.short_description = "Consultancy"
 
-    # For the related entity types (university, destination, etc.)
     def university(self, obj):
         return obj.university.name if obj.university else "Not Applicable"
+
+    def college(self, obj):  # ✅ NEW
+        return obj.college.name if obj.college else "Not Applicable"
 
     def destination(self, obj):
         return obj.destination.name if obj.destination else "Not Applicable"

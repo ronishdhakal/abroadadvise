@@ -6,6 +6,7 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('consultancy', 'Consultancy'),
         ('university', 'University'),
+        ('college', 'College'),  # ✅ Added College Role
         ('student', 'Student'),
     ]
 

@@ -12,6 +12,7 @@ from rest_framework import status
 from .pagination import UserPagination
 from django.db.models import Q
 from university.models import University
+from college.models import College  # ✅ NEW IMPORT
 from .serializers import (
     UserListSerializer,
     UserCreateSerializer,
@@ -19,7 +20,6 @@ from .serializers import (
 )
 
 User = get_user_model()
-
 
 # ✅ Register a New User (Ensures password is hashed before saving)
 @api_view(['POST'])
@@ -44,12 +44,11 @@ def register(request):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         })
-    
+
     return Response(serializer.errors, status=400)
 
 
-# ✅ User Login with JWT Authentication (Ensures role-based authentication)
-# ✅ User Login with JWT Authentication (Supports University & Consultancy Login)
+# ✅ User Login with JWT Authentication (Supports University, Consultancy, College Login)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -67,12 +66,14 @@ def login_view(request):
 
         refresh = RefreshToken.for_user(user)
 
-        # Fetch consultancy or university ID
+        # Fetch consultancy, university, or college ID
         consultancy = Consultancy.objects.filter(user=user).first()
         university = University.objects.filter(user=user).first()
+        college = College.objects.filter(user=user).first()
 
         consultancy_id = consultancy.id if consultancy else None
         university_id = university.id if university else None
+        college_id = college.id if college else None
 
         return Response({
             "user": {
@@ -82,6 +83,7 @@ def login_view(request):
             },
             "consultancy_id": consultancy_id,
             "university_id": university_id,
+            "college_id": college_id,
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         })
@@ -95,17 +97,12 @@ def login_view(request):
         return Response({"error": "Something went wrong"}, status=500)
 
 
-
 # ✅ Protected View: Only Consultancy Users Can Access Their Own Consultancy
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsConsultancyUser])  # Restrict to consultancy users
 def consultancy_only_view(request):
-    """ ✅ Fetch the consultancy profile linked to the logged-in consultancy user. """
     user = request.user  # Get the logged-in user
-
-    # Ensure user has a consultancy assigned
     consultancy = Consultancy.objects.filter(id=user.consultancy_id).first()
-
     if not consultancy:
         return Response({"error": "No consultancy is linked to this user."}, status=404)
 
@@ -125,12 +122,8 @@ def consultancy_only_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsUniversityUser])  # Restrict to university users
 def university_only_view(request):
-    """ ✅ Fetch the university profile linked to the logged-in university user. """
-    user = request.user  # Get the logged-in user
-
-    # Ensure user has a university assigned
+    user = request.user
     university = University.objects.filter(id=user.university_id).first()
-
     if not university:
         return Response({"error": "No university is linked to this user."}, status=404)
 
@@ -153,7 +146,6 @@ def student_only_view(request):
     return Response({"message": "Hello, Student! You can submit inquiries."})
 
 
-
 # For Users in Admin
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -171,6 +163,7 @@ def get_all_users(request):
     serializer = UserListSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
 
+
 # ✅ CREATE a user (only for superadmin)
 @api_view(['POST'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -183,7 +176,7 @@ def create_user_by_admin(request):
         return Response(UserListSerializer(user).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ✅ UPDATE a user (only for superadmin)
+
 # ✅ UPDATE a user (only for superadmin)
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated, IsAdminUser])
@@ -197,7 +190,6 @@ def update_user(request, user_id):
     if serializer.is_valid():
         updated_user = serializer.save()
 
-        # ✅ Only update password if provided
         if 'password' in request.data and request.data['password']:
             updated_user.set_password(request.data['password'])
             updated_user.save()

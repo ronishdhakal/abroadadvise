@@ -48,6 +48,7 @@ const AdminSidebar = () => {
         { name: "Dashboard", path: "/admin", icon: <LayoutDashboard className="w-4 h-4" /> },
         { name: "Consultancies", path: "/admin/consultancies", icon: <Building className="w-4 h-4" /> },
         { name: "Universities", path: "/admin/universities", icon: <School className="w-4 h-4" /> },
+        { name: "Colleges", path: "/admin/colleges", icon: <School className="w-4 h-4" /> },
         { name: "Courses", path: "/admin/courses", icon: <Book className="w-4 h-4" /> },
         { name: "Destination", path: "/admin/destinations", icon: <MapPin className="w-4 h-4" /> },
         { name: "Exams", path: "/admin/exams", icon: <CheckSquare className="w-4 h-4" /> },
