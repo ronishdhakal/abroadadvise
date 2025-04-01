@@ -10,11 +10,11 @@ from core.views import DisciplineListAPIView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    
-    # ✅ Fix authentication URL path (matches frontend expectations)
-    path("auth/", include("authentication.urls", namespace="authentication")),  
 
-    # ✅ Main Apps URLs
+    # ✅ Authentication
+    path("auth/", include("authentication.urls", namespace="authentication")),
+
+    # ✅ Main App Endpoints
     path("consultancy/", include("consultancy.urls")),
     path("university/", include("university.urls")),
     path("destination/", include("destination.urls")),
@@ -24,22 +24,21 @@ urlpatterns = [
     path("exam/", include("exam.urls")),
     path("inquiry/", include("inquiry.urls")),
     path("blog/", include("blog.urls")),
-    path("college/", include("college.urls")),  # ✅ NEW: College API endpoints
+    path("college/", include("college.urls")),
+    path("scholarship/", include("scholarship.urls")),  # ✅ NEW: Scholarship endpoints
 
-    # ✅ Core and Reviews Paths
+    # ✅ Core utilities
     path("", include("core.urls")),
-
-    # ✅ Discipline API (added)
     path("discipline/", DisciplineListAPIView.as_view(), name="list-disciplines"),
 
-    # ✅ Text Editor (TinyMCE)
+    # ✅ Rich Text Editor
     path("tinymce/", include("tinymce.urls")),
 ]
 
-# ✅ Optional: API format suffixes (e.g., .json, .api)
+# ✅ Optional suffixes (e.g. .json)
 urlpatterns = format_suffix_patterns(urlpatterns)
 
-# ✅ Serve media files during development
+# ✅ Serve media files during development or production
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:

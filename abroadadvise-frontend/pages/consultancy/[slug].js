@@ -14,26 +14,25 @@ import ConsultancyUniversities from "./ConsultancyUniversities";
 import ConsultancyDestinations from "./ConsultancyDestinations";
 import ConsultancyGallery from "./ConsultancyGallery";
 import ConsultancyBranches from "./ConsultancyBranches";
-import ConsultancyMap from "./ConsultancyMap"; // ✅ Map Component Added
+import ConsultancyMap from "./ConsultancyMap";
+import ConsultancyEvent from "./ConsultancyEvent";
 
-// Importing Inquiry Modal
-import InquiryModal from "../../components/InquiryModal"; // ✅ Dynamic Inquiry Modal
+// Inquiry Modal
+import InquiryModal from "../../components/InquiryModal";
 
-// Importing global layout components
+// Global layout
 import Footer from "../../components/footer";
 import Header from "../../components/header";
-
-// Import Next.js 404 page
-import Custom404 from "../404"; // ✅ Import 404 page
+import Custom404 from "../404";
 
 const ConsultancyDetailPage = () => {
   const router = useRouter();
   const { slug } = router.query;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const [consultancy, setConsultancy] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
+  const [isNotFound, setIsNotFound] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState({
     entityType: "consultancy",
@@ -47,17 +46,15 @@ const ConsultancyDetailPage = () => {
     const fetchConsultancy = async () => {
       try {
         const res = await fetch(`${API_URL}/consultancy/${slug}/`);
-
         if (!res.ok) {
-          setIsNotFound(true); // ✅ Instead of throwing an error, mark it as 404
+          setIsNotFound(true);
           return;
         }
-
         const data = await res.json();
         setConsultancy(data);
       } catch (err) {
         console.error("Fetch error:", err);
-        setIsNotFound(true); // ✅ If any error occurs, mark it as 404
+        setIsNotFound(true);
       } finally {
         setLoading(false);
       }
@@ -66,28 +63,18 @@ const ConsultancyDetailPage = () => {
     fetchConsultancy();
   }, [router.isReady, slug, API_URL]);
 
-  // ✅ Open Inquiry Modal Dynamically
-  const openInquiryModal = (entityType, entityId, entityName, consultancyId, consultancyName) => { //add consultancyId and consultancyName
+  const openInquiryModal = (entityType, entityId, entityName, consultancyId, consultancyName) => {
     if (!entityType || !entityId) {
-      console.error("❌ Missing entityType or entityId:", { entityType, entityId });
       alert("Something went wrong! Missing entity type or ID.");
       return;
     }
 
-    console.log("✅ Opening Inquiry Modal for:", { entityType, entityId, entityName });
-
-    setSelectedEntity({ entityType, entityId, entityName, consultancyId, consultancyName }); // add consultancyId and consultancyName
+    setSelectedEntity({ entityType, entityId, entityName, consultancyId, consultancyName });
     setIsModalOpen(true);
   };
 
-  // ✅ Show loading indicator while fetching data
-  if (loading)
-    return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
-
-  // ✅ Redirect to 404 if consultancy is not found
-  if (isNotFound) {
-    return <Custom404 />;
-  }
+  if (loading) return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
+  if (isNotFound) return <Custom404 />;
 
   return (
     <>
@@ -99,11 +86,10 @@ const ConsultancyDetailPage = () => {
       <Header />
 
       <main className="bg-gray-50 text-black min-h-screen pb-12">
-        {/* Consultancy Header - Fixed Props */}
         <ConsultancyHeader
           consultancy={consultancy}
           setIsModalOpen={setIsModalOpen}
-          setSelectedEntity={setSelectedEntity} // ✅ Fixed
+          setSelectedEntity={setSelectedEntity}
         />
 
         <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -111,45 +97,47 @@ const ConsultancyDetailPage = () => {
           <div className="md:col-span-1 space-y-6">
             <ConsultancyContact consultancy={consultancy} />
             <ConsultancyMap google_map_url={consultancy.google_map_url} consultancyName={consultancy.name} />
+
+            {/* 🔥 Sticky Events on Desktop */}
+            <div className="hidden md:block sticky top-28 h-fit">
+              <ConsultancyEvent slug={consultancy.slug} />
+            </div>
+
+            {/* 📱 Fallback for mobile */}
+            <div className="md:hidden">
+              <ConsultancyEvent slug={consultancy.slug} />
+            </div>
           </div>
 
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
-            {/* Destinations Section with Apply Now Buttons */}
-            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyDestinations
               destinations={consultancy.study_abroad_destinations}
               openInquiryModal={openInquiryModal}
-              consultancyId={consultancy.id} // ✅ Pass the id
-              consultancyName={consultancy.name} // ✅ Pass the name
-              verified={consultancy.verified} // ✅ Pass the verified prop here
+              consultancyId={consultancy.id}
+              consultancyName={consultancy.name}
+              verified={consultancy.verified}
             />
 
-            {/* Exams Section with Apply Now Buttons */}
-            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyExams
               exams={consultancy.test_preparation}
               openInquiryModal={openInquiryModal}
-              consultancyId={consultancy.id} // ✅ Pass the id
-              consultancyName={consultancy.name} // ✅ Pass the name
-              verified={consultancy.verified} // ✅ Pass the verified prop here
+              consultancyId={consultancy.id}
+              consultancyName={consultancy.name}
+              verified={consultancy.verified}
             />
 
-            {/* Branches */}
             <ConsultancyBranches branches={consultancy.branches} />
             <ConsultancyGallery gallery={consultancy.gallery_images} />
 
-            {/* Universities Section with Apply Now Buttons */}
-            {/* ✅ Pass the 'verified' prop here */}
             <ConsultancyUniversities
               universities={consultancy.partner_universities}
               openInquiryModal={openInquiryModal}
-              consultancyId={consultancy.id} // ✅ Pass the id
-              consultancyName={consultancy.name} // ✅ Pass the name
-              verified={consultancy.verified} // ✅ Pass the verified prop here
+              consultancyId={consultancy.id}
+              consultancyName={consultancy.name}
+              verified={consultancy.verified}
             />
 
-            {/* About Section */}
             <ConsultancyAbout consultancy={consultancy} />
             <ConsultancyServices consultancy={consultancy} />
           </div>
@@ -158,11 +146,10 @@ const ConsultancyDetailPage = () => {
 
       <Footer />
 
-      {/* Dynamic Inquiry Modal */}
       {isModalOpen && (
         <InquiryModal
-          consultancyId={selectedEntity?.consultancyId ?? null} //add consultancy id
-          consultancyName={selectedEntity?.consultancyName ?? ""} // add consultancy name
+          consultancyId={selectedEntity?.consultancyId ?? null}
+          consultancyName={selectedEntity?.consultancyName ?? ""}
           entityType={selectedEntity.entityType}
           entityId={selectedEntity.entityId}
           entityName={selectedEntity.entityName}

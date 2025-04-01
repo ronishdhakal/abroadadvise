@@ -1,5 +1,7 @@
-import Link from "next/link";
+"use client";
+
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { FiSearch } from "react-icons/fi";
 import { HiMenu, HiX } from "react-icons/hi";
@@ -91,41 +93,49 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center space-x-8 text-gray-700 font-medium text-base tracking-wide">
-          <Link href="/" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Home
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/university" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/university" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Universities
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/course" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/college" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
+            Colleges
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+          <Link href="/course" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Courses
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/consultancy" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Consultancies
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/destination" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/destination" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Destinations
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/exam" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/scholarship" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
+            Scholarships
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
+          </Link>
+          <Link href="/exam" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Exams
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/event" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/event" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Events
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/news" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             News
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
-          <Link href="/blog" className="hover:text-indigo-600 transition-colors duration-200 relative group">
+          <Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
             Blog
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
           </Link>
         </nav>
 
@@ -133,13 +143,13 @@ export default function Header() {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="text-gray-600 hover:text-indigo-600 transition-colors duration-200 p-2"
+            className="text-gray-600 hover:text-[#4c9bd5] transition-colors duration-200 p-2"
           >
             <FiSearch className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden text-gray-600 hover:text-indigo-600 transition-colors duration-200 p-2"
+            className="lg:hidden text-gray-600 hover:text-[#4c9bd5] transition-colors duration-200 p-2"
           >
             {menuOpen ? <HiX className="w-6 h-6" /> : <HiMenu className="w-6 h-6" />}
           </button>
@@ -150,31 +160,38 @@ export default function Header() {
       {menuOpen && (
         <div className="lg:hidden fixed top-[72px] left-0 w-full bg-white z-40 border-b border-gray-100 shadow-sm animate-slide-down">
           <nav className="flex flex-col px-4 py-6 space-y-4 text-gray-700 font-medium text-base">
-            <Link href="/" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Home
             </Link>
-            <Link href="/university" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/university" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Universities
             </Link>
-            <Link href="/course" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/college" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+              College
+            </Link>
+    
+            <Link href="/course" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Courses
             </Link>
-            <Link href="/consultancy" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Consultancies
             </Link>
-            <Link href="/destination" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/destination" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Destinations
             </Link>
-            <Link href="/exam" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/scholarship" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+              Scholarships
+            </Link>
+            <Link href="/exam" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Exams
             </Link>
-            <Link href="/event" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/event" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Events
             </Link>
-            <Link href="/news" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               News
             </Link>
-            <Link href="/blog" className="hover:text-indigo-600 transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
+            <Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
               Blog
             </Link>
           </nav>
@@ -186,18 +203,18 @@ export default function Header() {
         <div className="sticky top-[72px] w-full bg-white z-40 border-b border-gray-100 px-4 sm:px-6 py-4 shadow-sm transition-all duration-300">
           <form onSubmit={handleSearchSubmit} className="max-w-3xl mx-auto flex items-center space-x-3">
             <div className="relative flex-1">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#4c9bd5] w-5 h-5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search universities, courses..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-gray-700 text-sm sm:text-base transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] focus:border-transparent text-gray-700 text-sm sm:text-base transition-all duration-200"
               />
             </div>
             <button
               type="submit"
-              className="bg-indigo-600 text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors duration-200 text-sm sm:text-base font-medium"
+              className="bg-[#4c9bd5] text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-[#4c9bd5]/90 transition-colors duration-200 text-sm sm:text-base font-medium"
             >
               Search
             </button>

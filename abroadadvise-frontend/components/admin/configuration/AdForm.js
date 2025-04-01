@@ -38,7 +38,6 @@ const AdForm = ({ initialData, editMode, onCancel, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Convert formData to FormData object for file uploads
     const submission = new FormData();
     submission.append("title", formData.title);
     submission.append("placement", formData.placement);
@@ -56,94 +55,100 @@ const AdForm = ({ initialData, editMode, onCancel, onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border p-4 rounded-md bg-gray-50 mb-6">
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Title</label>
-        <input
-          type="text"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-        />
+    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm mb-6">
+      <h3 className="text-lg font-medium text-gray-800 mb-4">
+        {editMode ? "Edit Advertisement" : "New Advertisement"}
+      </h3>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Title</label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#4c9bd5] transition-colors"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Placement</label>
+          <select
+            name="placement"
+            value={formData.placement}
+            onChange={handleChange}
+            required
+            disabled={editMode}
+            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#4c9bd5] transition-colors disabled:bg-gray-100"
+          >
+            <option value="">Select Placement</option>
+            {PLACEMENT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Redirect URL</label>
+          <input
+            type="url"
+            name="redirect_url"
+            value={formData.redirect_url}
+            onChange={handleChange}
+            placeholder="https://example.com"
+            className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#4c9bd5] transition-colors"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Desktop Image</label>
+          <input
+            type="file"
+            name="desktop_image"
+            accept="image/*"
+            onChange={handleChange}
+            className="w-full text-gray-700"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-700 mb-1">Mobile Image</label>
+          <input
+            type="file"
+            name="mobile_image"
+            accept="image/*"
+            onChange={handleChange}
+            className="w-full text-gray-700"
+          />
+        </div>
+
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            name="is_active"
+            checked={formData.is_active}
+            onChange={handleChange}
+            className="h-4 w-4 text-[#4c9bd5] border-gray-200 rounded focus:ring-[#4c9bd5]"
+          />
+          <label className="ml-2 text-sm text-gray-700">Active</label>
+        </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Placement</label>
-        <select
-          name="placement"
-          value={formData.placement}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded"
-          disabled={editMode} // Prevent placement change while editing
-        >
-          <option value="">Select Placement</option>
-          {PLACEMENT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Redirect URL</label>
-        <input
-          type="url"
-          name="redirect_url"
-          value={formData.redirect_url}
-          onChange={handleChange}
-          placeholder="https://example.com"
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Desktop Image</label>
-        <input
-          type="file"
-          name="desktop_image"
-          accept="image/*"
-          onChange={handleChange}
-          className="w-full"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block font-medium mb-1">Mobile Image</label>
-        <input
-          type="file"
-          name="mobile_image"
-          accept="image/*"
-          onChange={handleChange}
-          className="w-full"
-        />
-      </div>
-
-      <div className="flex items-center mb-4">
-        <input
-          type="checkbox"
-          name="is_active"
-          checked={formData.is_active}
-          onChange={handleChange}
-          className="mr-2"
-        />
-        <label className="font-medium">Is Active</label>
-      </div>
-
-      <div className="flex gap-4">
+      <div className="flex gap-3 mt-6">
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="flex-1 bg-[#4c9bd5] text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-all"
         >
-          {editMode ? "Update Ad" : "Create Ad"}
+          {editMode ? "Update" : "Create"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+          className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all"
         >
           Cancel
         </button>

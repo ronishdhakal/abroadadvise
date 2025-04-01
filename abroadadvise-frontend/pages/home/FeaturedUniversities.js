@@ -31,12 +31,12 @@ export default function FeaturedUniversities() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-            <GraduationCap className="w-6 h-6 text-blue-600 mr-2" /> Featured Universities
+            <GraduationCap className="w-6 h-6 text-[#4c9bd5] mr-2" /> Featured Universities
           </h2>
           <p className="text-gray-600">Explore top institutions worldwide</p>
         </div>
         <Link href="/university">
-          <button className="border border-gray-300 rounded-lg px-4 py-2 text-gray-700 flex items-center hover:bg-gray-100 transition">
+          <button className="border border-gray-300 rounded-lg px-4 py-2 text-[#4c9bd5] flex items-center hover:bg-[#4c9bd5]/10 transition">
             View All →
           </button>
         </Link>
@@ -73,13 +73,13 @@ export default function FeaturedUniversities() {
                 {university.name}
                 {university.verified && (
                   <BadgeCheck
-                    className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 ml-2"
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-[#4c9bd5] ml-2"
                     title="Verified University"
                   />
                 )}
               </h3>
               <p className="text-xs sm:text-sm text-gray-600 mt-1 flex items-center">
-                <Globe className="w-4 h-4 mr-1 text-gray-500" />
+                <Globe className="w-4 h-4 mr-1 text-[#4c9bd5]" />
                 {university.country || "Location not available"}
               </p>
             </div>

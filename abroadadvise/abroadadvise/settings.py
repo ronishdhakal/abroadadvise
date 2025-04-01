@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'inquiry',
     'blog',
     'college',
+    'scholarship',
 
 ]
 

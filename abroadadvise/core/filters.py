@@ -8,9 +8,8 @@ from exam.models import Exam
 from event.models import Event
 from news.models import News
 from blog.models import BlogPost
-from django.apps import apps  # ✅ Avoid circular imports
-from core.models import District, Discipline  # ✅ Import Discipline
-
+from django.apps import apps
+from core.models import District, Discipline
 
 class ConsultancyFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr="icontains")
@@ -147,3 +146,15 @@ class CollegeFilter(filters.FilterSet):
     class Meta:
         model = College
         fields = ["name", "destination", "university"]
+
+
+# ✅ NEW: ScholarshipFilter (⬇️ Add this at the end)
+from scholarship.models import Scholarship
+
+class ScholarshipFilter(filters.FilterSet):
+    destination = filters.CharFilter(field_name="destination__slug", lookup_expr="iexact")
+    study_level = filters.CharFilter(field_name="study_level", lookup_expr="iexact")
+
+    class Meta:
+        model = Scholarship
+        fields = ["destination", "study_level"]

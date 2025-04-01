@@ -2222,3 +2222,101 @@ export const deleteUser = async (userId) => {
 
   return await response.json();
 };
+
+
+// For Scholarship
+// ✅ Fetch Scholarships with Pagination & Search
+export const fetchScholarships = async (page = 1, search = "") => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scholarship/?page=${page}&search=${search}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch scholarships");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching scholarships:", error);
+    throw error;
+  }
+};
+
+// ✅ Fetch Single Scholarship Details
+export const fetchScholarshipDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scholarship/${slug}/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch scholarship details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching scholarship details:", error);
+    throw error;
+  }
+};
+
+// ✅ Create Scholarship
+export const createScholarship = async (formData) => {
+  const response = await fetch(`${API_BASE_URL}/scholarship/create/`, {
+    method: "POST",
+    headers: getAuthHeaders(), // Must include JWT token
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("API Response Error:", errorData);
+    throw new Error(errorData.error || "Failed to create scholarship");
+  }
+
+  return await response.json();
+};
+
+// ✅ Update Scholarship
+export const updateScholarship = async (slug, formData) => {
+  const response = await fetch(`${API_BASE_URL}/scholarship/${slug}/update/`, {
+    method: "PATCH",
+    headers: getAuthHeaders(),
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("API Response Error:", errorData);
+    throw new Error(errorData.error || "Failed to update scholarship");
+  }
+
+  return await response.json();
+};
+
+// ✅ Delete Scholarship
+export const deleteScholarship = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/scholarship/${slug}/delete/`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("❌ Delete Scholarship API Error:", errorData);
+      throw new Error(errorData.detail || "Failed to delete scholarship");
+    }
+
+    return { success: true, message: "✅ Scholarship deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting scholarship:", error);
+    throw error;
+  }
+};
