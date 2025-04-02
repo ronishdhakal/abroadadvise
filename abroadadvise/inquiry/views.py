@@ -78,32 +78,32 @@ def submit_inquiry(request):
 
 
 
+
 # ✅ Superadmin + Role-Based Inquiry List
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
     pagination_class = InquiryPagination
+    permission_classes = [IsAuthenticated]  # ✅ Moved here
 
-    @permission_classes([IsAuthenticated])
     def get_queryset(self):
         user = self.request.user
         queryset = Inquiry.objects.all().order_by("-created_at")
 
-        # ✅ Superadmin sees all
         if getattr(user, "is_superuser", False):
             logger.info("✅ Superadmin viewing ALL inquiries")
             return queryset
 
-        # ✅ Filter for specific roles
         if hasattr(user, "consultancy") and user.consultancy:
             return queryset.filter(consultancy=user.consultancy)
 
         if hasattr(user, "university") and user.university:
             return queryset.filter(university=user.university)
 
-        if hasattr(user, "college") and user.college:  # ✅ NEW
+        if hasattr(user, "college") and user.college:
             return queryset.filter(college=user.college)
 
         return Inquiry.objects.none()
+
 
 
 # ✅ Retrieve a single inquiry

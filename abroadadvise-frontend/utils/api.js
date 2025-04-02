@@ -1298,23 +1298,26 @@ export const getNewsBySlug = async (slug) => {
 import { getAuthToken } from "./auth";
 // ...
 
-// ✅ Fetch ALL Inquiries (No authentication)
-export const getAllInquiries = async () => {
+// ✅ Fetch Paginated Inquiries
+export const getAllInquiries = async (page = 1) => {
   try {
-      const response = await fetch(`${API_BASE_URL}/inquiry/admin/all/`, {
-          headers: getAuthHeaders(),// ✅ Add the headers
-      });
-      if (!response.ok) {
-          throw new Error(`Failed to fetch inquiries: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("🟢 Inquiries Fetched:", data);
-      return data; // ✅ Return ALL inquiries
+    const response = await fetch(`${API_BASE_URL}/inquiry/admin/all/?page=${page}`, {
+      headers: getAuthHeaders(), // ✅ Includes access token
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch inquiries: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`🟢 Inquiries Fetched (Page ${page}):`, data);
+    return data;
   } catch (err) {
-      console.error("❌ Error fetching inquiries:", err);
-      throw err;
+    console.error("❌ Error fetching inquiries:", err);
+    throw err;
   }
 };
+
 
 /**
 * ✅ Fetch a single inquiry by ID

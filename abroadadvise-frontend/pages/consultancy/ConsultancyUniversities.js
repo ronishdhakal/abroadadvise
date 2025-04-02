@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { fetchAllUniversities } from "@/utils/api"; // ✅ Ensure this fetches all
+import { fetchAllUniversities } from "@/utils/api";
 
 const ConsultancyUniversities = ({
   openInquiryModal,
@@ -41,7 +41,6 @@ const ConsultancyUniversities = ({
     loadUniversities();
   }, [allUniversities, preselectedIds]);
 
-  // 🔍 Handle Search
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredUniversities(universities);
@@ -59,16 +58,14 @@ const ConsultancyUniversities = ({
     ? filteredUniversities
     : filteredUniversities.slice(0, 6);
 
-  if (!filteredUniversities || filteredUniversities.length === 0) return null;
-
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
       <h2 className="text-2xl font-semibold text-gray-900 mb-6 tracking-tight">
         Partner Universities
       </h2>
 
-      {/* 🔍 Search Bar */}
-      {filteredUniversities.length > 6 && (
+      {/* 🔍 Search Bar (always shown) */}
+      {universities.length > 6 && (
         <div className="mb-6">
           <input
             type="text"
@@ -80,51 +77,57 @@ const ConsultancyUniversities = ({
         </div>
       )}
 
-      {/* Universities Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-        {visibleUniversities.map((university) => (
-          <div
-            key={university.id}
-            className="flex flex-col items-start p-6 border border-gray-200 rounded-xl bg-[#f9fafb] hover:bg-[#f1f5f9] transition-all duration-300 shadow-sm hover:shadow-md"
-          >
-            <Link
-              href={`/university/${university.slug}`}
-              className="flex items-center gap-4 w-full mb-4"
+      {/* Universities Grid or No Match */}
+      {filteredUniversities.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          {visibleUniversities.map((university) => (
+            <div
+              key={university.id}
+              className="flex flex-col items-start p-6 border border-gray-200 rounded-xl bg-[#f9fafb] hover:bg-[#f1f5f9] transition-all duration-300 shadow-sm hover:shadow-md"
             >
-              <img
-                src={university.logo || "/placeholder-university.png"}
-                alt={university.name}
-                className="w-14 h-14 object-cover rounded-lg border border-gray-300 shadow-sm"
-              />
-              <div className="flex-1">
-                <p className="text-gray-900 font-semibold text-lg leading-tight line-clamp-2">
-                  {university.name}
-                </p>
-                <span className="text-sm text-gray-600 mt-1 block">
-                  {university.country || "Unknown Country"}
-                </span>
-              </div>
-            </Link>
-
-            {verified && (
-              <button
-                onClick={() =>
-                  openInquiryModal(
-                    "university",
-                    university.id,
-                    university.name,
-                    consultancyId,
-                    consultancyName
-                  )
-                }
-                className="mt-auto w-full px-4 py-2 bg-[#4c9bd5] hover:bg-[#3a8cc1] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+              <Link
+                href={`/university/${university.slug}`}
+                className="flex items-center gap-4 w-full mb-4"
               >
-                Apply Now
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+                <img
+                  src={university.logo || "/placeholder-university.png"}
+                  alt={university.name}
+                  className="w-14 h-14 object-cover rounded-lg border border-gray-300 shadow-sm"
+                />
+                <div className="flex-1">
+                  <p className="text-gray-900 font-semibold text-lg leading-tight line-clamp-2">
+                    {university.name}
+                  </p>
+                  <span className="text-sm text-gray-600 mt-1 block">
+                    {university.country || "Unknown Country"}
+                  </span>
+                </div>
+              </Link>
+
+              {verified && (
+                <button
+                  onClick={() =>
+                    openInquiryModal(
+                      "university",
+                      university.id,
+                      university.name,
+                      consultancyId,
+                      consultancyName
+                    )
+                  }
+                  className="mt-auto w-full px-4 py-2 bg-[#4c9bd5] hover:bg-[#3a8cc1] text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  Apply Now
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 italic text-sm mt-2">
+          No universities match your search.
+        </p>
+      )}
 
       {/* Show More / Less Button */}
       {filteredUniversities.length > 6 && (

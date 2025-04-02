@@ -131,7 +131,8 @@ const ConsultancyDetailPage = () => {
             <ConsultancyGallery gallery={consultancy.gallery_images} />
 
             <ConsultancyUniversities
-              universities={consultancy.partner_universities}
+              allUniversities={consultancy.partner_universities}
+              preselectedIds={consultancy.partner_universities.map((u) => u.id)}
               openInquiryModal={openInquiryModal}
               consultancyId={consultancy.id}
               consultancyName={consultancy.name}

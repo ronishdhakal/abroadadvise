@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/utils/api";
+import { X } from "lucide-react";
 
 const CollegeInquiries = () => {
   const [inquiries, setInquiries] = useState([]);
@@ -9,6 +10,8 @@ const CollegeInquiries = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchInquiries = async () => {
@@ -19,17 +22,8 @@ const CollegeInquiries = () => {
         const token = localStorage.getItem("accessToken");
         const collegeId = localStorage.getItem("college_id");
 
-        if (!token) {
-          setError("User not logged in");
-          return;
-        }
-
-        if (!collegeId) {
-          setError("College ID is missing. Please log in again.");
-          return;
-        }
-
-        console.log("✅ Fetching inquiries for college_id:", collegeId, "Page:", currentPage);
+        if (!token) return setError("User not logged in");
+        if (!collegeId) return setError("College ID is missing. Please log in again.");
 
         const response = await fetch(
           `${API_BASE_URL}/inquiry/admin/all/?college_id=${collegeId}&page=${currentPage}`,
@@ -47,8 +41,6 @@ const CollegeInquiries = () => {
           setError(errorData.detail || "Failed to fetch inquiries");
         } else {
           const data = await response.json();
-          console.log("✅ Inquiry Data Received:", data);
-
           setInquiries(data.results || []);
           setTotalPages(Math.ceil(data.count / 10));
         }
@@ -61,6 +53,16 @@ const CollegeInquiries = () => {
 
     fetchInquiries();
   }, [currentPage]);
+
+  const openModal = (inquiry) => {
+    setSelectedInquiry(inquiry);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedInquiry(null);
+    setShowModal(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -85,18 +87,9 @@ const CollegeInquiries = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {loading ? (
           <div className="text-center py-8 text-gray-500">
-            <svg
-              className="animate-spin h-6 w-6 mx-auto mb-2 text-blue-500"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
+            <svg className="animate-spin h-6 w-6 mx-auto mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
-              />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z" />
             </svg>
             Loading inquiries...
           </div>
@@ -109,22 +102,25 @@ const CollegeInquiries = () => {
             <table className="w-full border-collapse text-sm">
               <thead className="bg-blue-50 text-gray-600 sticky top-0 z-10">
                 <tr>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Name</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Email</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Contact Number</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Message</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">College</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">University</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Destination</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Exam</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Event</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Course</th>
-                  <th className="p-3 font-medium text-left uppercase text-xs tracking-wide">Created At</th>
+                  <th className="p-3">SN</th>
+                  <th className="p-3 text-left">Name</th>
+                  <th className="p-3 text-left">Email</th>
+                  <th className="p-3 text-left">Contact</th>
+                  <th className="p-3 text-left">Message</th>
+                  <th className="p-3 text-left">College</th>
+                  <th className="p-3 text-left">University</th>
+                  <th className="p-3 text-left">Destination</th>
+                  <th className="p-3 text-left">Exam</th>
+                  <th className="p-3 text-left">Event</th>
+                  <th className="p-3 text-left">Course</th>
+                  <th className="p-3 text-left">Created</th>
+                  <th className="p-3">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {inquiries.map((inquiry) => (
+                {inquiries.map((inquiry, index) => (
                   <tr key={inquiry.id} className="border-t border-gray-200 hover:bg-gray-50 transition-all duration-200">
+                    <td className="p-3 text-center text-gray-700">{(currentPage - 1) * 10 + index + 1}</td>
                     <td className="p-3 text-gray-800">{inquiry.name}</td>
                     <td className="p-3 text-gray-800">{inquiry.email}</td>
                     <td className="p-3 text-gray-800">{inquiry.phone || "-"}</td>
@@ -138,6 +134,9 @@ const CollegeInquiries = () => {
                     <td className="p-3 text-gray-800">{inquiry.event_name || "-"}</td>
                     <td className="p-3 text-gray-800">{inquiry.course_name || "-"}</td>
                     <td className="p-3 text-gray-800">{new Date(inquiry.created_at).toLocaleString()}</td>
+                    <td className="p-3 text-blue-600 font-medium cursor-pointer hover:underline">
+                      <button onClick={() => openModal(inquiry)}>View</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -151,20 +150,57 @@ const CollegeInquiries = () => {
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm"
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             Prev
           </button>
-          <span className="text-gray-700 font-medium text-sm">
-            Page {currentPage} of {totalPages}
-          </span>
+          <span className="text-gray-700 text-sm font-medium">Page {currentPage} of {totalPages}</span>
           <button
             onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm"
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-blue-400 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
             Next
           </button>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && selectedInquiry && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm z-50 flex items-center justify-center px-4">
+          <div className="relative bg-white max-w-2xl w-full rounded-xl shadow-2xl border border-gray-100 p-6 overflow-y-auto max-h-[90vh]">
+            <button onClick={closeModal} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition">
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-4 border-b pb-4">
+              <h2 className="text-xl font-semibold text-gray-800">Inquiry Details</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Received on {new Date(selectedInquiry.created_at).toLocaleString()}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
+              <div><span className="font-medium">Name:</span> {selectedInquiry.name}</div>
+              <div><span className="font-medium">Email:</span> {selectedInquiry.email}</div>
+              <div><span className="font-medium">Phone:</span> {selectedInquiry.phone || "-"}</div>
+              <div><span className="font-medium">College:</span> {selectedInquiry.college_name || "-"}</div>
+              <div><span className="font-medium">University:</span> {selectedInquiry.university_name || "-"}</div>
+              <div><span className="font-medium">Destination:</span> {selectedInquiry.destination_name || "-"}</div>
+              <div><span className="font-medium">Exam:</span> {selectedInquiry.exam_name || "-"}</div>
+              <div><span className="font-medium">Event:</span> {selectedInquiry.event_name || "-"}</div>
+              <div><span className="font-medium">Course:</span> {selectedInquiry.course_name || "-"}</div>
+              <div><span className="font-medium">Entity Type:</span> {selectedInquiry.entity_type || "-"}</div>
+              <div><span className="font-medium">Entity ID:</span> {selectedInquiry.entity_id || "-"}</div>
+            </div>
+
+            <div className="mt-6">
+              <label className="text-sm font-medium text-gray-800 mb-1 block">Message</label>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-line max-h-60 overflow-auto">
+                {selectedInquiry.message || "-"}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

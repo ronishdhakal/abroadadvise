@@ -17,16 +17,16 @@ const CategoryManager = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : ""; // updated code
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : "";
 
   const loadCategories = async () => {
     setLoading(true);
     setError("");
     try {
       const data = await fetchBlogCategories();
-      console.log("📦 API Response for Categories:", data); // Debug log
-      const resultArray = data.results || []; // ✅ THIS is the key fix
-      setCategories(resultArray); // ✅ Always set array here
+      console.log("📦 API Response for Categories:", data);
+      const resultArray = data.results || [];
+      setCategories(resultArray);
     } catch (err) {
       console.error("Failed to fetch categories:", err);
       setError("Failed to fetch categories.");
@@ -34,8 +34,6 @@ const CategoryManager = () => {
       setLoading(false);
     }
   };
-  
-  
 
   useEffect(() => {
     loadCategories();
@@ -68,65 +66,90 @@ const CategoryManager = () => {
 
   return (
     <div>
-      {successMessage && <p className="text-green-500">{successMessage}</p>}
-      {error && <p className="text-red-500">{error}</p>}
-
-      <button
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        onClick={() => {
-          setShowForm(!showForm);
-          setEditingCategory(null);
-        }}
-      >
-        {showForm ? "Cancel" : "Add New Category"}
-      </button>
-
-      {showForm && (
-        <CategoryForm
-          initialData={editingCategory}
-          onSuccess={handleFormSuccess}
-          token={token}
-        />
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-100 text-green-700 rounded-lg shadow-sm">
+          {successMessage}
+        </div>
+      )}
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg shadow-sm">
+          {error}
+        </div>
       )}
 
+      {/* Add New Category Button */}
+      <div className="flex justify-end mb-6">
+        <button
+          className={`px-4 py-3 rounded-lg font-medium transition-all ${
+            showForm
+              ? "bg-gray-500 text-white hover:bg-gray-600"
+              : "bg-[#4c9bd5] text-white hover:bg-[#3a8cc4]"
+          }`}
+          onClick={() => {
+            setShowForm(!showForm);
+            setEditingCategory(null);
+          }}
+        >
+          {showForm ? "Cancel" : "Add New Category"}
+        </button>
+      </div>
+
+      {/* Category Form */}
+      {showForm && (
+        <div className="mb-6 p-6 bg-white rounded-lg shadow-md">
+          <CategoryForm
+            initialData={editingCategory}
+            onSuccess={handleFormSuccess}
+            token={token}
+          />
+        </div>
+      )}
+
+      {/* Categories Table */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="text-center py-6 text-gray-600">Loading categories...</div>
       ) : categories.length === 0 ? (
-        <p>No categories found.</p>
+        <div className="text-center py-6 text-gray-600">No categories available.</div>
       ) : (
-        <table className="w-full border-collapse border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">#</th>
-              <th className="border p-2">Name</th>
-              <th className="border p-2">Slug</th>
-              <th className="border p-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((cat, index) => (
-              <tr key={cat.id}>
-                <td className="border p-2">{index + 1}</td>
-                <td className="border p-2">{cat.name}</td>
-                <td className="border p-2">{cat.slug}</td>
-                <td className="border p-2 flex gap-2">
-                  <button
-                    className="bg-blue-500 text-white px-3 py-1 rounded"
-                    onClick={() => handleEdit(cat)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="bg-red-500 text-white px-3 py-1 rounded"
-                    onClick={() => handleDelete(cat.slug)}
-                  >
-                    Delete
-                  </button>
-                </td>
+        <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50 text-gray-700">
+                <th className="p-4 text-left font-semibold min-w-[50px]">#</th>
+                <th className="p-4 text-left font-semibold min-w-[200px]">Name</th>
+                <th className="p-4 text-left font-semibold min-w-[150px]">Slug</th>
+                <th className="p-4 text-left font-semibold min-w-[150px]">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {categories.map((cat, index) => (
+                <tr
+                  key={cat.id}
+                  className="border-t border-gray-200 hover:bg-gray-50 transition-all"
+                >
+                  <td className="p-4 text-gray-600">{index + 1}</td>
+                  <td className="p-4 text-gray-800">{cat.name}</td>
+                  <td className="p-4 text-gray-600">{cat.slug}</td>
+                  <td className="p-4 flex gap-2">
+                    <button
+                      className="bg-[#4c9bd5] text-white px-4 py-2 rounded-lg hover:bg-[#3a8cc4] transition-all"
+                      onClick={() => handleEdit(cat)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all"
+                      onClick={() => handleDelete(cat.slug)}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
