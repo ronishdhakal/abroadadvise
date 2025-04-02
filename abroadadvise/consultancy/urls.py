@@ -1,13 +1,15 @@
 from django.urls import path
 from .views import (
     ConsultancyListView, ConsultancyDetailView, create_consultancy, update_consultancy, delete_consultancy,
-    consultancy_dashboard_view, update_consultancy_dashboard  # ✅ Fixed import
+    consultancy_dashboard_view, update_consultancy_dashboard, consultancy_dropdown_list  # ✅ Fixed import
 )
 
 urlpatterns = [
     # ✅ Dashboard Route (Must be placed before `<slug:slug>/` to avoid conflicts)
     path('dashboard/', consultancy_dashboard_view, name='consultancy-dashboard'),
     path("dashboard/update/", update_consultancy_dashboard, name="update_consultancy_dashboard"),
+    path("dropdown/", consultancy_dropdown_list, name="consultancy_dropdown_list"),
+
 
 
     # ✅ Other Consultancy Routes

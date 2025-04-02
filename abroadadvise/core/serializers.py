@@ -92,3 +92,8 @@ class ReviewSerializer(serializers.ModelSerializer):
             instance.save()
 
         return instance
+
+class DistrictMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = District
+        fields = ['id', 'name']

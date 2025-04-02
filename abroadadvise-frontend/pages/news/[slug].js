@@ -7,9 +7,7 @@ import NewsHeader from "./NewsHeader";
 import NewsBody from "./NewsBody";
 import NewsRelated from "./NewsRelated";
 import NewsComment from "./NewsComment";
-
-// Importing custom 404 page
-import Custom404 from "../404"; // ✅ Import 404 Page
+import Custom404 from "../404";
 
 export default function NewsDetail() {
   const router = useRouter();
@@ -17,7 +15,7 @@ export default function NewsDetail() {
   const [news, setNews] = useState(null);
   const [relatedNews, setRelatedNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isNotFound, setIsNotFound] = useState(false); // ✅ Track 404 state
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -26,9 +24,8 @@ export default function NewsDetail() {
       try {
         console.log(`Fetching news from: ${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${slug}/`);
-
         if (!response.ok) {
-          setIsNotFound(true); // ✅ Mark as 404 instead of throwing an error
+          setIsNotFound(true);
           return;
         }
 
@@ -37,7 +34,7 @@ export default function NewsDetail() {
         setNews(data);
       } catch (error) {
         console.error("Error fetching news:", error);
-        setIsNotFound(true); // ✅ Mark as 404 on error
+        setIsNotFound(true);
       } finally {
         setLoading(false);
       }
@@ -66,12 +63,10 @@ export default function NewsDetail() {
     fetchRelatedNews();
   }, [slug]);
 
-  // ✅ Show loading while fetching
   if (loading) {
     return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
   }
 
-  // ✅ Redirect to 404 if news is not found
   if (isNotFound) {
     return <Custom404 />;
   }
@@ -83,24 +78,27 @@ export default function NewsDetail() {
       </Head>
       <Header />
 
-      <div className="container mx-auto py-8 px-4 lg:px-0">
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          {/* ✅ Main Content Area */}
-          <div className="w-full lg:w-3/4 space-y-8">
-            {news && (
-              <>
-                <NewsHeader news={news} />
-                <NewsBody news={news} />
-                <NewsComment newsSlug={slug} />
-              </>
-            )}
-          </div>
+      <div className="container mx-auto py-8 px-4 lg:px-0 flex flex-col items-center">
+        {/* Main Content Container */}
+        <div className="w-full max-w-4xl space-y-8 text-left">
+          {news && (
+            <>
+              <NewsHeader news={news} />
+              <NewsBody news={news} />
+            </>
+          )}
+        </div>
 
-          {/* ✅ Right Sidebar */}
-          <aside className="w-full lg:w-1/4">
-            {relatedNews.length > 0 && <NewsRelated relatedNews={relatedNews} />}
-          </aside>
+        {/* Related News Container (Moved Below Main Content) */}
+        {relatedNews.length > 0 && (
+          <div className="w-full max-w-4xl mt-8 text-left">
+            <NewsRelated relatedNews={relatedNews} />
+          </div>
+        )}
+
+        {/* Comments Container */}
+        <div className="w-full max-w-4xl mt-8 text-left">
+          {news && <NewsComment newsSlug={slug} />}
         </div>
       </div>
 

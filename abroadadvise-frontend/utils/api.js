@@ -124,6 +124,28 @@ export const fetchUniversities = async (page = 1, search = "") => {
   }
 };
 
+// ✅ Fetch all universities without pagination
+export const fetchAllUniversities = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/university/?page_size=1000`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch universities");
+    }
+
+    return await response.json(); // should return { results: [...] }
+  } catch (error) {
+    console.error("Error fetching all universities:", error);
+    throw error;
+  }
+};
+
+
 // ✅ Fetch Single University Details
 export const fetchUniversityDetails = async (slug) => {
   try {
@@ -225,6 +247,7 @@ const convertToJson = (formData, key) => {
 
 
 // ✅ Create Consultancy
+// ✅ Create Consultancy
 export const createConsultancy = async (formData) => {
   // ✅ Convert boolean fields correctly
   formData.set("moe_certified", formData.get("moe_certified") === "true");
@@ -249,6 +272,8 @@ export const createConsultancy = async (formData) => {
 
   return await response.json();
 };
+
+
 
 // ✅ Update Consultancy
 export const updateConsultancy = async (slug, formData) => {
@@ -2318,5 +2343,83 @@ export const deleteScholarship = async (slug) => {
   } catch (error) {
     console.error("❌ Error deleting scholarship:", error);
     throw error;
+  }
+};
+
+// Dropdown Apis
+
+// ✅ Fetch minimal list of universities for dropdown (id + name only)
+export const fetchUniversitiesDropdown = async (search = "") => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/university/dropdown/?search=${encodeURIComponent(search)}`
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch universities");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching university dropdown:", error);
+    return [];
+  }
+};
+
+// ✅ Fetch minimal list of destinations for dropdown (id + title only)
+export const fetchDestinationsDropdown = async (search = "") => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/destination/dropdown/?search=${encodeURIComponent(search)}`
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch destinations");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching destination dropdown:", error);
+    return [];
+  }
+};
+
+// ✅ Fetch minimal list of districts for dropdown (id + name only)
+export const fetchDistrictsDropdown = async (search = "") => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/district/dropdown/?search=${encodeURIComponent(search)}`
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch districts");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching district dropdown:", error);
+    return [];
+  }
+};
+
+// ✅ Fetch minimal list of consultancies for dropdown (id + name only)
+export const fetchConsultanciesDropdown = async (search = "") => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/consultancy/dropdown/?search=${encodeURIComponent(search)}`
+    );
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch consultancies");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching consultancy dropdown:", error);
+    return [];
   }
 };

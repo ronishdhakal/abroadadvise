@@ -19,8 +19,6 @@ const CollegeForm = ({
   collegeSlug,
   onSuccess,
   onCancel,
-  allDestinations,
-  allUniversities,
   allDistricts,
 }) => {
   const isEditing = !!collegeSlug;
@@ -142,17 +140,24 @@ const CollegeForm = ({
       <form onSubmit={handleSubmit} encType="multipart/form-data">
         <CollegeHeader formData={formData} setFormData={setFormData} />
         <CollegeContact formData={formData} setFormData={setFormData} allDistricts={allDistricts} />
-        <CollegeStudyDest formData={formData} setFormData={setFormData} allDestinations={allDestinations} />
+        <CollegeStudyDest formData={formData} setFormData={setFormData} />
         <CollegeBranches formData={formData} setFormData={setFormData} />
         <CollegeGallery formData={formData} setFormData={setFormData} />
-        <CollegeUniversities formData={formData} setFormData={setFormData} allUniversities={allUniversities} />
+        <CollegeUniversities formData={formData} setFormData={setFormData} />
         <CollegeAbout formData={formData} setFormData={setFormData} />
 
         <div className="flex gap-4 mt-6">
-          <button type="submit" className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition">
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-green-600 transition"
+          >
             {loading ? "Saving..." : isEditing ? "Update" : "Create"}
           </button>
-          <button type="button" className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition" onClick={onCancel}>
+          <button
+            type="button"
+            className="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-lg hover:bg-gray-600 transition"
+            onClick={onCancel}
+          >
             Cancel
           </button>
         </div>

@@ -1,19 +1,25 @@
 const HeroSection = () => {
   return (
-    <section className="w-full px-4 md:px-0 flex justify-center mt-10">
-      <div
-        className="bg-gradient-to-r from-[#009ada] to-blue-700 text-white text-center py-16 px-6 md:px-16 
-        rounded-2xl shadow-xl max-w-7xl w-full"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
-      >
-        <h1 className="text-3xl md:text-5xl font-extrabold">
-          Explore Top Courses for Your Future
-        </h1>
-        <p className="text-base md:text-lg mt-3">
-          Find the best courses from leading universities around the world
-        </p>
-      </div>
-    </section>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+          `,
+        }}
+      />
+      <section className="w-full px-4 md:px-0 flex justify-center mt-10">
+        <div
+          className="bg-[#4c9bd5] text-white text-center py-12 px-6 md:px-12 
+          rounded-xl shadow-lg w-full max-w-6xl"
+          style={{ fontFamily: "'Poppins', sans-serif" }}
+        >
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
+            Explore Top Courses for Your Future
+          </h1>
+        </div>
+      </section>
+    </>
   );
 };
 

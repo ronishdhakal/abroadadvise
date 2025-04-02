@@ -100,3 +100,9 @@ class UniversitySerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+class UniversityMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = University
+        fields = ['id', 'name']
+

@@ -91,22 +91,27 @@ class EventSerializer(serializers.ModelSerializer):
         related_consultancies = validated_data.pop("related_consultancies", [])
         targeted_destinations = validated_data.pop("targeted_destinations", [])
 
-        # ✅ Handle Organizer Type Using SLUG
-        organizer_slug = validated_data.pop("organizer_slug", None)
-        organizer_type = validated_data.pop("organizer_type", None)
-
-        if organizer_slug and organizer_type == "university":
-            try:
-              validated_data["organizer"] = University.objects.get(slug=organizer_slug)
-            except University.DoesNotExist:
-              raise serializers.ValidationError({"organizer_slug": "University with that slug not found"})
-        elif organizer_slug and organizer_type == "consultancy":
-            try:
-              validated_data["organizer"] = Consultancy.objects.get(slug=organizer_slug)
-            except Consultancy.DoesNotExist:
-              raise serializers.ValidationError({"organizer_slug": "Consultancy with that slug not found"})
+        # ✅ Auto-assign organizer if consultancy user is logged in
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and hasattr(request.user, 'consultancy'):
+            validated_data["organizer"] = request.user.consultancy
         else:
-            validated_data["organizer"] = None
+            # fallback to slug-based assignment for superadmin/university
+            organizer_slug = validated_data.pop("organizer_slug", None)
+            organizer_type = validated_data.pop("organizer_type", None)
+
+            if organizer_slug and organizer_type == "university":
+                try:
+                    validated_data["organizer"] = University.objects.get(slug=organizer_slug)
+                except University.DoesNotExist:
+                    raise serializers.ValidationError({"organizer_slug": "University with that slug not found"})
+            elif organizer_slug and organizer_type == "consultancy":
+                try:
+                    validated_data["organizer"] = Consultancy.objects.get(slug=organizer_slug)
+                except Consultancy.DoesNotExist:
+                    raise serializers.ValidationError({"organizer_slug": "Consultancy with that slug not found"})
+            else:
+                validated_data["organizer"] = None
 
         # ✅ Save Event
         event = Event.objects.create(**validated_data)
@@ -126,22 +131,26 @@ class EventSerializer(serializers.ModelSerializer):
         related_consultancies = validated_data.pop("related_consultancies", None)
         targeted_destinations = validated_data.pop("targeted_destinations", None)
 
-        # ✅ Handle Organizer Type Using SLUG
-        organizer_slug = validated_data.pop("organizer_slug", None)
-        organizer_type = validated_data.pop("organizer_type", None)
-
-        if organizer_slug and organizer_type == "university":
-            try:
-                instance.organizer = University.objects.get(slug=organizer_slug)
-            except University.DoesNotExist:
-                raise serializers.ValidationError({"organizer_slug": "University with that slug not found"})
-        elif organizer_slug and organizer_type == "consultancy":
-            try:
-                instance.organizer = Consultancy.objects.get(slug=organizer_slug)
-            except Consultancy.DoesNotExist:
-                raise serializers.ValidationError({"organizer_slug": "Consultancy with that slug not found"})
+        # ✅ Auto-assign organizer if consultancy user is logged in
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and hasattr(request.user, 'consultancy'):
+            instance.organizer = request.user.consultancy
         else:
-            instance.organizer = None
+            organizer_slug = validated_data.pop("organizer_slug", None)
+            organizer_type = validated_data.pop("organizer_type", None)
+
+            if organizer_slug and organizer_type == "university":
+                try:
+                    instance.organizer = University.objects.get(slug=organizer_slug)
+                except University.DoesNotExist:
+                    raise serializers.ValidationError({"organizer_slug": "University with that slug not found"})
+            elif organizer_slug and organizer_type == "consultancy":
+                try:
+                    instance.organizer = Consultancy.objects.get(slug=organizer_slug)
+                except Consultancy.DoesNotExist:
+                    raise serializers.ValidationError({"organizer_slug": "Consultancy with that slug not found"})
+            else:
+                instance.organizer = None
 
         # ✅ Update Normal Fields
         for attr, value in validated_data.items():

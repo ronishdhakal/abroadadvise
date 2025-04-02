@@ -1,39 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Select from "react-select"; // ✅ Searchable Dropdown for Districts
-import { Globe, Mail, Phone, Calendar, MapPin, Tag } from "lucide-react"; // ✅ Removed Unused CheckCircle Icon
+import Select from "react-select";
+import { Globe, Mail, Phone, Calendar, MapPin, Tag } from "lucide-react";
+import { fetchDistrictsDropdown } from "@/utils/api"; // ✅ New API import
 
-const ConsultancyContact = ({ formData, setFormData, allDistricts = [] }) => {
-  // ✅ Handle input changes
+const ConsultancyContact = ({ formData, setFormData }) => {
+  const [districts, setDistricts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Load district options on mount
+  useEffect(() => {
+    setLoading(true);
+    fetchDistrictsDropdown()
+      .then((data) => setDistricts(data || []))
+      .catch((err) => console.error("Failed to fetch districts:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value, // ✅ Ensure boolean values are stored correctly
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  // ✅ Handle District Selection
   const handleDistrictChange = (selectedOptions) => {
     setFormData((prev) => ({
       ...prev,
       districts: selectedOptions ? selectedOptions.map((opt) => opt.value) : [],
     }));
   };
-
-  // ✅ Ensure districts are correctly prefilled when editing
-  useEffect(() => {
-    if (formData.districts && Array.isArray(formData.districts)) {
-      const preselectedDistricts = allDistricts
-        .filter((district) => formData.districts.includes(district.id))
-        .map((district) => ({ value: district.id, label: district.name }));
-      setFormData((prev) => ({
-        ...prev,
-        selectedDistricts: preselectedDistricts, // ✅ Keep selected districts in sync
-      }));
-    }
-  }, [formData.districts, allDistricts]);
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
@@ -165,16 +163,19 @@ const ConsultancyContact = ({ formData, setFormData, allDistricts = [] }) => {
         <span className="ml-2 text-gray-700 font-medium">Certified by Ministry of Education</span>
       </div>
 
-      {/* Districts Covered (Searchable Multi-Select) */}
+      {/* Districts Covered */}
       <div className="mb-4">
         <label className="block text-gray-700 font-medium mb-1">Districts Covered</label>
         <Select
           isMulti
-          options={allDistricts.map((district) => ({
-            value: district.id,
-            label: district.name,
-          }))}
-          value={formData.selectedDistricts || []}
+          isLoading={loading}
+          options={districts.map((d) => ({ value: d.id, label: d.name }))}
+          value={
+            formData.districts?.map((id) => {
+              const match = districts.find((d) => d.id === id);
+              return match ? { value: match.id, label: match.name } : null;
+            }).filter(Boolean) || []
+          }
           onChange={handleDistrictChange}
           className="w-full"
           placeholder="Search and select districts..."

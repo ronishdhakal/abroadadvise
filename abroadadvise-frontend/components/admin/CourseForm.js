@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createCourse, updateCourse, fetchCourseDetails } from "@/utils/api";
+import { useState, useEffect, useMemo } from "react";
+import {
+  createCourse,
+  updateCourse,
+  fetchCourseDetails,
+} from "@/utils/api";
 
 import CourseHeader from "./course/CourseHeader";
 import CourseAbout from "./course/CourseAbout";
-import CourseInfo from "./course/CourseInfo"; // Import CourseInfo
+import CourseInfo from "./course/CourseInfo";
 
 const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
   const isEditing = !!courseSlug;
 
-  // ✅ Define initial form state
-  const [formData, setFormData] = useState({
+  // ✅ Memoize default state to avoid rerenders
+  const defaultFormData = useMemo(() => ({
     name: "",
     abbreviation: "",
     slug: "",
@@ -27,11 +31,12 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
     priority: "",
     icon: null,
     cover_image: null,
-    university: null, // Add university to the form data
-    disciplines: [], // Add disciplines to the form data as an array
-    destination: null, // Add destination to the form data
-  });
+    university: null,
+    disciplines: [],
+    destination: null,
+  }), []);
 
+  const [formData, setFormData] = useState(defaultFormData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -49,9 +54,9 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
             ...data,
             icon: data.icon || prev.icon,
             cover_image: data.cover_image || prev.cover_image,
-            university: data.university_details?.id || null, // Load the university Id, or null
-            disciplines: data.disciplines_details?.map((d) => d.id) || [], // Load the disciplines array of id, or empty array
-            destination: data.destination_details?.id || null, // Load the destination Id, or null
+            university: data.university_details?.id || null,
+            disciplines: data.disciplines_details?.map((d) => d.id) || [],
+            destination: data.destination_details?.id || null,
           }));
         })
         .catch((error) => {
@@ -60,19 +65,22 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
         })
         .finally(() => setLoading(false));
     }
-  }, [courseSlug]);
+  }, [courseSlug, isEditing]);
 
-  // ✅ Handle Slug (Auto-generate but allow manual edit)
+  // ✅ Auto-generate slug from name
   useEffect(() => {
     if (formData.name && !formData.slug) {
       setFormData((prev) => ({
         ...prev,
-        slug: prev.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        slug: prev.name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, ""),
       }));
     }
   }, [formData.name]);
 
-  // ✅ Handle Form Submission
+  // ✅ Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -81,18 +89,22 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
 
     const submissionData = new FormData();
 
-    // ✅ Append all non-file fields, including university, disciplines, and destination
     Object.entries(formData).forEach(([key, value]) => {
-      if (key !== "icon" && key !== "cover_image" && value !== null && value !== undefined && key !== "disciplines") {
+      if (
+        key !== "icon" &&
+        key !== "cover_image" &&
+        key !== "disciplines" &&
+        value !== null &&
+        value !== undefined
+      ) {
         submissionData.append(key, value);
       }
     });
-    // ✅ Append disciplines as an array of numbers
-    formData.disciplines.forEach((disciplineId) => { // updated code
-      submissionData.append("disciplines", Number(disciplineId)); // updated code
-    });
 
-    // ✅ Append image fields only if they are new files
+    formData.disciplines.forEach((id) =>
+      submissionData.append("disciplines", Number(id))
+    );
+
     if (formData.icon instanceof File) {
       submissionData.append("icon", formData.icon);
     }
@@ -100,8 +112,7 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
       submissionData.append("cover_image", formData.cover_image);
     }
 
-    // ✅ Log FormData before sending (for debugging)
-    console.log("📤 Submitting FormData:");
+    console.log("📤 Submitting Course FormData:");
     for (let pair of submissionData.entries()) {
       console.log(`🔹 ${pair[0]}:`, pair[1]);
     }
@@ -125,22 +136,24 @@ const CourseForm = ({ courseSlug, onSuccess, onCancel }) => {
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
-      <h2 className="text-2xl font-bold mb-4">{isEditing ? "Edit Course" : "Create Course"}</h2>
+      <h2 className="text-2xl font-bold mb-4">
+        {isEditing ? "Edit Course" : "Create Course"}
+      </h2>
 
-      {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
+      {error && <p className="text-red-500 mb-2">{error}</p>}
+      {success && <p className="text-green-500 mb-2">{success}</p>}
 
       <form onSubmit={handleSubmit} encType="multipart/form-data">
-        {/* ✅ Course Information (University, Discipline, Destination) */}
+        {/* ✅ Dropdown Info (with pagination support inside CourseInfo) */}
         <CourseInfo formData={formData} setFormData={setFormData} />
 
-        {/* ✅ Course Header */}
+        {/* ✅ Course Static Fields */}
         <CourseHeader formData={formData} setFormData={setFormData} />
 
-        {/* ✅ Course About (Rich Text Fields) */}
+        {/* ✅ Rich Text Areas */}
         <CourseAbout formData={formData} setFormData={setFormData} />
 
-        {/* ✅ Submit & Cancel Buttons */}
+        {/* ✅ Form Actions */}
         <div className="flex gap-4 mt-6">
           <button
             type="submit"

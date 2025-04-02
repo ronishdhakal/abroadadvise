@@ -1,5 +1,6 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, parser_classes, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
@@ -22,6 +23,7 @@ from exam.models import Exam
 from university.models import University
 from core.models import District
 from .serializers import ConsultancySerializer, ConsultancyBranchSerializer
+from .serializers import ConsultancyMinimalSerializer
 from inquiry.models import Inquiry  # Import Inquiry model
 from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
 
@@ -42,7 +44,7 @@ class ConsultancyListView(ListAPIView):
             "partner_universities",
             "gallery_images",
             "branches",
-        ).order_by("-priority", "-id").distinct()
+        ).order_by("priority", "-id").distinct()
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):
@@ -327,3 +329,13 @@ def update_consultancy_dashboard(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def consultancy_dropdown_list(request):
+    """Returns minimal list of consultancies for dropdowns (id + name only)."""
+    search = request.GET.get('search', '')
+    consultancies = Consultancy.objects.filter(name__icontains=search).order_by('name')
+    serializer = ConsultancyMinimalSerializer(consultancies, many=True)
+    return Response(serializer.data)

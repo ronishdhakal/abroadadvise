@@ -8,6 +8,7 @@ from .views import (
     AdCreateAPIView,          # ✅ Admin create
     AdUpdateAPIView,          # ✅ Admin update
     AdDeleteAPIView,          # ✅ Admin delete
+    district_dropdown_list,
 
 
 )
@@ -19,6 +20,8 @@ urlpatterns = [
     path('districts/create/', DistrictCreateAPIView.as_view(), name='create-district'),
     path('districts/<int:pk>/update/', DistrictUpdateAPIView.as_view(), name='update-district'),
     path('districts/<int:pk>/delete/', DistrictDeleteAPIView.as_view(), name='delete-district'),
+    path("district/dropdown/", district_dropdown_list, name="district_dropdown_list"),
+
 
 # Discipline CRUD
     path('disciplines/create/', DisciplineCreateAPIView.as_view(), name='create-discipline'),

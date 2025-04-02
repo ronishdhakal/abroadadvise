@@ -1,29 +1,59 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Select from "react-select";
-import { fetchUniversities } from "@/utils/api"; // ✅ Shared university fetch logic
+import { fetchUniversities } from "@/utils/api";
+import Pagination from "@/pages/destination/Pagination";
 
 const CollegeUniversities = ({ formData, setFormData, allUniversities = [] }) => {
+  const isMounted = useRef(false);
   const [loading, setLoading] = useState(false);
   const [universities, setUniversities] = useState([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const shouldFetch = allUniversities.length === 0;
+
+  const loadUniversities = async () => {
+    if (!shouldFetch) {
+      setUniversities(allUniversities);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await fetchUniversities(page, search);
+      const newResults = data.results || [];
+
+      const selectedUniversities = formData.affiliated_universities
+        .map((id) => universities.find((u) => u?.id === id) || null)
+        .filter(Boolean);
+
+      const merged = [...new Map([...selectedUniversities, ...newResults].map((u) => [u.id, u])).values()];
+      setUniversities(merged);
+
+      setTotalPages(Math.ceil(data.count / 10));
+    } catch (error) {
+      console.error("Error fetching universities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (allUniversities.length > 0) {
-      setUniversities(allUniversities);
-    } else {
-      setLoading(true);
-      fetchUniversities()
-        .then((data) => setUniversities(data.results || []))
-        .catch((error) => console.error("Error fetching universities:", error))
-        .finally(() => setLoading(false));
+    if (isMounted.current || shouldFetch) {
+      loadUniversities();
     }
-  }, [allUniversities]);
+    isMounted.current = true;
+  }, [page, search]);
 
   const handleUniversityChange = (selectedOptions) => {
     setFormData((prev) => ({
       ...prev,
-      affiliated_universities: selectedOptions ? selectedOptions.map((opt) => opt.value) : [],
+      affiliated_universities: selectedOptions
+        ? selectedOptions.map((opt) => opt.value)
+        : [],
     }));
   };
 
@@ -31,12 +61,23 @@ const CollegeUniversities = ({ formData, setFormData, allUniversities = [] }) =>
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Affiliated Universities</h2>
 
+      <input
+        type="text"
+        placeholder="Search universities..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(1);
+        }}
+        className="mb-3 p-2 border border-gray-300 rounded w-full"
+      />
+
       <Select
         isMulti
         isLoading={loading}
-        options={universities.map((university) => ({
-          value: university.id,
-          label: university.name,
+        options={universities.map((u) => ({
+          value: u.id,
+          label: u.name,
         }))}
         value={formData.affiliated_universities
           ?.map((id) => {
@@ -62,6 +103,14 @@ const CollegeUniversities = ({ formData, setFormData, allUniversities = [] }) =>
             );
           })}
         </div>
+      )}
+
+      {shouldFetch && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

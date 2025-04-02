@@ -40,3 +40,8 @@ class StudyDestinationSerializer(serializers.ModelSerializer):
         instance.save()
         print("✅ Destination updated successfully!")  # Debugging log
         return instance
+
+class DestinationMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Destination
+        fields = ['id', 'title']

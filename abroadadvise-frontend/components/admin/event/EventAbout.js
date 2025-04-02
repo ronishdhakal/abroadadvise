@@ -53,20 +53,7 @@ const EventAbout = ({ formData, setFormData }) => {
         />
       </div>
 
-      {/* ✅ Priority Input */}
-      <div className="mb-4">
-        <label className="block text-gray-700 font-semibold mb-1">
-          Priority (lower means higher priority):
-        </label>
-        <input
-          type="number"
-          min="1"
-          placeholder="Enter event priority (e.g. 1 for highest)"
-          value={formData.priority || ""}
-          onChange={handlePriorityChange}
-          className="border border-gray-300 p-2 rounded-lg w-full"
-        />
-      </div>
+      
     </div>
   );
 };

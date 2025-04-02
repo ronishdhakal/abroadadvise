@@ -13,6 +13,7 @@ from core.pagination import StandardResultsSetPagination
 from core.filters import UniversityFilter
 from .models import University
 from .serializers import UniversitySerializer
+from .serializers import UniversityMinimalSerializer  # ✅ make sure this is imported
 import json
 
 from inquiry.models import Inquiry  # Import Inquiry model
@@ -245,3 +246,13 @@ def update_university_dashboard(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def university_dropdown_list(request):
+    """Returns minimal list of universities for dropdowns (id + name only)."""
+    search = request.GET.get('search', '')
+    universities = University.objects.filter(name__icontains=search).order_by('name')
+    serializer = UniversityMinimalSerializer(universities, many=True)
+    return Response(serializer.data)

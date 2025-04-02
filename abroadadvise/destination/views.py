@@ -13,6 +13,7 @@ from core.pagination import StandardResultsSetPagination
 from core.filters import DestinationFilter
 from .models import Destination
 from .serializers import StudyDestinationSerializer
+from .serializers import DestinationMinimalSerializer
 from .pagination import DestinationPagination  # ✅ Import the new pagination class
 
 # ✅ Publicly Accessible List of Destinations with Pagination & Filtering
@@ -142,3 +143,13 @@ def delete_destination(request, slug):
     
     except Destination.DoesNotExist:
         return Response({"error": "Destination not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def destination_dropdown_list(request):
+    """Returns minimal list of destinations for dropdowns (id + title)."""
+    search = request.GET.get('search', '')
+    destinations = Destination.objects.filter(title__icontains=search).order_by('title')
+    serializer = DestinationMinimalSerializer(destinations, many=True)
+    return Response(serializer.data)

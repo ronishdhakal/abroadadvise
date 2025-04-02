@@ -177,3 +177,8 @@ class ConsultancySerializer(serializers.ModelSerializer):
             ConsultancyBranch.objects.create(consultancy=instance, **branch)
 
         return instance
+
+class ConsultancyMinimalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consultancy
+        fields = ['id', 'name']

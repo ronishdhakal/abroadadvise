@@ -1,90 +1,128 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchConsultancies, fetchUniversities, fetchDestinations } from "@/utils/api";
+import Select from "react-select";
+import {
+  fetchConsultancies,
+  fetchUniversities,
+  fetchDestinations,
+} from "@/utils/api";
 
-const EventOverview = ({ formData, setFormData }) => {
-  const [allConsultancies, setAllConsultancies] = useState([]);
-  const [allUniversities, setAllUniversities] = useState([]);
-  const [allDestinations, setAllDestinations] = useState([]);
-  // ✅ Search states
-  const [searchConsultancies, setSearchConsultancies] = useState("");
-  const [searchUniversities, setSearchUniversities] = useState("");
-  const [searchDestinations, setSearchDestinations] = useState("");
+const EventOverview = ({
+  formData,
+  setFormData,
+  allDestinations,
+  allUniversities,
+  allConsultancies,
+  pageDestinations,
+  setPageDestinations,
+  totalPagesDestinations,
+  pageUniversities,
+  setPageUniversities,
+  totalPagesUniversities,
+  pageConsultancies,
+  setPageConsultancies,
+  totalPagesConsultancies,
+  searchDestinations,
+  setSearchDestinations,
+  searchUniversities,
+  setSearchUniversities,
+  searchConsultancies,
+  setSearchConsultancies,
+}) => {
+  // Pagination component
+  const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
 
-  // ✅ Fetch Data on Component Mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [consultancies, universities, destinations] = await Promise.all([
-          fetchConsultancies(1, searchConsultancies), // Fetch consultancies
-          fetchUniversities(1, searchUniversities), // Fetch universities
-          fetchDestinations(), // Fetch destinations
-        ]);
+    return (
+      <div className="flex justify-center gap-2 mt-4">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onPageChange(p)}
+            className={`px-3 py-1 rounded ${
+              p === currentPage ? "bg-[#4c9bd5] text-white" : "bg-gray-200"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
 
-        setAllConsultancies(consultancies.results || []);
-        setAllUniversities(universities.results || []);
-        setAllDestinations(destinations.results || []);
-      } catch (error) {
-        console.error("❌ Error fetching event-related data:", error);
+  const mergeSelected = (fetchedList, selectedSlugs, key = "slug", labelKey = "name") => {
+    const merged = [...fetchedList];
+    selectedSlugs.forEach((slug) => {
+      if (!fetchedList.find((item) => item[key] === slug)) {
+        merged.push({ [key]: slug, [labelKey]: slug });
       }
-    };
-    loadData();
-  }, [searchConsultancies, searchUniversities]);
+    });
+    return merged;
+  };
 
-  // ✅ Handle Organizer Type Selection (Now Fixed to Consultancy)
   const handleOrganizerTypeChange = (e) => {
-    //const type = e.target.value; // Removed because we always set consultancy
     setFormData((prev) => ({
       ...prev,
-      organizer_slug: "", // Reset organizer when type changes
-      organizer_type: "consultancy",//type, // Now, always set to consultancy
+      organizer_slug: "",
+      organizer_type: "consultancy",
     }));
   };
 
-  // ✅ Handle Organizer Selection (Use Slug Instead of ID)
   const handleOrganizerChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      organizer_slug: e.target.value || "", // Use slug instead of ID
+      organizer_slug: e.target.value || "",
     }));
   };
 
-  // ✅ Handle Multi-Select Inputs (Destinations, Universities, Consultancies)
-  const handleMultiSelect = (slug, field) => {
-    setFormData((prev) => {
-      const newValues = prev[field].includes(slug)
-        ? prev[field].filter((s) => s !== slug)
-        : [...prev[field], slug];
-      return { ...prev, [field]: newValues };
-    });
+  const handleSelectChange = (selectedOptions, field) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: selectedOptions ? selectedOptions.map((opt) => opt.value) : [],
+    }));
   };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-4">
       <h2 className="text-xl font-bold mb-4">Event Organizer & Destinations</h2>
 
-      {/* ✅ Organizer Type Selection */}
+      {/* Organizer Type */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Organizer Type:</label>
         <select
           name="organizer_type"
-          value={"consultancy"} // Now always is consultancy
+          value={"consultancy"}
           onChange={handleOrganizerTypeChange}
           className="w-full p-2 border border-gray-300 rounded mt-1"
         >
           <option value="consultancy">Consultancy</option>
-          {/*<option value="university">University</option> - Removed University option */}
         </select>
       </div>
 
-      {/* ✅ Organizer Selection (Using Slug) */}
+      {/* Organizer Slug */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Organizer:</label>
-        {/* Search Field for Organizer */}
         <input
           type="text"
-          placeholder={`Search Consultancies`}
+          placeholder="Search Consultancies"
           value={searchConsultancies}
           onChange={(e) => setSearchConsultancies(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
@@ -102,12 +140,18 @@ const EventOverview = ({ formData, setFormData }) => {
             </option>
           ))}
         </select>
+        {totalPagesConsultancies > 1 && (
+          <Pagination
+            currentPage={pageConsultancies}
+            totalPages={totalPagesConsultancies}
+            onPageChange={setPageConsultancies}
+          />
+        )}
       </div>
 
-      {/* ✅ Select Targeted Destinations (Checkbox List) */}
+      {/* Targeted Destinations */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Targeted Destinations:</label>
-        {/* Search Field for Destinations */}
         <input
           type="text"
           placeholder="Search Destinations"
@@ -115,28 +159,37 @@ const EventOverview = ({ formData, setFormData }) => {
           onChange={(e) => setSearchDestinations(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          {allDestinations
-            .filter((destination) => destination.title.toLowerCase().includes(searchDestinations.toLowerCase()))
-            .map((destination) => (
-              <label key={destination.slug} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={destination.slug}
-                  checked={formData.targeted_destinations.includes(destination.slug)}
-                  onChange={() => handleMultiSelect(destination.slug, "targeted_destinations")}
-                  className="text-green-500 focus:ring-green-500"
-                />
-                <span>{destination.title}</span>
-              </label>
-            ))}
-        </div>
+        <Select
+          isMulti
+          isSearchable={false} // Search handled by input above
+          options={allDestinations
+            .filter((d) => d.title.toLowerCase().includes(searchDestinations.toLowerCase()))
+            .map((d) => ({
+              value: d.slug,
+              label: d.title,
+            }))}
+          value={formData.targeted_destinations
+            .map((slug) => {
+              const d = allDestinations.find((dest) => dest.slug === slug);
+              return d ? { value: d.slug, label: d.title } : null;
+            })
+            .filter(Boolean)}
+          onChange={(selected) => handleSelectChange(selected, "targeted_destinations")}
+          className="mt-1"
+          placeholder="Select destinations..."
+        />
+        {totalPagesDestinations > 1 && (
+          <Pagination
+            currentPage={pageDestinations}
+            totalPages={totalPagesDestinations}
+            onPageChange={setPageDestinations}
+          />
+        )}
       </div>
 
-      {/* ✅ Select Participating Universities (Checkbox List) */}
+      {/* Participating Universities */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Participating Universities:</label>
-        {/* Search Field for Universities */}
         <input
           type="text"
           placeholder="Search Universities"
@@ -144,28 +197,37 @@ const EventOverview = ({ formData, setFormData }) => {
           onChange={(e) => setSearchUniversities(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          {allUniversities
-            .filter((university) => university.name.toLowerCase().includes(searchUniversities.toLowerCase()))
-            .map((university) => (
-              <label key={university.slug} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={university.slug}
-                  checked={formData.related_universities.includes(university.slug)}
-                  onChange={() => handleMultiSelect(university.slug, "related_universities")}
-                  className="text-green-500 focus:ring-green-500"
-                />
-                <span>{university.name}</span>
-              </label>
-            ))}
-        </div>
+        <Select
+          isMulti
+          isSearchable={false} // Search handled by input above
+          options={allUniversities
+            .filter((u) => u.name.toLowerCase().includes(searchUniversities.toLowerCase()))
+            .map((u) => ({
+              value: u.slug,
+              label: u.name,
+            }))}
+          value={formData.related_universities
+            .map((slug) => {
+              const uni = allUniversities.find((u) => u.slug === slug);
+              return uni ? { value: uni.slug, label: uni.name } : null;
+            })
+            .filter(Boolean)}
+          onChange={(selected) => handleSelectChange(selected, "related_universities")}
+          className="mt-1"
+          placeholder="Select universities..."
+        />
+        {totalPagesUniversities > 1 && (
+          <Pagination
+            currentPage={pageUniversities}
+            totalPages={totalPagesUniversities}
+            onPageChange={setPageUniversities}
+          />
+        )}
       </div>
 
-      {/* ✅ Select Related Consultancies (Checkbox List) */}
+      {/* Related Consultancies */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Related Consultancies:</label>
-        {/* Search Field for Consultancies */}
         <input
           type="text"
           placeholder="Search Consultancies"
@@ -173,25 +235,34 @@ const EventOverview = ({ formData, setFormData }) => {
           onChange={(e) => setSearchConsultancies(e.target.value)}
           className="w-full p-2 border border-gray-300 rounded mt-1 mb-2"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          {allConsultancies
-            .filter((consultancy) => consultancy.name.toLowerCase().includes(searchConsultancies.toLowerCase()))
-            .map((consultancy) => (
-              <label key={consultancy.slug} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  value={consultancy.slug}
-                  checked={formData.related_consultancies.includes(consultancy.slug)}
-                  onChange={() => handleMultiSelect(consultancy.slug, "related_consultancies")}
-                  className="text-green-500 focus:ring-green-500"
-                />
-                <span>{consultancy.name}</span>
-              </label>
-            ))}
-        </div>
+        <Select
+          isMulti
+          isSearchable={false} // Search handled by input above
+          options={allConsultancies
+            .filter((c) => c.name.toLowerCase().includes(searchConsultancies.toLowerCase()))
+            .map((c) => ({
+              value: c.slug,
+              label: c.name,
+            }))}
+          value={formData.related_consultancies
+            .map((slug) => {
+              const c = allConsultancies.find((x) => x.slug === slug);
+              return c ? { value: c.slug, label: c.name } : null;
+            })
+            .filter(Boolean)}
+          onChange={(selected) => handleSelectChange(selected, "related_consultancies")}
+          className="mt-1"
+          placeholder="Select consultancies..."
+        />
+        {totalPagesConsultancies > 1 && (
+          <Pagination
+            currentPage={pageConsultancies}
+            totalPages={totalPagesConsultancies}
+            onPageChange={setPageConsultancies}
+          />
+        )}
       </div>
 
-      {/* ✅ Debugging - Show Selected Data in Console */}
       <button
         onClick={() => console.log("📌 Updated formData:", formData)}
         className="bg-gray-200 px-4 py-2 rounded-lg mt-4"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline"; // Modern icons from Heroicons
 import Link from "next/link";
 
 const ConsultancyDestinations = ({
@@ -66,24 +66,26 @@ const ConsultancyDestinations = ({
         ))}
       </div>
 
-      {/* Show More / Less */}
+      {/* Show More / Less Button */}
       {destinations.length > 6 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full mt-6 flex items-center justify-center text-[#4c9bd5] font-medium hover:underline transition"
-        >
-          {showAll ? (
-            <>
-              <ChevronUp className="h-5 w-5 mr-1" />
-              Show Less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="h-5 w-5 mr-1" />
-              Show All ({destinations.length})
-            </>
-          )}
-        </button>
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="group flex items-center px-5 py-2 bg-[#4c9bd5] text-white text-sm font-medium rounded-full hover:bg-[#3a8cc1] transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
+          >
+            {showAll ? (
+              <>
+                <ChevronUpIcon className="h-5 w-5 mr-2 transform group-hover:-translate-y-0.5 transition-transform duration-300" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDownIcon className="h-5 w-5 mr-2 transform group-hover:translate-y-0.5 transition-transform duration-300" />
+                Show All ({destinations.length})
+              </>
+            )}
+          </button>
+        </div>
       )}
     </div>
   );
