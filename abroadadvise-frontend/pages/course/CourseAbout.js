@@ -7,8 +7,8 @@ const CourseAbout = ({ about }) => {
 
       {about ? (
         <div
-          className="text-gray-700 text-sm leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: about }} // ✅ Fix: Ensures proper HTML rendering
+          className="prose prose-sm sm:prose lg:prose-lg max-w-none text-gray-800"
+          dangerouslySetInnerHTML={{ __html: about }}
         />
       ) : (
         <p className="text-gray-500">Course description not available</p>

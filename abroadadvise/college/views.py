@@ -204,8 +204,6 @@ def update_college_dashboard(request):
     data = request.data
 
     try:
-        study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
-        affiliated_universities = json.loads(data.get("affiliated_universities", "[]"))
         branches_data = json.loads(data.get("branches", "[]"))
         districts = json.loads(data.get("districts", "[]"))
     except json.JSONDecodeError:
@@ -215,13 +213,7 @@ def update_college_dashboard(request):
     if serializer.is_valid():
         college = serializer.save()
 
-        # Preserve related fields
-        if study_abroad_destinations:
-            college.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
-
-        if affiliated_universities:
-            college.affiliated_universities.set(University.objects.filter(id__in=affiliated_universities))
-
+        # Preserve related fields (districts only)
         if districts:
             college.districts.set(District.objects.filter(id__in=districts))
 

@@ -1,19 +1,19 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
-// ✅ Dynamically import TinyMCE
-const Editor = dynamic(() => import("@tinymce/tinymce-react").then((mod) => mod.Editor), {
-  ssr: false,
-});
+// ✅ Dynamically import JoditEditor to avoid SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const EventAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
+
   const [editorContent, setEditorContent] = useState({
     description: formData.description || "",
   });
 
-  // ✅ Handle TinyMCE change
+  // ✅ Handle Jodit change
   const handleEditorChange = (name, content) => {
     setEditorContent((prev) => ({ ...prev, [name]: content }));
     setFormData((prev) => ({ ...prev, [name]: content }));
@@ -36,24 +36,16 @@ const EventAbout = ({ formData, setFormData }) => {
     <div className="bg-white p-6 rounded-lg shadow-md mb-4">
       <h2 className="text-xl font-bold mb-4">Event Description & Priority</h2>
 
-      {/* ✅ Description (TinyMCE Rich Text) */}
+      {/* ✅ Description (Jodit Rich Text) */}
       <div className="mb-6">
         <label className="block text-gray-700 font-semibold mb-1">Event Description:</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={editorContent.description}
-          init={{
-            height: 300,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
-          onEditorChange={(content) => handleEditorChange("description", content)}
+          tabIndex={1}
+          onBlur={(content) => handleEditorChange("description", content)}
         />
       </div>
-
-      
     </div>
   );
 };

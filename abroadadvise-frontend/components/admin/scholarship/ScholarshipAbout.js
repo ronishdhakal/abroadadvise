@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
+
+// ✅ Dynamically import JoditEditor to avoid SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const ScholarshipDetail = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
   const [detailContent, setDetailContent] = useState("");
 
   useEffect(() => {
@@ -22,19 +26,13 @@ const ScholarshipDetail = ({ formData, setFormData }) => {
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Scholarship Description</h2>
 
-      <Editor
-        apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+      <JoditEditor
+        ref={editorRef}
         value={detailContent}
-        onEditorChange={(content) => {
+        tabIndex={1}
+        onBlur={(content) => {
           setDetailContent(content);
           setFormData((prev) => ({ ...prev, detail: content }));
-        }}
-        init={{
-          height: 300,
-          menubar: false,
-          plugins: "advlist autolink lists link image charmap preview anchor table",
-          toolbar:
-            "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
         }}
       />
 

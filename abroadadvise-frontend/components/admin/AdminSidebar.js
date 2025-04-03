@@ -52,6 +52,7 @@ const AdminSidebar = () => {
         { name: "Courses", path: "/admin/courses", icon: <Book className="w-4 h-4" /> },
         { name: "Destination", path: "/admin/destinations", icon: <MapPin className="w-4 h-4" /> },
         { name: "Exams", path: "/admin/exams", icon: <CheckSquare className="w-4 h-4" /> },
+        { name: "Scholarships", path: "/admin/scholarships", icon: <CheckSquare className="w-4 h-4" /> },
         { name: "Configurations", path: "/admin/configurations", icon: <Pencil className="w-4 h-4" /> },
         { name: "Inquiries", path: "/admin/inquiries", icon: <MessageSquare className="w-4 h-4" /> },
       ],

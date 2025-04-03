@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { updateConsultancyDashboard } from "@/utils/api";
 
+// ✅ Dynamically import JoditEditor to prevent SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+
 const ConsultancyAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
   const [aboutContent, setAboutContent] = useState("");
   const [servicesContent, setServicesContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -59,34 +63,22 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
       {/* About Section */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">About Consultancy</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={aboutContent}
-          onEditorChange={setAboutContent}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
+          tabIndex={1}
+          onBlur={(newContent) => setAboutContent(newContent)}
         />
       </div>
 
       {/* Services Section */}
       <div>
         <label className="block text-gray-700 font-medium mb-2">Our Services</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={servicesContent}
-          onEditorChange={setServicesContent}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
+          tabIndex={1}
+          onBlur={(newContent) => setServicesContent(newContent)}
         />
       </div>
 

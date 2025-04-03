@@ -7,10 +7,12 @@ const UniversityAbout = ({ university = {} }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-    if (university?.about) {
+    if (university?.about?.trim()) {
       setAboutContent(university.about);
     }
   }, [university?.about]);
+
+  const shouldClamp = !isExpanded && aboutContent.length > 300;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 w-full mx-auto">
@@ -18,20 +20,20 @@ const UniversityAbout = ({ university = {} }) => {
         About {university?.name || "this university"}
       </h2>
 
-      {/* ✅ Safely render About content */}
       {aboutContent ? (
         <div
-          className={`text-sm text-gray-700 ${isExpanded ? "" : "line-clamp-3"}`}
+          className={`prose prose-sm sm:prose md:prose-md max-w-none text-gray-800 ${
+            shouldClamp ? "line-clamp-3 overflow-hidden" : ""
+          }`}
           dangerouslySetInnerHTML={{ __html: aboutContent }}
-        ></div>
+        />
       ) : (
         <p className="text-sm text-gray-500">No content available.</p>
       )}
 
-      {/* ✅ Toggle if long content */}
       {aboutContent.length > 300 && (
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => setIsExpanded((prev) => !prev)}
           className="mt-4 text-sm font-medium text-blue-600 hover:underline"
         >
           {isExpanded ? "Show Less" : "Show More"}

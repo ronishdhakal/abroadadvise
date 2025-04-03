@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { updateUniversityDashboard } from "@/utils/api";
 import { PlusCircle, Trash2 } from "lucide-react";
 
+// ✅ Dynamically import JoditEditor
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+
 const UniversityAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
@@ -72,20 +76,6 @@ const UniversityAbout = ({ formData, setFormData }) => {
     }
   };
 
-  const editorConfig = {
-    height: 300,
-    menubar: false,
-    plugins: "advlist autolink lists link image charmap preview anchor table",
-    toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-    content_style: `
-      body { font-family: 'Inter', sans-serif; font-size: 14px; color: #374151; }
-      a { color: #4c9bd5; }
-    `,
-    skin: "oxide",
-    content_css: "default",
-  };
-
   if (!formData) {
     return (
       <div className="p-8 bg-white shadow-md rounded-2xl text-center text-gray-500 italic">
@@ -107,14 +97,14 @@ const UniversityAbout = ({ formData, setFormData }) => {
       ].map(({ label, state, setState, field }, idx) => (
         <div className="mb-8" key={idx}>
           <label className="block text-gray-700 font-medium mb-2">{label}</label>
-          <Editor
-            apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+          <JoditEditor
+            ref={editorRef}
             value={state}
-            onEditorChange={(content) => {
-              setState(content);
-              setFormData((prev) => ({ ...prev, [field]: content }));
+            tabIndex={1}
+            onBlur={(newContent) => {
+              setState(newContent);
+              setFormData((prev) => ({ ...prev, [field]: newContent }));
             }}
-            init={editorConfig}
           />
         </div>
       ))}

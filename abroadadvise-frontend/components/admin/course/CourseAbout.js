@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Editor } from "@tinymce/tinymce-react"; // ✅ TinyMCE Rich Text Editor
+import { useEffect, useState, useCallback, useRef } from "react";
+import dynamic from "next/dynamic";
+
+// ✅ Dynamically import JoditEditor to avoid SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const CourseAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
+
   // ✅ Local states for content fields
   const [content, setContent] = useState({
     short_description: "",
@@ -42,15 +47,6 @@ const CourseAbout = ({ formData, setFormData }) => {
     [setFormData]
   );
 
-  // ✅ TinyMCE Configuration
-  const editorConfig = {
-    height: 250,
-    menubar: false,
-    plugins: "advlist autolink lists link image charmap preview anchor table",
-    toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-  };
-
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Course Details</h2>
@@ -58,66 +54,66 @@ const CourseAbout = ({ formData, setFormData }) => {
       {/* ✅ About the Course (Short Description) */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Short Description *</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.short_description}
-          onEditorChange={(newContent) => handleEditorChange("short_description", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("short_description", newContent)}
         />
       </div>
 
       {/* ✅ Eligibility Criteria */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Eligibility Criteria *</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.eligibility}
-          onEditorChange={(newContent) => handleEditorChange("eligibility", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("eligibility", newContent)}
         />
       </div>
 
       {/* ✅ Course Structure */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Course Structure</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.course_structure}
-          onEditorChange={(newContent) => handleEditorChange("course_structure", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("course_structure", newContent)}
         />
       </div>
 
       {/* ✅ Career Opportunities */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Career Opportunities</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.job_prospects}
-          onEditorChange={(newContent) => handleEditorChange("job_prospects", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("job_prospects", newContent)}
         />
       </div>
 
       {/* ✅ Course Features */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Key Features</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.features}
-          onEditorChange={(newContent) => handleEditorChange("features", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("features", newContent)}
         />
       </div>
 
       {/* ✅ Scholarship Information */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Scholarships Offered</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={content.scholarship}
-          onEditorChange={(newContent) => handleEditorChange("scholarship", newContent)}
-          init={editorConfig}
+          tabIndex={1}
+          onBlur={(newContent) => handleEditorChange("scholarship", newContent)}
         />
       </div>
     </div>

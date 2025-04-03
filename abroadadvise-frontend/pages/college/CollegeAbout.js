@@ -15,10 +15,11 @@ const CollegeAbout = ({ college }) => {
       <h2 className="text-2xl font-semibold text-gray-900">
         {`About ${college.name || "this College"}`}
       </h2>
+
       <div
-        className="text-gray-800 leading-relaxed mt-2 font-normal"
+        className="prose prose-sm sm:prose lg:prose-lg max-w-none text-gray-800 mt-4"
         dangerouslySetInnerHTML={{
-          __html: college.about || "No additional details available.",
+          __html: college.about || "<p>No additional details available.</p>",
         }}
       />
     </div>

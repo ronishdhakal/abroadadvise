@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
+
+// ✅ Dynamically import JoditEditor to avoid SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const CollegeAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
+
   const [aboutContent, setAboutContent] = useState("");
   const [servicesContent, setServicesContent] = useState("");
   const [priority, setPriority] = useState("");
@@ -18,7 +23,7 @@ const CollegeAbout = ({ formData, setFormData }) => {
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">About & Services</h2>
 
-      {/* Priority Field */}
+      {/* Priority Input */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">
           Priority (Lower number = Higher Rank)
@@ -38,19 +43,13 @@ const CollegeAbout = ({ formData, setFormData }) => {
       {/* About College */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">About College</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={aboutContent}
-          onEditorChange={(content) => {
-            setAboutContent(content);
-            setFormData((prev) => ({ ...prev, about: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setAboutContent(newContent);
+            setFormData((prev) => ({ ...prev, about: newContent }));
           }}
         />
       </div>
@@ -58,19 +57,13 @@ const CollegeAbout = ({ formData, setFormData }) => {
       {/* College Services */}
       <div>
         <label className="block text-gray-700 font-medium mb-2">Our Services</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={servicesContent}
-          onEditorChange={(content) => {
-            setServicesContent(content);
-            setFormData((prev) => ({ ...prev, services: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setServicesContent(newContent);
+            setFormData((prev) => ({ ...prev, services: newContent }));
           }}
         />
       </div>

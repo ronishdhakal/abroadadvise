@@ -7,9 +7,9 @@ const CourseScholarship = ({ scholarship }) => {
 
       {scholarship ? (
         <div
+          className="prose prose-sm sm:prose-md max-w-none text-gray-800"
           dangerouslySetInnerHTML={{ __html: scholarship }}
-          className="text-gray-700 text-sm leading-relaxed prose prose-sm sm:prose-md"
-        ></div>
+        />
       ) : (
         <p className="text-gray-500">Scholarship information not available</p>
       )}

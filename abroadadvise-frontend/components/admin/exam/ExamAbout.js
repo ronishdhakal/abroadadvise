@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 
-// ✅ Dynamically import TinyMCE to prevent SSR issues
-const Editor = dynamic(() => import("@tinymce/tinymce-react").then((mod) => mod.Editor), {
-  ssr: false,
-});
+// ✅ Dynamically import JoditEditor to prevent SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const ExamAbout = ({ formData, setFormData }) => {
-  // ✅ Local states to track editor content
+  const editorRef = useRef(null);
+
   const [shortDescription, setShortDescription] = useState("");
   const [aboutExam, setAboutExam] = useState("");
   const [examCenters, setExamCenters] = useState("");
@@ -21,17 +20,6 @@ const ExamAbout = ({ formData, setFormData }) => {
     setExamCenters(formData.exam_centers || "");
   }, [formData]);
 
-  // ✅ Common TinyMCE Configuration (Full Toolbar)
-  const editorConfig = {
-    height: 250,
-    menubar: false,
-    plugins:
-      "advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help",
-    toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image media | preview code fullscreen",
-    content_style: "body { font-family:Arial,sans-serif; font-size:14px }",
-  };
-
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-4">
       <h2 className="text-xl font-bold mb-4">Exam About & Centers</h2>
@@ -39,13 +27,13 @@ const ExamAbout = ({ formData, setFormData }) => {
       {/* ✅ Short Description */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Short Description:</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={shortDescription}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setShortDescription(content);
-            setFormData((prev) => ({ ...prev, short_description: content }));
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setShortDescription(newContent);
+            setFormData((prev) => ({ ...prev, short_description: newContent }));
           }}
         />
       </div>
@@ -53,13 +41,13 @@ const ExamAbout = ({ formData, setFormData }) => {
       {/* ✅ About Exam */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">About Exam:</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={aboutExam}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setAboutExam(content);
-            setFormData((prev) => ({ ...prev, about: content }));
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setAboutExam(newContent);
+            setFormData((prev) => ({ ...prev, about: newContent }));
           }}
         />
       </div>
@@ -67,13 +55,13 @@ const ExamAbout = ({ formData, setFormData }) => {
       {/* ✅ Exam Centers */}
       <div className="mb-4">
         <label className="block text-gray-700 font-semibold">Exam Centers:</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={examCenters}
-          init={editorConfig}
-          onEditorChange={(content) => {
-            setExamCenters(content);
-            setFormData((prev) => ({ ...prev, exam_centers: content }));
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setExamCenters(newContent);
+            setFormData((prev) => ({ ...prev, exam_centers: newContent }));
           }}
         />
       </div>

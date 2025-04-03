@@ -11,9 +11,8 @@ const EventAbout = ({ event }) => {
 
   return (
     <div className="bg-white shadow-md rounded-xl p-6 border">
-      {/* Renders HTML Content from TinyMCE (event.description) */}
       <div
-        className="text-gray-700 text-base leading-relaxed"
+        className="prose prose-sm sm:prose lg:prose-lg max-w-none text-gray-800"
         dangerouslySetInnerHTML={{ __html: event.description }}
       />
     </div>

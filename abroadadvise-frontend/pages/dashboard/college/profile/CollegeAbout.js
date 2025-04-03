@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import { updateCollegeDashboard } from "@/utils/api";
 
+// ✅ Dynamically import JoditEditor to prevent SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
+
 const CollegeAbout = ({ formData, setFormData }) => {
+  const editorRef = useRef(null);
   const [aboutContent, setAboutContent] = useState("");
   const [servicesContent, setServicesContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,26 +26,26 @@ const CollegeAbout = ({ formData, setFormData }) => {
     setLoading(true);
     setError(null);
     setSuccessMessage(null);
-  
+
     try {
       const updateData = new FormData();
-  
-      // 🔒 Preserve branches (safe field)
+
+      // 🔒 Preserve branches
       if (formData.branches) {
         updateData.append("branches", JSON.stringify(formData.branches));
       }
-  
+
       updateData.append("about", aboutContent);
       updateData.append("services", servicesContent);
-  
+
       await updateCollegeDashboard(updateData);
-  
+
       setFormData((prev) => ({
         ...prev,
         about: aboutContent,
         services: servicesContent,
       }));
-  
+
       setSuccessMessage("About & Services updated successfully!");
     } catch (err) {
       setError(err.message || "Failed to update About & Services");
@@ -49,7 +53,6 @@ const CollegeAbout = ({ formData, setFormData }) => {
       setLoading(false);
     }
   };
-  
 
   if (!formData) {
     return (
@@ -66,34 +69,22 @@ const CollegeAbout = ({ formData, setFormData }) => {
       {/* About Section */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">About College</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={aboutContent}
-          onEditorChange={setAboutContent}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
+          tabIndex={1}
+          onBlur={(newContent) => setAboutContent(newContent)}
         />
       </div>
 
       {/* Services Section */}
       <div>
         <label className="block text-gray-700 font-medium mb-2">Our Services</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={servicesContent}
-          onEditorChange={setServicesContent}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
+          tabIndex={1}
+          onBlur={(newContent) => setServicesContent(newContent)}
         />
       </div>
 

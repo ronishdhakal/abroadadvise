@@ -1,7 +1,6 @@
 "use client";
 
 const ConsultancyAbout = ({ consultancy }) => {
-  // Handle case where consultancy is undefined
   if (!consultancy) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -17,7 +16,7 @@ const ConsultancyAbout = ({ consultancy }) => {
         {`About ${consultancy.name || "this Consultancy"}`}
       </h2>
       <div
-        className="text-gray-800 leading-relaxed mt-2 font-normal"
+        className="text-gray-800 leading-relaxed mt-4 font-normal prose prose-sm sm:prose lg:prose-lg max-w-none"
         dangerouslySetInnerHTML={{
           __html: consultancy.about || "No additional details available.",
         }}

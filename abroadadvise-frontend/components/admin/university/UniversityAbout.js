@@ -1,31 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react"; // ✅ Rich Text Editor for Better Formatting
+import { useEffect, useState, useRef } from "react";
+import dynamic from "next/dynamic";
+
+// ✅ Dynamically import JoditEditor to avoid SSR issues
+const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 const UniversityAbout = ({ formData, setFormData }) => {
-  // ✅ Local states for content fields
+  const editorRef = useRef(null);
+
+  // ✅ Local states for content fields (Removed faqsContent)
   const [aboutContent, setAboutContent] = useState("");
   const [eligibilityContent, setEligibilityContent] = useState("");
   const [facilitiesContent, setFacilitiesContent] = useState("");
   const [scholarshipContent, setScholarshipContent] = useState("");
-  const [faqsContent, setFaqsContent] = useState(""); // ✅ Added FAQs Field
   const [priority, setPriority] = useState(""); // ✅ Added Priority Field
 
-  // ✅ Sync form data when editing
+  // ✅ Sync form data when editing (Removed faqs from dependencies)
   useEffect(() => {
     setAboutContent(formData.about || "");
     setEligibilityContent(formData.eligibility || "");
     setFacilitiesContent(formData.facilities_features || "");
     setScholarshipContent(formData.scholarship || "");
-    setFaqsContent(formData.faqs || ""); // ✅ Load FAQs
     setPriority(formData.priority || ""); // ✅ Load priority from formData
   }, [
     formData.about,
     formData.eligibility,
     formData.facilities_features,
     formData.scholarship,
-    formData.faqs,
     formData.priority,
   ]);
 
@@ -53,19 +55,13 @@ const UniversityAbout = ({ formData, setFormData }) => {
       {/* About University */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">About University</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={aboutContent}
-          onEditorChange={(content) => {
-            setAboutContent(content);
-            setFormData((prev) => ({ ...prev, about: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setAboutContent(newContent);
+            setFormData((prev) => ({ ...prev, about: newContent }));
           }}
         />
       </div>
@@ -73,19 +69,13 @@ const UniversityAbout = ({ formData, setFormData }) => {
       {/* Eligibility Criteria */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Eligibility Criteria</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={eligibilityContent}
-          onEditorChange={(content) => {
-            setEligibilityContent(content);
-            setFormData((prev) => ({ ...prev, eligibility: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setEligibilityContent(newContent);
+            setFormData((prev) => ({ ...prev, eligibility: newContent }));
           }}
         />
       </div>
@@ -93,19 +83,13 @@ const UniversityAbout = ({ formData, setFormData }) => {
       {/* Facilities & Features */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">University Facilities</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={facilitiesContent}
-          onEditorChange={(content) => {
-            setFacilitiesContent(content);
-            setFormData((prev) => ({ ...prev, facilities_features: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setFacilitiesContent(newContent);
+            setFormData((prev) => ({ ...prev, facilities_features: newContent }));
           }}
         />
       </div>
@@ -113,39 +97,13 @@ const UniversityAbout = ({ formData, setFormData }) => {
       {/* Scholarships */}
       <div className="mb-6">
         <label className="block text-gray-700 font-medium mb-2">Scholarships Offered</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
+        <JoditEditor
+          ref={editorRef}
           value={scholarshipContent}
-          onEditorChange={(content) => {
-            setScholarshipContent(content);
-            setFormData((prev) => ({ ...prev, scholarship: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
-          }}
-        />
-      </div>
-
-      {/* FAQs */}
-      <div>
-        <label className="block text-gray-700 font-medium mb-2">Frequently Asked Questions (FAQs)</label>
-        <Editor
-          apiKey={process.env.NEXT_PUBLIC_TINYMCE_API_KEY}
-          value={faqsContent}
-          onEditorChange={(content) => {
-            setFaqsContent(content);
-            setFormData((prev) => ({ ...prev, faqs: content }));
-          }}
-          init={{
-            height: 250,
-            menubar: false,
-            plugins: "advlist autolink lists link image charmap preview anchor table",
-            toolbar:
-              "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | link image | preview",
+          tabIndex={1}
+          onBlur={(newContent) => {
+            setScholarshipContent(newContent);
+            setFormData((prev) => ({ ...prev, scholarship: newContent }));
           }}
         />
       </div>
