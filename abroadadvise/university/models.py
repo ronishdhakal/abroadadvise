@@ -11,9 +11,9 @@ User = get_user_model()  # ✅ Get the user model dynamically
 
 class University(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        null=True, 
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
         blank=True
     )
 
@@ -43,7 +43,7 @@ class University(models.Model):
     facilities_features = HTMLField(blank=True, null=True)
     scholarship = HTMLField(blank=True, null=True)
     tuition_fees = models.CharField(max_length=100, blank=True, null=True)
-    
+
     # ✅ New field for QS World University Rankings
     qs_world_ranking = models.CharField(max_length=100, blank=True, null=True)
 
@@ -63,15 +63,24 @@ class University(models.Model):
     def assign_user(self, email, phone, name, password):
         """
         ✅ Manually create and assign a user to this university.
+        Uses university name as the username.
         """
         if not self.user:
-            username = email.split('@')[0] if email else f"university_{self.id}"
+            base_username = slugify(name) or f"university_{self.id}"
+            username = base_username
+            counter = 1
+
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}-{counter}"
+                counter += 1
+
             user, created = User.objects.get_or_create(username=username, email=email)
             if created:
                 user.set_password(password)
                 user.first_name = name
-                user.role = "university"  # ✅ Explicitly set role to "university"
+                user.role = "university"
                 user.save()
+
             self.user = user
             self.save(update_fields=["user"])
 
@@ -92,17 +101,19 @@ def create_university_user(sender, instance, created, **kwargs):
     if created and not instance.user:
         User = get_user_model()
 
-        # ✅ Ensure email exists before creating a user
-        if instance.email:
-            user, user_created = User.objects.get_or_create(username=instance.email.split('@')[0], email=instance.email)
-        else:
-            # ✅ If no email, create a generic user but ensure uniqueness
-            username = f"university_{instance.id}"
-            user, user_created = User.objects.get_or_create(username=username)
+        base_username = slugify(instance.name) or f"university_{instance.id}"
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}-{counter}"
+            counter += 1
 
-        # ✅ Set role explicitly to "university"
+        user, user_created = User.objects.get_or_create(username=username, email=instance.email)
+
         if user_created:
+            user.first_name = instance.name
             user.role = "university"
+            user.set_password("abroaduniversity123")  # Optional default password
             user.save()
 
         instance.user = user

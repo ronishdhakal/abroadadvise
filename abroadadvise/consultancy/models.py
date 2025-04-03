@@ -44,26 +44,29 @@ class Consultancy(models.Model):
     def __str__(self):
         return self.name
 
-    def assign_user(self, email, phone, name, password):
+    def assign_user(self, email, phone, password):
         """
-        ✅ Manually create and assign a user to this consultancy.
-        Uses slugified consultancy name for username.
+        ✅ Create and assign a user using consultancy name as username and full name.
         """
         if not self.user:
-            base_username = slugify(name) or f"consultancy_{self.id}"
+            base_username = slugify(self.name) or f"consultancy_{self.id}"
             username = base_username
             counter = 1
 
+            # Ensure username uniqueness
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}-{counter}"
                 counter += 1
 
-            user, created = User.objects.get_or_create(username=username, email=email)
-            if created:
-                user.set_password(password)
-                user.first_name = name
-                user.role = "consultancy"
-                user.save()
+            # Avoid get_or_create to ensure full control over username assignment
+            user = User(
+                username=username,
+                email=email,
+                first_name=self.name,
+                role="consultancy"
+            )
+            user.set_password(password)
+            user.save()
 
             self.user = user
             self.save(update_fields=["user"])

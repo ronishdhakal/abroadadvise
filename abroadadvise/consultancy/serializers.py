@@ -1,12 +1,13 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import Consultancy, ConsultancyGallery, ConsultancyBranch
-from core.models import District  # Removed VerifiedItem import
+from core.models import District
 from destination.models import Destination
 from exam.models import Exam
 from university.models import University
-from inquiry.models import Inquiry  # Import Inquiry model
-from inquiry.serializers import InquirySerializer  # Import the InquirySerializer
+from inquiry.models import Inquiry
+from inquiry.serializers import InquirySerializer
+from django.utils.text import slugify
 
 User = get_user_model()
 
@@ -93,7 +94,7 @@ class ConsultancySerializer(serializers.ModelSerializer):
             "logo", "cover_photo", "districts", "verified", "address", "latitude",
             "longitude", "establishment_date", "website", "email", "phone", "moe_certified",
             "about", "priority", "google_map_url", "services", "has_branches", "branches",
-            "gallery_images", "study_abroad_destinations", "test_preparation", "partner_universities",'inquiries',
+            "gallery_images", "study_abroad_destinations", "test_preparation", "partner_universities", 'inquiries',
         ]
 
     def get_logo(self, obj):
@@ -109,44 +110,43 @@ class ConsultancySerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.brochure.url) if request and obj.brochure else None
 
     def get_inquiries(self, obj):
-        """
-        Retrieve all inquiries related to the consultancy.
-        This can be filtered based on the consultancy ID.
-        """
         inquiries = Inquiry.objects.filter(consultancy=obj)
-        return InquirySerializer(inquiries, many=True).data  # Serialize and return inquiries
+        return InquirySerializer(inquiries, many=True).data
 
     def create(self, validated_data):
-
-        # ✅ Extract related fields
         study_abroad_destinations = validated_data.pop("study_abroad_destinations", [])
         test_preparation = validated_data.pop("test_preparation", [])
         partner_universities = validated_data.pop("partner_universities", [])
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
-        # ✅ Create Consultancy
         consultancy = Consultancy.objects.create(**validated_data)
 
-        # ✅ Create user automatically - similar to the University model
-        if consultancy.email:  # Check if email exists
-            username = consultancy.email.split('@')[0]
+        # ✅ Create user using consultancy name as username
+        if consultancy.email:  # Required for login
+            base_username = slugify(consultancy.name) or "consultancy"
+            username = base_username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}-{counter}"
+                counter += 1
+
             user, user_created = User.objects.get_or_create(username=username, email=consultancy.email)
 
-            # set role if user is created
             if user_created:
+                user.first_name = consultancy.name
                 user.role = "consultancy"
+                user.set_password("abroadconsultancy123")  # Optional: Set a default password
                 user.save()
+
             consultancy.user = user
             consultancy.save(update_fields=["user"])
 
-        # ✅ Assign many-to-many fields
         consultancy.study_abroad_destinations.set(study_abroad_destinations)
         consultancy.test_preparation.set(test_preparation)
         consultancy.partner_universities.set(partner_universities)
         consultancy.districts.set(districts)
 
-        # ✅ Assign branches
         for branch in branches_data:
             ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
 
@@ -159,7 +159,6 @@ class ConsultancySerializer(serializers.ModelSerializer):
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
-        # ✅ Prevent modifying the user account directly, since user is created automatically
         validated_data.pop("user_email", None)
 
         for attr, value in validated_data.items():
@@ -171,13 +170,13 @@ class ConsultancySerializer(serializers.ModelSerializer):
         instance.partner_universities.set(partner_universities)
         instance.districts.set(districts)
 
-        # ✅ Update branches
         instance.branches.all().delete()
         for branch in branches_data:
             ConsultancyBranch.objects.create(consultancy=instance, **branch)
 
         return instance
 
+# ✅ Minimal Serializer
 class ConsultancyMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Consultancy

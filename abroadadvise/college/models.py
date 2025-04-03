@@ -43,26 +43,29 @@ class College(models.Model):
     def __str__(self):
         return self.name
 
-    def assign_user(self, email, phone, name, password):
+    def assign_user(self, email, phone, password):
         """
-        ✅ Manually create and assign a user to this college.
-        Uses slugified college name for username.
+        ✅ Create and assign a user using college name as username and full name.
         """
         if not self.user:
-            base_username = slugify(name) or f"college_{self.id}"
+            base_username = slugify(self.name) or f"college_{self.id}"
             username = base_username
             counter = 1
 
+            # Ensure username uniqueness
             while User.objects.filter(username=username).exists():
                 username = f"{base_username}-{counter}"
                 counter += 1
 
-            user, created = User.objects.get_or_create(username=username, email=email)
-            if created:
-                user.set_password(password)
-                user.first_name = name
-                user.role = "college"
-                user.save()
+            # Avoid get_or_create to ensure full control over username assignment
+            user = User(
+                username=username,
+                email=email,
+                first_name=self.name,
+                role="college"
+            )
+            user.set_password(password)
+            user.save()
 
             self.user = user
             self.save(update_fields=["user"])
@@ -92,8 +95,7 @@ def create_college_user(sender, instance, created, **kwargs):
         instance.assign_user(
             email=instance.email,
             phone=instance.phone,
-            name=instance.name,
-            password="college123"  # 🔐 You may replace with random password logic
+            password="college123"  # 🔐 You may replace with a secure random password generator
         )
 
 

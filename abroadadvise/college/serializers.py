@@ -105,16 +105,8 @@ class CollegeSerializer(serializers.ModelSerializer):
         branches_data = validated_data.pop("branches", [])
         districts = validated_data.pop("districts", [])
 
+        # ✅ Create college; user will be created in post_save signal
         college = College.objects.create(**validated_data)
-
-        if college.email:
-            username = college.email.split('@')[0]
-            user, created = User.objects.get_or_create(username=username, email=college.email)
-            if created:
-                user.role = "college"
-                user.save()
-            college.user = user
-            college.save(update_fields=["user"])
 
         college.study_abroad_destinations.set(study_abroad_destinations)
         college.affiliated_universities.set(affiliated_universities)
@@ -126,7 +118,6 @@ class CollegeSerializer(serializers.ModelSerializer):
         return college
 
     def update(self, instance, validated_data):
-        # Remove fields that should not be updated unless explicitly passed
         study_abroad_destinations = validated_data.pop("study_abroad_destinations", None)
         affiliated_universities = validated_data.pop("affiliated_universities", None)
         districts = validated_data.pop("districts", None)
@@ -134,22 +125,17 @@ class CollegeSerializer(serializers.ModelSerializer):
 
         validated_data.pop("user_email", None)
 
-        # Update regular fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # Only update these if explicitly passed
         if study_abroad_destinations is not None:
             instance.study_abroad_destinations.set(study_abroad_destinations)
-
         if affiliated_universities is not None:
             instance.affiliated_universities.set(affiliated_universities)
-
         if districts is not None:
             instance.districts.set(districts)
 
-        # Update branches
         instance.branches.all().delete()
         for branch in branches_data:
             CollegeBranch.objects.create(college=instance, **branch)
