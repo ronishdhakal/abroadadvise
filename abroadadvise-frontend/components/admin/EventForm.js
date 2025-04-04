@@ -90,10 +90,19 @@ const EventForm = ({ eventSlug, onSuccess, onCancel }) => {
           fetchConsultancies(pageConsultancies, searchConsultancies),
         ]);
 
-        setAllDestinations(destinations.results || []);
+        // ✅ Merge fetched data with selected items
+        setAllDestinations((prev) => {
+          const selected = formData.targeted_destinations;
+          return mergeSelected(destinations.results || [], selected, "slug", "title");
+        });
         setTotalPagesDestinations(Math.ceil(destinations.count / 10));
-        setAllUniversities(universities.results || []);
+
+        setAllUniversities((prev) => {
+          const selected = formData.related_universities;
+          return mergeSelected(universities.results || [], selected, "slug", "name");
+        });
         setTotalPagesUniversities(Math.ceil(universities.count / 10));
+
         setAllConsultancies(consultancies.results || []);
         setTotalPagesConsultancies(Math.ceil(consultancies.count / 10));
       } catch (err) {
@@ -108,6 +117,8 @@ const EventForm = ({ eventSlug, onSuccess, onCancel }) => {
     searchDestinations,
     searchUniversities,
     searchConsultancies,
+    formData.targeted_destinations, // Add dependencies
+    formData.related_universities, // Add dependencies
   ]);
 
   // Automatically generate slug if empty
@@ -174,6 +185,17 @@ const EventForm = ({ eventSlug, onSuccess, onCancel }) => {
     }
   };
 
+  // ✅ Function to merge selected items with fetched data
+  const mergeSelected = (fetchedList, selectedSlugs, key = "slug", labelKey = "name") => {
+    const merged = [...fetchedList];
+    selectedSlugs.forEach((slug) => {
+      if (!fetchedList.find((item) => item[key] === slug)) {
+        merged.push({ [key]: slug, [labelKey]: slug });
+      }
+    });
+    return merged;
+  };
+
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-2xl font-bold mb-4">{isEditing ? "Edit Event" : "Create Event"}</h2>
@@ -187,7 +209,9 @@ const EventForm = ({ eventSlug, onSuccess, onCancel }) => {
           formData={formData}
           setFormData={setFormData}
           allDestinations={allDestinations}
+          setAllDestinations={setAllDestinations} // Add setAllDestinations
           allUniversities={allUniversities}
+          setAllUniversities={setAllUniversities} // Add setAllUniversities
           allConsultancies={allConsultancies}
           pageDestinations={pageDestinations}
           setPageDestinations={setPageDestinations}

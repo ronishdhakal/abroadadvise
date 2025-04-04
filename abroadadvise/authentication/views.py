@@ -147,6 +147,7 @@ def student_only_view(request):
 
 
 # For Users in Admin
+# ✅ For Users in Admin
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])
 def get_all_users(request):
@@ -155,6 +156,8 @@ def get_all_users(request):
     users = User.objects.filter(
         Q(username__icontains=search) |
         Q(email__icontains=search) |
+        Q(first_name__icontains=search) |  # ✅ Added
+        Q(last_name__icontains=search) |   # ✅ Added
         Q(role__icontains=search)
     ).order_by('-date_joined')
 
@@ -162,6 +165,7 @@ def get_all_users(request):
     result_page = paginator.paginate_queryset(users, request)
     serializer = UserListSerializer(result_page, many=True)
     return paginator.get_paginated_response(serializer.data)
+
 
 
 # ✅ CREATE a user (only for superadmin)

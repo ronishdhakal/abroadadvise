@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import Select from "react-select";
+import { fetchDisciplines } from "@/utils/api";
 
 const UniversityFilters = ({
   searchQuery = "",
@@ -10,15 +12,42 @@ const UniversityFilters = ({
   setCountryQuery = () => {},
   selectedDisciplines = [],
   setSelectedDisciplines = () => {},
-  disciplines = [],
 }) => {
-  // ✅ Convert disciplines to react-select options safely
-  const disciplineOptions = Array.isArray(disciplines)
-    ? disciplines.map((discipline) => ({
+  const [disciplineOptions, setDisciplineOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // ✅ Fetch all pages of disciplines and merge
+  const loadAllDisciplines = async () => {
+    setLoading(true);
+    let all = [];
+    let page = 1;
+    let hasMore = true;
+
+    try {
+      while (hasMore) {
+        const data = await fetchDisciplines(page);
+        all = [...all, ...(data.results || [])];
+        const total = data.count || 0;
+        hasMore = all.length < total;
+        page++;
+      }
+
+      const options = all.map((discipline) => ({
         value: discipline.id,
         label: discipline.name,
-      }))
-    : [];
+      }));
+
+      setDisciplineOptions(options);
+    } catch (error) {
+      console.error("❌ Error fetching disciplines:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAllDisciplines();
+  }, []);
 
   // ✅ Custom styles for react-select
   const customStyles = {
@@ -92,6 +121,7 @@ const UniversityFilters = ({
             <Select
               options={disciplineOptions}
               isMulti
+              isLoading={loading}
               value={selectedDisciplines}
               onChange={setSelectedDisciplines}
               placeholder="Select disciplines..."

@@ -1,6 +1,9 @@
-import { useState } from "react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { Search, Filter, MapPin, GraduationCap, Globe } from "lucide-react";
 import Select from "react-select";
+import { fetchDisciplines, fetchUniversitiesDropdown, fetchDestinationsDropdown } from "@/utils/api";
 
 const CourseFilters = ({
   searchQuery,
@@ -11,49 +14,126 @@ const CourseFilters = ({
   setCountryQuery,
   selectedDisciplines,
   setSelectedDisciplines,
-  disciplines = [],
-  universities = [],
-  countries = [],
+  disciplines: initialDisciplines = [],
+  universities: initialUniversities = [],
+  countries: initialCountries = [],
 }) => {
-  const [showFilters, setShowFilters] = useState(false); // ✅ Toggle state for filters
+  const [showFilters, setShowFilters] = useState(false); // Toggle state for filters
+  const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+  const [loadingUniversities, setLoadingUniversities] = useState(false);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  
+  const [disciplineOptions, setDisciplineOptions] = useState([]);
+  const [universityOptions, setUniversityOptions] = useState([]);
+  const [countryOptions, setCountryOptions] = useState([]);
 
-  // Convert disciplines, universities, & countries to react-select options
-  const disciplineOptions = disciplines.map((d) => ({
-    value: d?.id || "",
-    label: d?.name || "Unknown",
-  }));
+  // ✅ Fetch all pages of disciplines
+  const loadAllDisciplines = async () => {
+    setLoadingDisciplines(true);
+    let all = [];
+    let page = 1;
+    let hasMore = true;
 
-  const countryOptions = countries.map((c) => ({
-    value: c?.name || "",
-    label: c?.name || "Unknown",
-  }));
+    try {
+      while (hasMore) {
+        const data = await fetchDisciplines(page);
+        all = [...all, ...(data.results || [])];
+        const total = data.count || 0;
+        hasMore = all.length < total;
+        page++;
+      }
 
-  const universityOptions = universities.map((u) => ({
-    value: u?.slug || "",
-    label: u?.name || "Unknown",
-  }));
+      const options = all.map((discipline) => ({
+        value: discipline.id,
+        label: discipline.name,
+      }));
 
-  // ✅ Custom Styles for react-select to make text BLACK
+      setDisciplineOptions(options);
+    } catch (error) {
+      console.error("❌ Error fetching disciplines:", error);
+    } finally {
+      setLoadingDisciplines(false);
+    }
+  };
+
+  // ✅ Fetch universities
+  const loadUniversities = async () => {
+    setLoadingUniversities(true);
+    try {
+      const data = await fetchUniversitiesDropdown();
+      const options = (data || []).map((uni) => ({
+        value: uni.slug || uni.id,
+        label: uni.name,
+      }));
+      setUniversityOptions(options);
+    } catch (error) {
+      console.error("❌ Error fetching universities:", error);
+    } finally {
+      setLoadingUniversities(false);
+    }
+  };
+
+  // ✅ Fetch countries (destinations)
+  const loadCountries = async () => {
+    setLoadingCountries(true);
+    try {
+      const data = await fetchDestinationsDropdown();
+      const options = (data || []).map((country) => ({
+        value: country.slug || country.id,
+        label: country.title,
+      }));
+      setCountryOptions(options);
+    } catch (error) {
+      console.error("❌ Error fetching countries:", error);
+    } finally {
+      setLoadingCountries(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!initialDisciplines.length) loadAllDisciplines();
+    else setDisciplineOptions(initialDisciplines.map((d) => ({ value: d.id, label: d.name })));
+    
+    if (!initialUniversities.length) loadUniversities();
+    else setUniversityOptions(initialUniversities.map((u) => ({ value: u.slug || u.id, label: u.name })));
+    
+    if (!initialCountries.length) loadCountries();
+    else setCountryOptions(initialCountries.map((c) => ({ value: c.slug || c.id, label: c.title })));
+  }, [initialDisciplines, initialUniversities, initialCountries]);
+
+  // ✅ Custom styles
   const customStyles = {
-    control: (base) => ({
-      ...base,
-      color: "black",
+    control: (provided) => ({
+      ...provided,
+      borderRadius: "8px",
+      borderColor: "#D1D5DB",
+      boxShadow: "none",
+      "&:hover": { borderColor: "#2563EB" },
+      paddingLeft: "2.5rem", // Space for icons
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "#fff" : "#000",
+      backgroundColor: state.isSelected ? "#2563EB" : "#fff",
+      "&:hover": {
+        backgroundColor: "#E5E7EB",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "8px",
+      boxShadow: "rgba(0, 0, 0, 0.1) 0px 4px 12px",
     }),
     singleValue: (provided) => ({
       ...provided,
       color: "black",
     }),
-    option: (provided, state) => ({
-      ...provided,
-      color: state.isSelected ? "white" : "black", // ✅ Black text for unselected options
-      backgroundColor: state.isSelected ? "#2563eb" : "white", // ✅ Blue highlight for selected
-    }),
   };
 
   return (
-    <div className="w-full">
+    <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
       {/* Search Bar & Filter Button */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -61,14 +141,12 @@ const CourseFilters = ({
             placeholder="Search for a course..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
+            className="w-full pl-10 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
             aria-label="Search Courses"
           />
         </div>
-
-        {/* Filter Toggle Button */}
         <button
-          className="flex items-center bg-blue-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-blue-700 transition whitespace-nowrap"
+          className="flex items-center bg-blue-600 text-white px-4 py-3 rounded-lg shadow-md hover:bg-blue-700 transition whitespace-nowrap ml-4"
           onClick={() => setShowFilters(!showFilters)}
         >
           <Filter className="h-5 w-5 mr-2" />
@@ -78,62 +156,65 @@ const CourseFilters = ({
 
       {/* Show Filters Only When "Filters" is Clicked */}
       {showFilters && (
-        <div className="mt-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* University Dropdown */}
-            <div className="relative">
-              <GraduationCap className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Select
-                options={universityOptions}
-                value={universityOptions.find((u) => u.value === universityQuery) || null}
-                onChange={(selected) => setUniversityQuery(selected?.value || null)}
-                placeholder="Select University..."
-                styles={customStyles} // ✅ Apply black text styles
-                aria-label="Select University"
-              />
-            </div>
-
-            {/* Country Dropdown */}
-            <div className="relative">
-              <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Select
-                options={countryOptions}
-                value={countryOptions.find((c) => c.value === countryQuery) || null}
-                onChange={(selected) => setCountryQuery(selected?.value || null)}
-                placeholder="Select Country..."
-                styles={customStyles} // ✅ Apply black text styles
-                aria-label="Select Country"
-              />
-            </div>
-
-            {/* Discipline Multi-Select */}
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <Select
-                isMulti
-                options={disciplineOptions}
-                value={selectedDisciplines}
-                onChange={setSelectedDisciplines}
-                placeholder="Select Disciplines..."
-                styles={customStyles} // ✅ Apply black text styles
-                aria-label="Select Disciplines"
-              />
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {/* University Dropdown */}
+          <div className="relative">
+            <GraduationCap className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+            <Select
+              options={universityOptions}
+              value={universityOptions.find((u) => u.value === universityQuery) || null}
+              onChange={(selected) => setUniversityQuery(selected?.value || "")}
+              placeholder="Select University..."
+              styles={customStyles}
+              isLoading={loadingUniversities}
+              isClearable
+              aria-label="Select University"
+            />
           </div>
 
-          {/* Clear Filters Button */}
-          <button
-            onClick={() => {
-              setSearchQuery("");
-              setUniversityQuery(null);
-              setCountryQuery(null);
-              setSelectedDisciplines([]);
-            }}
-            className="mt-4 text-sm text-red-600 hover:underline"
-          >
-            Clear All
-          </button>
+          {/* Country Search Filter (Updated to Input like UniversityFilters) */}
+          <div className="relative">
+            <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by country..."
+              value={countryQuery}
+              onChange={(e) => setCountryQuery(e.target.value)}
+              className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
+              aria-label="Search Country"
+            />
+          </div>
+
+          {/* Discipline Multi-Select */}
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+            <Select
+              isMulti
+              options={disciplineOptions}
+              value={selectedDisciplines}
+              onChange={setSelectedDisciplines}
+              placeholder="Select Disciplines..."
+              styles={customStyles}
+              isLoading={loadingDisciplines}
+              aria-label="Select Disciplines"
+            />
+          </div>
         </div>
+      )}
+
+      {/* Clear Filters Button (Visible only when filters are shown) */}
+      {showFilters && (
+        <button
+          onClick={() => {
+            setSearchQuery("");
+            setUniversityQuery("");
+            setCountryQuery("");
+            setSelectedDisciplines([]);
+          }}
+          className="mt-4 text-sm text-blue-600 hover:underline"
+        >
+          Clear All
+        </button>
       )}
     </div>
   );

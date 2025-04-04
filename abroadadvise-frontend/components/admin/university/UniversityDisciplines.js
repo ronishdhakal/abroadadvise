@@ -2,81 +2,51 @@
 
 import { useEffect, useState } from "react";
 import Select from "react-select";
-import { fetchDisciplines } from "@/utils/api"; // API function to fetch disciplines
+import { fetchDisciplines } from "@/utils/api";
 
 const UniversityDisciplines = ({ formData, setFormData }) => {
   const [loading, setLoading] = useState(false);
   const [disciplines, setDisciplines] = useState([]);
   const [selectedDisciplines, setSelectedDisciplines] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
 
-  // Pagination component (modeled after DestinationsPage)
-  const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-    const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
+  // ✅ Fetch all pages of disciplines and merge them
+  const loadAllDisciplines = async () => {
+    setLoading(true);
+    let all = [];
+    let page = 1;
+    let hasMore = true;
 
-    return (
-      <div className="flex justify-center gap-2 mt-4">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        {pages.map((p) => (
-          <button
-            key={p}
-            onClick={() => onPageChange(p)}
-            className={`px-3 py-1 rounded ${
-              p === currentPage ? "bg-[#4c9bd5] text-white" : "bg-gray-200"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
-    );
+    try {
+      while (hasMore) {
+        const data = await fetchDisciplines(page, "");
+        all = [...all, ...(data.results || [])];
+        const total = data.count || 0;
+        hasMore = all.length < total;
+        page++;
+      }
+      setDisciplines(all);
+    } catch (err) {
+      console.error("❌ Error loading all disciplines:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fetch paginated disciplines
   useEffect(() => {
-    setLoading(true);
-    fetchDisciplines(page, search)
-      .then((data) => {
-        setDisciplines(data.results || []);
-        setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 items per page
-      })
-      .catch((error) => console.error("❌ Error fetching disciplines:", error))
-      .finally(() => setLoading(false));
-  }, [page, search]);
+    loadAllDisciplines();
+  }, []);
 
-  // Handle Discipline Selection
   useEffect(() => {
-    if (disciplines.length > 0) {
-      const selected = (formData.disciplines || [])
-        .map((id) => {
-          const discipline = disciplines.find((d) => d.id === id);
-          return discipline
-            ? { value: discipline.id.toString(), label: discipline.name }
-            : null;
-        })
-        .filter(Boolean);
-      setSelectedDisciplines(selected);
-    } else {
-      setSelectedDisciplines([]);
-    }
+    const selected = (formData.disciplines || [])
+      .map((id) => {
+        const discipline = disciplines.find((d) => d.id === id);
+        return discipline
+          ? { value: discipline.id.toString(), label: discipline.name }
+          : null;
+      })
+      .filter(Boolean);
+    setSelectedDisciplines(selected);
   }, [disciplines, formData.disciplines]);
 
   const handleDisciplineChange = (selectedOptions) => {
@@ -84,7 +54,7 @@ const UniversityDisciplines = ({ formData, setFormData }) => {
     setFormData((prev) => ({
       ...prev,
       disciplines: selectedOptions
-        ? selectedOptions.map((opt) => Number(opt.value)) // Convert to integer IDs
+        ? selectedOptions.map((opt) => Number(opt.value))
         : [],
     }));
   };
@@ -102,24 +72,24 @@ const UniversityDisciplines = ({ formData, setFormData }) => {
         className="w-full p-2 border border-gray-300 rounded mt-1 mb-2 focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] transition-all"
       />
 
-      {/* Multi-Select Dropdown for Disciplines */}
+      {/* Multi-Select Dropdown */}
       <Select
         isMulti
         isLoading={loading}
         options={disciplines
           .filter((d) => d.name.toLowerCase().includes(search.toLowerCase()))
           .map((discipline) => ({
-            value: discipline.id.toString(), // Ensure string values for React-Select
+            value: discipline.id.toString(),
             label: discipline.name,
           }))}
         value={selectedDisciplines}
         onChange={handleDisciplineChange}
         className="w-full"
         placeholder="Select disciplines..."
-        isSearchable={false} // Search handled by input above
+        isSearchable={false} // handled manually
       />
 
-      {/* Display Selected Disciplines as Tags */}
+      {/* Display Selected Disciplines */}
       {selectedDisciplines.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {selectedDisciplines.map((option) => (
@@ -131,15 +101,6 @@ const UniversityDisciplines = ({ formData, setFormData }) => {
             </span>
           ))}
         </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
       )}
     </div>
   );

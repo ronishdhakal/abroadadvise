@@ -1,211 +1,209 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Select from "react-select";
 import {
   fetchDisciplines,
-  fetchUniversities,
-  fetchDestinations,
+  fetchUniversitiesDropdown,
+  fetchDestinationsDropdown,
 } from "@/utils/api";
-import Pagination from "@/pages/destination/Pagination";
 
 const CourseInfo = ({ formData, setFormData }) => {
-  const [loading, setLoading] = useState(false);
-
-  // ✅ Disciplines
+  const [loadingDisciplines, setLoadingDisciplines] = useState(false);
+  const [loadingUniversities, setLoadingUniversities] = useState(false);
+  const [loadingDestinations, setLoadingDestinations] = useState(false);
+  
   const [disciplines, setDisciplines] = useState([]);
-  const [disciplineSearch, setDisciplineSearch] = useState("");
-  const [disciplinePage, setDisciplinePage] = useState(1);
-  const [disciplineTotalPages, setDisciplineTotalPages] = useState(1);
-  const disciplineMounted = useRef(false);
-
-  // ✅ Universities
   const [universities, setUniversities] = useState([]);
-  const [univSearch, setUnivSearch] = useState("");
-  const [univPage, setUnivPage] = useState(1);
-  const [univTotalPages, setUnivTotalPages] = useState(1);
-  const univMounted = useRef(false);
-
-  // ✅ Destinations
   const [destinations, setDestinations] = useState([]);
-  const [destSearch, setDestSearch] = useState("");
-  const [destPage, setDestPage] = useState(1);
-  const [destTotalPages, setDestTotalPages] = useState(1);
-  const destMounted = useRef(false);
+  
+  const [disciplineSearch, setDisciplineSearch] = useState("");
 
-  // ✅ Fetch Disciplines
-  useEffect(() => {
-    if (!disciplineMounted.current) {
-      disciplineMounted.current = true;
-      return;
+  // ✅ Fetch Disciplines (similar to UniversityDisciplines)
+  const loadAllDisciplines = async () => {
+    setLoadingDisciplines(true);
+    let all = [];
+    let page = 1;
+    let hasMore = true;
+
+    try {
+      while (hasMore) {
+        const data = await fetchDisciplines(page, "");
+        all = [...all, ...(data.results || [])];
+        const total = data.count || 0;
+        hasMore = all.length < total;
+        page++;
+      }
+      setDisciplines(all);
+    } catch (err) {
+      console.error("❌ Error loading all disciplines:", err);
+    } finally {
+      setLoadingDisciplines(false);
     }
+  };
 
-    fetchDisciplines(disciplinePage, disciplineSearch)
-      .then((data) => {
-        const selected = formData.disciplines
-          .map((id) => disciplines.find((d) => d.id === id))
-          .filter(Boolean);
-
-        const merged = [
-          ...new Map([...selected, ...(data.results || [])].map((d) => [d.id, d])).values(),
-        ];
-        setDisciplines(merged);
-        setDisciplineTotalPages(Math.ceil(data.count / 10));
-      })
-      .catch(() => setDisciplines([]));
-  }, [disciplinePage, disciplineSearch]);
-
-  // ✅ Fetch Universities
   useEffect(() => {
-    if (!univMounted.current) {
-      univMounted.current = true;
-      return;
-    }
+    loadAllDisciplines();
+  }, []);
 
-    fetchUniversities(univPage, univSearch)
-      .then((data) => {
-        const selected = formData.university
-          ? [universities.find((u) => u.id === formData.university)].filter(Boolean)
-          : [];
-
-        const merged = [
-          ...new Map([...selected, ...(data.results || [])].map((u) => [u.id, u])).values(),
-        ];
-        setUniversities(merged);
-        setUnivTotalPages(Math.ceil(data.count / 10));
-      })
-      .catch(() => setUniversities([]));
-  }, [univPage, univSearch]);
-
-  // ✅ Fetch Destinations
+  // ✅ Fetch Universities (similar to ConsultancyUniversities)
   useEffect(() => {
-    if (!destMounted.current) {
-      destMounted.current = true;
-      return;
-    }
+    setLoadingUniversities(true);
+    fetchUniversitiesDropdown()
+      .then((data) => setUniversities(data || []))
+      .catch((error) => console.error("Error fetching universities:", error))
+      .finally(() => setLoadingUniversities(false));
+  }, []);
 
-    fetchDestinations(destPage, destSearch)
-      .then((data) => {
-        const selected = formData.destination
-          ? [destinations.find((d) => d.id === formData.destination)].filter(Boolean)
-          : [];
+  // ✅ Fetch Destinations (similar to ConsultancyStudyDest)
+  useEffect(() => {
+    setLoadingDestinations(true);
+    fetchDestinationsDropdown()
+      .then((data) => setDestinations(data || []))
+      .catch((error) => console.error("Error fetching destinations:", error))
+      .finally(() => setLoadingDestinations(false));
+  }, []);
 
-        const merged = [
-          ...new Map([...selected, ...(data.results || [])].map((d) => [d.id, d])).values(),
-        ];
-        setDestinations(merged);
-        setDestTotalPages(Math.ceil(data.count / 10));
-      })
-      .catch(() => setDestinations([]));
-  }, [destPage, destSearch]);
+  // ✅ Handlers
+  const handleDisciplineChange = (selectedOptions) => {
+    setFormData((prev) => ({
+      ...prev,
+      disciplines: selectedOptions
+        ? selectedOptions.map((opt) => Number(opt.value))
+        : [],
+    }));
+  };
+
+  const handleUniversityChange = (selectedOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      university: selectedOption ? selectedOption.value : "",
+    }));
+  };
+
+  const handleDestinationChange = (selectedOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      destination: selectedOption ? selectedOption.value : "",
+    }));
+  };
 
   return (
     <div className="p-6 bg-white shadow-lg rounded-xl">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Course Information</h2>
 
       {/* ✅ Disciplines */}
-      <label className="block text-gray-700 font-medium mb-1">Disciplines</label>
-      <input
-        type="text"
-        placeholder="Search disciplines..."
-        value={disciplineSearch}
-        onChange={(e) => {
-          setDisciplineSearch(e.target.value);
-          setDisciplinePage(1);
-        }}
-        className="mb-2 p-2 border border-gray-300 rounded w-full"
-      />
-      <Select
-        isMulti
-        isLoading={loading}
-        options={disciplines.map((d) => ({ value: d.id, label: d.name }))}
-        value={formData.disciplines
-          .map((id) => {
-            const d = disciplines.find((d) => d.id === id);
-            return d ? { value: d.id, label: d.name } : null;
-          })
-          .filter(Boolean)}
-        onChange={(selected) =>
-          setFormData((prev) => ({
-            ...prev,
-            disciplines: selected.map((opt) => opt.value),
-          }))
-        }
-        className="w-full mb-4"
-      />
-      <Pagination
-        currentPage={disciplinePage}
-        totalPages={disciplineTotalPages}
-        onPageChange={setDisciplinePage}
-      />
+      <div className="mb-6">
+        <h3 className="text-gray-700 font-medium mb-1">Disciplines</h3>
+        <input
+          type="text"
+          placeholder="Search disciplines..."
+          value={disciplineSearch}
+          onChange={(e) => setDisciplineSearch(e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded mt-1 mb-2 focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] transition-all"
+        />
+        <Select
+          isMulti
+          isLoading={loadingDisciplines}
+          options={disciplines
+            .filter((d) => d.name.toLowerCase().includes(disciplineSearch.toLowerCase()))
+            .map((discipline) => ({
+              value: discipline.id.toString(),
+              label: discipline.name,
+            }))}
+          value={formData.disciplines
+            ?.map((id) => {
+              const discipline = disciplines.find((d) => d.id === id);
+              return discipline
+                ? { value: discipline.id.toString(), label: discipline.name }
+                : null;
+            })
+            .filter(Boolean)}
+          onChange={handleDisciplineChange}
+          className="w-full"
+          placeholder="Select disciplines..."
+          isSearchable={false} // Handled manually via input
+        />
+        {formData.disciplines?.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {formData.disciplines.map((id) => {
+              const discipline = disciplines.find((d) => d.id === id);
+              return (
+                discipline && (
+                  <span
+                    key={discipline.id}
+                    className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md"
+                  >
+                    {discipline.name}
+                  </span>
+                )
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* ✅ University */}
-      <label className="block text-gray-700 font-medium mb-1 mt-6">University</label>
-      <input
-        type="text"
-        placeholder="Search universities..."
-        value={univSearch}
-        onChange={(e) => {
-          setUnivSearch(e.target.value);
-          setUnivPage(1);
-        }}
-        className="mb-2 p-2 border border-gray-300 rounded w-full"
-      />
-      <Select
-        isLoading={loading}
-        options={universities.map((u) => ({ value: u.id, label: u.name }))}
-        value={
-          formData.university
-            ? {
-                value: formData.university,
-                label: universities.find((u) => u.id === formData.university)?.name,
-              }
-            : null
-        }
-        onChange={(selected) =>
-          setFormData((prev) => ({ ...prev, university: selected.value }))
-        }
-        className="w-full mb-4"
-      />
-      <Pagination
-        currentPage={univPage}
-        totalPages={univTotalPages}
-        onPageChange={setUnivPage}
-      />
+      <div className="mb-6">
+        <h3 className="text-gray-700 font-medium mb-1">University</h3>
+        <Select
+          isLoading={loadingUniversities}
+          options={universities.map((university) => ({
+            value: university.id,
+            label: university.name,
+          }))}
+          value={
+            formData.university
+              ? {
+                  value: formData.university,
+                  label: universities.find((u) => u.id === formData.university)?.name,
+                }
+              : null
+          }
+          onChange={handleUniversityChange}
+          className="w-full"
+          placeholder="Select university..."
+          isClearable
+        />
+        {formData.university && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+              {universities.find((u) => u.id === formData.university)?.name}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ✅ Destination */}
-      <label className="block text-gray-700 font-medium mb-1 mt-6">Study Destination</label>
-      <input
-        type="text"
-        placeholder="Search destinations..."
-        value={destSearch}
-        onChange={(e) => {
-          setDestSearch(e.target.value);
-          setDestPage(1);
-        }}
-        className="mb-2 p-2 border border-gray-300 rounded w-full"
-      />
-      <Select
-        isLoading={loading}
-        options={destinations.map((d) => ({ value: d.id, label: d.title }))}
-        value={
-          formData.destination
-            ? {
-                value: formData.destination,
-                label: destinations.find((d) => d.id === formData.destination)?.title,
-              }
-            : null
-        }
-        onChange={(selected) =>
-          setFormData((prev) => ({ ...prev, destination: selected.value }))
-        }
-        className="w-full"
-      />
-      <Pagination
-        currentPage={destPage}
-        totalPages={destTotalPages}
-        onPageChange={setDestPage}
-      />
+      <div>
+        <h3 className="text-gray-700 font-medium mb-1">Study Destination</h3>
+        <Select
+          isLoading={loadingDestinations}
+          options={destinations.map((dest) => ({
+            value: dest.id,
+            label: dest.title,
+          }))}
+          value={
+            formData.destination
+              ? {
+                  value: formData.destination,
+                  label: destinations.find((d) => d.id === formData.destination)?.title,
+                }
+              : null
+          }
+          onChange={handleDestinationChange}
+          className="w-full"
+          placeholder="Select study destination..."
+          isClearable
+        />
+        {formData.destination && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+              {destinations.find((d) => d.id === formData.destination)?.title}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

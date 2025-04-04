@@ -37,7 +37,7 @@ const ConsultancyFilters = ({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {/* Search Field */}
+        {/* 🔍 Search Field */}
         <div className="relative">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
@@ -50,7 +50,7 @@ const ConsultancyFilters = ({
           />
         </div>
 
-        {/* District Multi-Select Filter */}
+        {/* 📍 District Multi-Select */}
         <div className="relative">
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <Select
@@ -64,7 +64,7 @@ const ConsultancyFilters = ({
           />
         </div>
 
-        {/* Destination Dropdown */}
+        {/* 🌍 Destination Dropdown */}
         <div className="relative">
           <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
@@ -82,7 +82,7 @@ const ConsultancyFilters = ({
           </select>
         </div>
 
-        {/* Exam Dropdown */}
+        {/* 📝 Exam Dropdown */}
         <div className="relative">
           <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
@@ -100,7 +100,7 @@ const ConsultancyFilters = ({
           </select>
         </div>
 
-        {/* MOE Certification Dropdown */}
+        {/* 🏅 MOE Certified Filter */}
         <div className="relative">
           <Award className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Upload, CalendarDays, BookOpen, Trash } from "lucide-react";
-import { fetchDestinations } from "@/utils/api";
+import { fetchDestinationsDropdown } from "@/utils/api"; // Updated to use fetchDestinationsDropdown
 import Select from "react-select";
 
 const LEVEL_CHOICES = [
@@ -13,13 +13,17 @@ const LEVEL_CHOICES = [
 ];
 
 const ScholarshipHeader = ({ formData, setFormData }) => {
+  const [loadingDestinations, setLoadingDestinations] = useState(false);
   const [destinations, setDestinations] = useState([]);
   const [featuredPreview, setFeaturedPreview] = useState(null);
 
+  // ✅ Fetch Destinations (exact same as CourseInfo)
   useEffect(() => {
-    fetchDestinations()
-      .then((res) => setDestinations(res.results || []))
-      .catch((err) => console.error("Failed to fetch destinations", err));
+    setLoadingDestinations(true);
+    fetchDestinationsDropdown()
+      .then((data) => setDestinations(data || []))
+      .catch((error) => console.error("Error fetching destinations:", error))
+      .finally(() => setLoadingDestinations(false));
   }, []);
 
   useEffect(() => {
@@ -57,10 +61,11 @@ const ScholarshipHeader = ({ formData, setFormData }) => {
     setFeaturedPreview(null);
   };
 
+  // ✅ Handle Destination Change (exact same as CourseInfo)
   const handleDestinationChange = (selectedOption) => {
     setFormData((prev) => ({
       ...prev,
-      destination: selectedOption?.value || null,
+      destination: selectedOption ? selectedOption.value : "",
     }));
   };
 
@@ -114,19 +119,35 @@ const ScholarshipHeader = ({ formData, setFormData }) => {
         />
       </div>
 
-      {/* Destination */}
+      {/* ✅ Destination (exact same as CourseInfo) */}
       <div>
-        <label className="font-medium text-gray-700 mb-1 block">Destination</label>
+        <h3 className="text-gray-700 font-medium mb-1">Study Destination</h3>
         <Select
-          options={destinations.map((d) => ({ value: d.id, label: d.title }))}
+          isLoading={loadingDestinations}
+          options={destinations.map((dest) => ({
+            value: dest.id,
+            label: dest.title,
+          }))}
           value={
-            destinations
-              .map((d) => ({ value: d.id, label: d.title }))
-              .find((opt) => opt.value === formData.destination) || null
+            formData.destination
+              ? {
+                  value: formData.destination,
+                  label: destinations.find((d) => d.id === formData.destination)?.title,
+                }
+              : null
           }
           onChange={handleDestinationChange}
-          placeholder="Select destination"
+          className="w-full"
+          placeholder="Select study destination..."
+          isClearable
         />
+        {formData.destination && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <span className="bg-gray-200 text-gray-700 px-3 py-1 text-sm rounded-md">
+              {destinations.find((d) => d.id === formData.destination)?.title}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Study Level */}

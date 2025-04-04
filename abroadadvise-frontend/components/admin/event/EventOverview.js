@@ -12,7 +12,9 @@ const EventOverview = ({
   formData,
   setFormData,
   allDestinations,
+  setAllDestinations, // Add setAllDestinations
   allUniversities,
+  setAllUniversities, // Add setAllUniversities
   allConsultancies,
   pageDestinations,
   setPageDestinations,
@@ -68,6 +70,7 @@ const EventOverview = ({
     );
   };
 
+  // ✅ Function to merge selected items with fetched data
   const mergeSelected = (fetchedList, selectedSlugs, key = "slug", labelKey = "name") => {
     const merged = [...fetchedList];
     selectedSlugs.forEach((slug) => {
@@ -82,7 +85,7 @@ const EventOverview = ({
     setFormData((prev) => ({
       ...prev,
       organizer_slug: "",
-      organizer_type: "consultancy",
+      organizer_type: e.target.value, // Update the organizer_type
     }));
   };
 
@@ -109,7 +112,7 @@ const EventOverview = ({
         <label className="block text-gray-700 font-semibold">Organizer Type:</label>
         <select
           name="organizer_type"
-          value={"consultancy"}
+          value={formData.organizer_type || "consultancy"} // Set default value
           onChange={handleOrganizerTypeChange}
           className="w-full p-2 border border-gray-300 rounded mt-1"
         >
@@ -162,12 +165,17 @@ const EventOverview = ({
         <Select
           isMulti
           isSearchable={false} // Search handled by input above
-          options={allDestinations
-            .filter((d) => d.title.toLowerCase().includes(searchDestinations.toLowerCase()))
-            .map((d) => ({
-              value: d.slug,
-              label: d.title,
-            }))}
+          options={mergeSelected(
+            allDestinations
+              .filter((d) => d.title.toLowerCase().includes(searchDestinations.toLowerCase()))
+              .map((d) => ({
+                value: d.slug,
+                label: d.title,
+              })),
+            formData.targeted_destinations,
+            "value",
+            "label"
+          )}
           value={formData.targeted_destinations
             .map((slug) => {
               const d = allDestinations.find((dest) => dest.slug === slug);
@@ -200,12 +208,17 @@ const EventOverview = ({
         <Select
           isMulti
           isSearchable={false} // Search handled by input above
-          options={allUniversities
-            .filter((u) => u.name.toLowerCase().includes(searchUniversities.toLowerCase()))
-            .map((u) => ({
-              value: u.slug,
-              label: u.name,
-            }))}
+          options={mergeSelected(
+            allUniversities
+              .filter((u) => u.name.toLowerCase().includes(searchUniversities.toLowerCase()))
+              .map((u) => ({
+                value: u.slug,
+                label: u.name,
+              })),
+            formData.related_universities,
+            "value",
+            "label"
+          )}
           value={formData.related_universities
             .map((slug) => {
               const uni = allUniversities.find((u) => u.slug === slug);

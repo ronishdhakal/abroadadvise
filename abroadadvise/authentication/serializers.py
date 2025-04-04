@@ -1,29 +1,41 @@
 from rest_framework import serializers
 from .models import User
 
+# ✅ UserSerializer (basic default serializer)
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'password']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'role', 'password'
+        ]
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
+        password = validated_data.pop('password', None)
+        user = User(**validated_data)
+        if password:
+            user.set_password(password)
+        user.save()
         return user
 
-
-# ✅ For listing users
+# ✅ UserListSerializer (for listing users)
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'is_active', 'date_joined']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'role', 'is_active', 'date_joined'
+        ]
 
-
-# ✅ For creating users (with password)
+# ✅ UserCreateSerializer (for creating users)
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'password']
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'role', 'password'
+        ]
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -33,9 +45,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
-# ✅ For updating users (excluding password)
+# ✅ UserUpdateSerializer (for updating users, excluding password)
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username', 'email', 'role', 'is_active']
+        fields = [
+            'username', 'email', 'first_name', 'last_name',
+            'role', 'is_active'
+        ]
