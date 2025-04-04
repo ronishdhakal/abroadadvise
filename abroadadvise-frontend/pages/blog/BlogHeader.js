@@ -71,11 +71,18 @@ const BlogHeader = ({ blog }) => {
         <div className="w-full mb-8 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={aboveHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer" className="block">
             <Image
-              src={aboveHeadlineAd.desktop_image_url || "/placeholder.svg"}
+              src={aboveHeadlineAd.desktop_image_url}
               alt={aboveHeadlineAd.title}
               width={1200}
               height={150}
-              className="w-full object-cover"
+              className="hidden sm:block w-full object-cover"
+            />
+            <Image
+              src={aboveHeadlineAd.mobile_image_url || aboveHeadlineAd.desktop_image_url}
+              alt={aboveHeadlineAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden w-full object-cover"
             />
           </a>
         </div>
@@ -125,11 +132,18 @@ const BlogHeader = ({ blog }) => {
         <div className="w-full my-8 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={belowHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer" className="block">
             <Image
-              src={belowHeadlineAd.desktop_image_url || "/placeholder.svg"}
+              src={belowHeadlineAd.desktop_image_url}
               alt={belowHeadlineAd.title}
               width={1200}
               height={150}
-              className="w-full object-cover"
+              className="hidden sm:block w-full object-cover"
+            />
+            <Image
+              src={belowHeadlineAd.mobile_image_url || belowHeadlineAd.desktop_image_url}
+              alt={belowHeadlineAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden w-full object-cover"
             />
           </a>
         </div>
@@ -140,7 +154,7 @@ const BlogHeader = ({ blog }) => {
         {blog.featured_image_url ? (
           <div className="rounded-xl overflow-hidden shadow-md">
             <Image
-              src={blog.featured_image_url || "/placeholder.svg"}
+              src={blog.featured_image_url}
               alt={blog.title}
               width={1100}
               height={550}
@@ -178,11 +192,18 @@ const BlogHeader = ({ blog }) => {
         <div className="w-full mt-8 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={belowImageAd.redirect_url} target="_blank" rel="noopener noreferrer" className="block">
             <Image
-              src={belowImageAd.desktop_image_url || "/placeholder.svg"}
+              src={belowImageAd.desktop_image_url}
               alt={belowImageAd.title}
               width={1200}
               height={150}
-              className="w-full object-cover"
+              className="hidden sm:block w-full object-cover"
+            />
+            <Image
+              src={belowImageAd.mobile_image_url || belowImageAd.desktop_image_url}
+              alt={belowImageAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden w-full object-cover"
             />
           </a>
         </div>

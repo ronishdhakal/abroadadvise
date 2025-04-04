@@ -10,6 +10,17 @@ export default function Footer() {
   const [siteLogo, setSiteLogo] = useState(null);
   const [ad, setAd] = useState(null);
   const [blogNewsAd, setBlogNewsAd] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Mobile breakpoint at 768px
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Fetch Site Logo
   useEffect(() => {
@@ -64,16 +75,16 @@ export default function Footer() {
 
   return (
     <>
-      {/* Blog/News Ad Above Footer */}
-      {blogNewsAd && (
+      {/* General Ad Above Footer */}
+      {ad && (
         <div className="w-full py-6 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <a href={blogNewsAd.redirect_url} target="_blank" rel="noopener noreferrer">
+            <a href={ad.redirect_url} target="_blank" rel="noopener noreferrer">
               <Image
-                src={blogNewsAd.desktop_image_url}
-                alt={blogNewsAd.title}
-                width={1200}
-                height={150}
+                src={isMobile ? ad.mobile_image_url : ad.desktop_image_url}
+                alt={ad.title}
+                width={isMobile ? 600 : 1200}
+                height={isMobile ? 100 : 150}
                 className="w-full object-cover rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
               />
             </a>
@@ -81,16 +92,16 @@ export default function Footer() {
         </div>
       )}
 
-      {/* General Ad Above Footer */}
-      {ad && !router.pathname.startsWith("/blog") && !router.pathname.startsWith("/news") && (
+      {/* Blog/News Ad Above Footer */}
+      {blogNewsAd && (router.pathname.startsWith("/blog") || router.pathname.startsWith("/news")) && (
         <div className="w-full py-6 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
-            <a href={ad.redirect_url} target="_blank" rel="noopener noreferrer">
+            <a href={blogNewsAd.redirect_url} target="_blank" rel="noopener noreferrer">
               <Image
-                src={ad.desktop_image_url}
-                alt={ad.title}
-                width={1200}
-                height={150}
+                src={isMobile ? blogNewsAd.mobile_image_url : blogNewsAd.desktop_image_url}
+                alt={blogNewsAd.title}
+                width={isMobile ? 600 : 1200}
+                height={isMobile ? 100 : 150}
                 className="w-full object-cover rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300"
               />
             </a>

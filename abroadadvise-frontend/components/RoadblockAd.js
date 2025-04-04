@@ -3,15 +3,19 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
-import { API_BASE_URL } from "@/utils/api"; // ✅ Centralized API URL
+import { API_BASE_URL } from "@/utils/api";
+import { usePathname } from "next/navigation";
 
 export default function RoadblockAd() {
+  const pathname = usePathname();
   const [showAd, setShowAd] = useState(false);
   const [ad, setAd] = useState(null);
 
   useEffect(() => {
-    const hasSeenAd = sessionStorage.getItem("hasSeenRoadblockAd");
-    if (hasSeenAd) return;
+    if (!pathname) return;
+
+    // Don't show ad on admin or dashboard pages
+    if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) return;
 
     const fetchAd = async () => {
       try {
@@ -21,7 +25,6 @@ export default function RoadblockAd() {
         if (data.results.length > 0) {
           setAd(data.results[0]);
           setShowAd(true);
-          sessionStorage.setItem("hasSeenRoadblockAd", "true");
         }
       } catch (error) {
         console.error("Error fetching roadblock ad:", error);
@@ -29,7 +32,7 @@ export default function RoadblockAd() {
     };
 
     fetchAd();
-  }, []);
+  }, [pathname]);
 
   const closeAd = () => {
     setShowAd(false);
@@ -39,12 +42,11 @@ export default function RoadblockAd() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Subtle Overlay with Minimal Blur */}
+      {/* Overlay */}
       <div className="fixed inset-0 bg-gray-900/10 backdrop-blur-[0.5px] pointer-events-none" />
 
       {/* Ad Container */}
       <div className="relative max-w-4xl w-full sm:max-w-3xl pointer-events-auto animate-in fade-in zoom-in-95 duration-300 z-60">
-        {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50">
           {/* Close Button */}
           <button
@@ -62,7 +64,7 @@ export default function RoadblockAd() {
             rel="noopener noreferrer"
             className="block w-full transition-transform duration-300 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-xl"
           >
-            {/* Desktop Version */}
+            {/* Desktop Image */}
             <div className="hidden sm:block">
               <Image
                 src={ad.desktop_image_url || "/placeholder.svg"}
@@ -74,7 +76,7 @@ export default function RoadblockAd() {
               />
             </div>
 
-            {/* Mobile Version */}
+            {/* Mobile Image */}
             <div className="sm:hidden">
               <Image
                 src={ad.mobile_image_url || "/placeholder.svg"}

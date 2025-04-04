@@ -66,12 +66,21 @@ const NewsHeader = ({ news }) => {
       {aboveHeadlineAd && (
         <div className="w-full mb-4 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={aboveHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
+            {/* Desktop */}
             <Image
               src={aboveHeadlineAd.desktop_image_url}
               alt={aboveHeadlineAd.title}
               width={1200}
               height={150}
-              className="object-cover w-full"
+              className="hidden sm:block object-cover w-full"
+            />
+            {/* Mobile */}
+            <Image
+              src={aboveHeadlineAd.mobile_image_url || aboveHeadlineAd.desktop_image_url}
+              alt={aboveHeadlineAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden object-cover w-full"
             />
           </a>
         </div>
@@ -93,12 +102,21 @@ const NewsHeader = ({ news }) => {
       {belowHeadlineAd && (
         <div className="w-full mt-4 mb-2 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={belowHeadlineAd.redirect_url} target="_blank" rel="noopener noreferrer">
+            {/* Desktop */}
             <Image
               src={belowHeadlineAd.desktop_image_url}
               alt={belowHeadlineAd.title}
               width={1200}
               height={150}
-              className="object-cover w-full"
+              className="hidden sm:block object-cover w-full"
+            />
+            {/* Mobile */}
+            <Image
+              src={belowHeadlineAd.mobile_image_url || belowHeadlineAd.desktop_image_url}
+              alt={belowHeadlineAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden object-cover w-full"
             />
           </a>
         </div>
@@ -138,12 +156,21 @@ const NewsHeader = ({ news }) => {
       {belowImageAd && (
         <div className="w-full mt-4 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
           <a href={belowImageAd.redirect_url} target="_blank" rel="noopener noreferrer">
+            {/* Desktop */}
             <Image
               src={belowImageAd.desktop_image_url}
               alt={belowImageAd.title}
               width={1200}
               height={150}
-              className="object-cover w-full"
+              className="hidden sm:block object-cover w-full"
+            />
+            {/* Mobile */}
+            <Image
+              src={belowImageAd.mobile_image_url || belowImageAd.desktop_image_url}
+              alt={belowImageAd.title}
+              width={600}
+              height={100}
+              className="block sm:hidden object-cover w-full"
             />
           </a>
         </div>

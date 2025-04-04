@@ -46,15 +46,21 @@ class UniversitySerializer(serializers.ModelSerializer):
 
     def get_logo(self, obj):
         request = self.context.get("request")
-        return request.build_absolute_uri(obj.logo.url) if request and obj.logo else None
+        if obj.logo and hasattr(obj.logo, 'url'):
+            return request.build_absolute_uri(obj.logo.url) if request else obj.logo.url
+        return None
 
     def get_cover_photo(self, obj):
         request = self.context.get("request")
-        return request.build_absolute_uri(obj.cover_photo.url) if request and obj.cover_photo else None
+        if obj.cover_photo and hasattr(obj.cover_photo, 'url'):
+            return request.build_absolute_uri(obj.cover_photo.url) if request else obj.cover_photo.url
+        return None
 
     def get_brochure(self, obj):
         request = self.context.get("request")
-        return request.build_absolute_uri(obj.brochure.url) if request and obj.brochure else None
+        if obj.brochure and hasattr(obj.brochure, 'url'):
+            return request.build_absolute_uri(obj.brochure.url) if request else obj.brochure.url
+        return None
 
     def get_is_verified(self, obj):
         return obj.verified.verified if obj.verified else False
@@ -75,7 +81,6 @@ class UniversitySerializer(serializers.ModelSerializer):
                 university.brochure = request.FILES['brochure']
             university.save()
 
-        # ✅ Assign disciplines if provided
         if discipline_ids:
             university.disciplines.set(discipline_ids)
 
@@ -98,12 +103,12 @@ class UniversitySerializer(serializers.ModelSerializer):
 
         instance.save()
 
-        # ✅ Re-assign disciplines
         if discipline_ids:
             instance.disciplines.set(discipline_ids)
 
         return instance
 
+# ✅ Minimal Serializer
 class UniversityMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = University
