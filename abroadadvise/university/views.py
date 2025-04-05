@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes, permission_classes
 from authentication.permissions import IsUniversityUser  # ✅ Correct import path
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter
@@ -59,7 +59,7 @@ def extract_disciplines(data):
 
 # ✅ Create University (Handles File Uploads & Disciplines)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_university(request):
     """ ✅ Creates a new university including file uploads and disciplines """
@@ -114,7 +114,7 @@ def get_university(request, slug):
 
 # ✅ Update University (Handles File Uploads & Disciplines)
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_university(request, slug):
     """ ✅ Updates an existing university including file uploads and disciplines """
@@ -162,7 +162,7 @@ def update_university(request, slug):
 
 # ✅ Delete University
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_university(request, slug):
     """ ✅ Deletes an existing university including file cleanup """
     try:

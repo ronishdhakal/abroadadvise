@@ -39,6 +39,9 @@ class EventSerializer(serializers.ModelSerializer):
     )
     organizer = serializers.SerializerMethodField()
 
+    # ✅ New: registration_link field (will be handled automatically)
+    registration_link = serializers.URLField(required=False, allow_null=True)
+
     class Meta:
         model = Event
         fields = '__all__'

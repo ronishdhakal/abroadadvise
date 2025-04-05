@@ -110,9 +110,15 @@ const EventHeader = ({ event }) => {
             )}
           </div>
 
-          {/* ✅ Title */}
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900">
+          {/* ✅ Title with Colored Organizer */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 flex flex-wrap items-center gap-2">
             {event.name || "Untitled Event"}
+            {event.organizer?.name && (
+              <>
+                <span className="text-gray-900">–</span>
+                <span className="text-[#4c9bd5]">{event.organizer.name}</span>
+              </>
+            )}
             {event.is_verified && (
               <span className="inline-flex ml-2 items-center" title="Verified Event">
                 <BadgeCheck className="h-6 w-6 md:h-7 md:w-7 text-[#4c9bd5]" />

@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
@@ -51,7 +51,7 @@ class ScholarshipDetailView(RetrieveAPIView):
 
 # ✅ Admin Panel - Create Scholarship
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_scholarship(request):
     data = request.data.copy()
@@ -82,7 +82,7 @@ def create_scholarship(request):
 
 # ✅ Admin Panel - Update Scholarship
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_scholarship(request, slug):
     scholarship = get_object_or_404(Scholarship, slug=slug)
@@ -104,7 +104,7 @@ def update_scholarship(request, slug):
 
 # ✅ Admin Panel - Delete Scholarship
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_scholarship(request, slug):
     scholarship = get_object_or_404(Scholarship, slug=slug)
 

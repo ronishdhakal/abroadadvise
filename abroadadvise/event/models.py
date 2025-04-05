@@ -4,8 +4,8 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from university.models import University
 from consultancy.models import Consultancy
-from destination.models import Destination  # ✅ Import Destination model
-from tinymce.models import HTMLField  # ✅ Import TinyMCE HTMLField
+from destination.models import Destination
+from tinymce.models import HTMLField
 
 class Event(models.Model):
     EVENT_TYPE_CHOICES = (
@@ -24,18 +24,20 @@ class Event(models.Model):
     featured_image = models.ImageField(upload_to='events/featured/', blank=True, null=True)
     date = models.DateField()
     duration = models.CharField(max_length=50, blank=True, null=True)
-    time = models.CharField(max_length=50, blank=True, null=True)  # ✅ Changed to CharField for manual input
+    time = models.CharField(max_length=50, blank=True, null=True)
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
     organizer = models.ForeignKey(Consultancy, on_delete=models.SET_NULL, null=True, blank=True)
-    targeted_destinations = models.ManyToManyField(Destination, blank=True, related_name='events')  # ✅ Allow multiple destinations
+    targeted_destinations = models.ManyToManyField(Destination, blank=True, related_name='events')
     location = models.CharField(max_length=255, blank=True, null=True)
-    description = HTMLField(blank=True, null=True)  # ✅ TinyMCE applied here
+    description = HTMLField(blank=True, null=True)
     registration_type = models.CharField(max_length=10, choices=REGISTRATION_TYPE_CHOICES)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     related_universities = models.ManyToManyField(University, blank=True, related_name='events')
     related_consultancies = models.ManyToManyField(Consultancy, blank=True, related_name='events')
 
-    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")  # ✅ Added Priority Field
+    registration_link = models.URLField(blank=True, null=True, help_text="Paste registration link if available")
+
+    priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
 
     def __str__(self):
         return self.name
@@ -59,7 +61,6 @@ class EventGallery(models.Model):
     def __str__(self):
         return f"{self.event.name} - Image"
 
-# ✅ Event Registration Model
 class EventRegistration(models.Model):
     PAYMENT_STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -72,6 +73,6 @@ class EventRegistration(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     registered_at = models.DateTimeField(auto_now_add=True)
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending')
-    
+
     def __str__(self):
         return f"{self.name} - {self.event.name}"

@@ -21,6 +21,13 @@ const EventRegistrationDetail = ({ event, setIsModalOpen, setSelectedEntity }) =
   const handleRegistration = () => {
     if (!event) return;
 
+    // ✅ Redirect to registration link if available
+    if (event.registration_link) {
+      window.open(event.registration_link, "_blank");
+      return;
+    }
+
+    // ✅ Fallback: open inquiry modal
     setSelectedEntity({
       entityType: "event",
       entityId: event.id,

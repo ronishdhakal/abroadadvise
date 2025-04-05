@@ -25,6 +25,12 @@ const EventAbout = ({ formData, setFormData }) => {
     setFormData((prev) => ({ ...prev, priority: value }));
   };
 
+  // ✅ Handle Registration Link change
+  const handleRegistrationLinkChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, registration_link: value }));
+  };
+
   // ✅ Sync local state when editing
   useEffect(() => {
     setEditorContent({
@@ -34,7 +40,7 @@ const EventAbout = ({ formData, setFormData }) => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-4">
-      <h2 className="text-xl font-bold mb-4">Event Description & Priority</h2>
+      <h2 className="text-xl font-bold mb-4">Event Description, Link & Priority</h2>
 
       {/* ✅ Description (Jodit Rich Text) */}
       <div className="mb-6">
@@ -44,6 +50,31 @@ const EventAbout = ({ formData, setFormData }) => {
           value={editorContent.description}
           tabIndex={1}
           onBlur={(content) => handleEditorChange("description", content)}
+        />
+      </div>
+
+      {/* ✅ Registration Link */}
+      <div className="mb-6">
+        <label className="block text-gray-700 font-semibold mb-1">Registration Link (optional):</label>
+        <input
+          type="url"
+          placeholder="https://example.com/register"
+          value={formData.registration_link || ""}
+          onChange={handleRegistrationLinkChange}
+          className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring focus:border-blue-500"
+        />
+      </div>
+
+      {/* ✅ Priority */}
+      <div>
+        <label className="block text-gray-700 font-semibold mb-1">Priority (lower = higher priority):</label>
+        <input
+          type="number"
+          min={1}
+          placeholder="e.g. 1"
+          value={formData.priority || ""}
+          onChange={handlePriorityChange}
+          className="w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring focus:border-blue-500"
         />
       </div>
     </div>

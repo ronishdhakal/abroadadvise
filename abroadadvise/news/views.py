@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, parser_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -46,7 +46,7 @@ def related_news(request, slug):
 
 # ✅ Create News (No Authentication Required)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])  
 def create_news(request):
     """
@@ -70,7 +70,7 @@ def get_news(request, slug):
 
 # ✅ Update News (No Authentication Required)
 @api_view(['PUT', 'PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])  
 def update_news(request, slug):
     """
@@ -88,7 +88,7 @@ def update_news(request, slug):
 
 # ✅ Delete News (No Authentication Required)
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_news(request, slug):
     """
     Delete a news article (Public Access).

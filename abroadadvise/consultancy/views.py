@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, parser_classes, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.filters import SearchFilter
@@ -79,7 +79,7 @@ import json
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_consultancy(request):
     """ ✅ Creates a new consultancy with optional manual slug. """
@@ -148,7 +148,7 @@ def create_consultancy(request):
 
 # ✅ Update Consultancy
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy(request, slug):
     """ ✅ Fully updates a consultancy, ensuring pre-filled data updates correctly. """
@@ -200,7 +200,7 @@ def update_consultancy(request, slug):
 
 # ✅ Delete Consultancy (Handles Deleting Files & Related Data)
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_consultancy(request, slug):
     """ ✅ Deletes a consultancy and ensures all related data and files are removed safely. """
 

@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
@@ -48,7 +48,7 @@ class CollegeDetailView(RetrieveAPIView):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def create_college(request):
     data = request.data
@@ -104,7 +104,7 @@ def create_college(request):
 
 
 @api_view(["PUT", "PATCH"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 @parser_classes([MultiPartParser, FormParser])
 def update_college(request, slug):
     college = get_object_or_404(College, slug=slug)
@@ -143,7 +143,7 @@ def update_college(request, slug):
 
 
 @api_view(["DELETE"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsAdminUser])
 def delete_college(request, slug):
     college = get_object_or_404(College, slug=slug)
     college.study_abroad_destinations.clear()
@@ -172,6 +172,8 @@ def delete_college(request, slug):
     college.delete()
     return Response({"message": "College deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
+
+# For College Dashboard
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
