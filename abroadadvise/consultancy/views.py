@@ -279,35 +279,47 @@ def consultancy_dashboard_view(request):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def update_consultancy_dashboard(request):
-    """ ✅ Allows a logged-in consultancy user to update their own profile."""
+    """ ✅ Allows a logged-in consultancy user to update their own profile without wiping unmodified fields. """
     user = request.user
 
     if not hasattr(user, "consultancy") or not user.consultancy:
         return Response({"error": "User is not linked to any consultancy."}, status=status.HTTP_403_FORBIDDEN)
 
-    consultancy = user.consultancy  # ✅ Get the consultancy linked to the user
+    consultancy = user.consultancy
     data = request.data
 
-
-    # ✅ Convert JSON string fields to lists
-    branches_data = json.loads(data.get("branches", "[]"))
-    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]"))
-    test_preparation = json.loads(data.get("test_preparation", "[]"))
-    partner_universities = json.loads(data.get("partner_universities", "[]"))
-    districts = json.loads(data.get("districts", "[]"))
+    # ✅ Parse optional JSON fields only if present
+    branches_data = json.loads(data.get("branches", "[]")) if "branches" in data else None
+    study_abroad_destinations = json.loads(data.get("study_abroad_destinations", "[]")) if "study_abroad_destinations" in data else None
+    test_preparation = json.loads(data.get("test_preparation", "[]")) if "test_preparation" in data else None
+    partner_universities = json.loads(data.get("partner_universities", "[]")) if "partner_universities" in data else None
+    districts = json.loads(data.get("districts", "[]")) if "districts" in data else None
 
     serializer = ConsultancySerializer(consultancy, data=data, partial=True)
 
     if serializer.is_valid():
         consultancy = serializer.save()
 
-        # ✅ Update ManyToMany relationships
-        consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
-        consultancy.test_preparation.set(Exam.objects.filter(id__in=test_preparation))
-        consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
-        consultancy.districts.set(District.objects.filter(id__in=districts))
+        # ✅ Conditional many-to-many updates (only if sent)
+        if study_abroad_destinations is not None:
+            consultancy.study_abroad_destinations.set(Destination.objects.filter(id__in=study_abroad_destinations))
 
-        # ✅ Handle File Uploads (Update only if a new file is provided)
+        if test_preparation is not None:
+            consultancy.test_preparation.set(Exam.objects.filter(id__in=test_preparation))
+
+        if partner_universities is not None:
+            consultancy.partner_universities.set(University.objects.filter(id__in=partner_universities))
+
+        if districts is not None:
+            consultancy.districts.set(District.objects.filter(id__in=districts))
+
+        # ✅ Conditional branches update
+        if branches_data is not None:
+            consultancy.branches.all().delete()
+            for branch in branches_data:
+                ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
+
+        # ✅ File fields (optional)
         if "logo" in request.FILES:
             consultancy.logo = request.FILES["logo"]
         if "cover_photo" in request.FILES:
@@ -317,18 +329,25 @@ def update_consultancy_dashboard(request):
 
         consultancy.save()
 
-        # ✅ Update Branches (Delete old ones and create new ones)
-        consultancy.branches.all().delete()
-        for branch in branches_data:
-            ConsultancyBranch.objects.create(consultancy=consultancy, **branch)
-
-        # ✅ Save New Gallery Images (Keep old ones, add new ones)
+        # ✅ Gallery Uploads (optional append)
         for file in request.FILES.getlist("gallery_images"):
             ConsultancyGallery.objects.create(consultancy=consultancy, image=file)
+
+        # ✅ Gallery Deletion (optional)
+        if "deleted_gallery_images" in data:
+            deleted_ids = json.loads(data.get("deleted_gallery_images", "[]"))
+            for image_id in deleted_ids:
+                image = ConsultancyGallery.objects.filter(id=image_id, consultancy=consultancy).first()
+                if image and image.image:
+                    image.image.delete(save=False)  # remove file from storage
+                if image:
+                    image.delete()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 @api_view(['GET'])

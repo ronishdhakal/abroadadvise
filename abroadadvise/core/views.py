@@ -26,7 +26,9 @@ from destination.models import Destination
 from exam.models import Exam
 
 # For Search Algorith
+
 from core.utils.levenshtein import levenshtein_distance
+
 
 
 
@@ -144,21 +146,8 @@ class AdListAPIView(generics.ListAPIView):
 
         return queryset
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework.renderers import JSONRenderer
-from django.conf import settings
-from django.db.models import Q
 
-from consultancy.models import Consultancy
-from university.models import University
-from college.models import College
-from course.models import Course
-from destination.models import Destination
-from exam.models import Exam
 
-from core.utils.levenshtein import levenshtein_distance
 
 
 
@@ -179,7 +168,6 @@ class GlobalSearchAPIView(APIView):
             return None
 
         def search_all(q):
-            """Runs all model lookups and formats image URLs"""
             consultancies = Consultancy.objects.filter(
                 Q(name__icontains=q) | Q(about__icontains=q)
             ).values("id", "name", "slug", "logo", "address")
@@ -200,7 +188,9 @@ class GlobalSearchAPIView(APIView):
 
             courses = Course.objects.filter(
                 Q(name__icontains=q) | Q(short_description__icontains=q)
-            ).select_related("university").values("id", "name", "slug", "cover_image", "university__name")
+            ).select_related("university").values(
+                "id", "name", "slug", "cover_image", "university__name"
+            )
             for item in courses:
                 item["cover_image"] = get_full_url(item["cover_image"])
                 item["university"] = {"name": item.pop("university__name", None)}
@@ -229,7 +219,7 @@ class GlobalSearchAPIView(APIView):
         # ✅ Initial Search
         results = search_all(query)
 
-        # ✅ Determine most relevant section for ordering
+        # ✅ Calculate most relevant section based on minimum distance
         top_result = None
         lowest_distance = float("inf")
 
@@ -249,7 +239,7 @@ class GlobalSearchAPIView(APIView):
                     lowest_distance = dist
                     top_result = section
 
-        # ✅ If no results found, suggest alternative
+        # ✅ Suggest closest match if no results
         if all(len(v) == 0 for v in results.values()):
             dictionary = []
             for terms in section_terms.values():
@@ -267,7 +257,7 @@ class GlobalSearchAPIView(APIView):
             if best_match and lowest_distance <= 2:
                 corrected_results = search_all(best_match)
 
-                # Recalculate top result for suggestion match
+                # Recalculate top result from suggestion
                 corrected_top_result = None
                 min_dist = float("inf")
                 for section, terms in section_terms.items():
@@ -283,10 +273,12 @@ class GlobalSearchAPIView(APIView):
                     "top_result": corrected_top_result
                 })
 
+        # ✅ Default return with real results and best-matching section
         return Response({
             "results": results,
             "top_result": top_result
         })
+
 
 
 # ✅ Create District

@@ -29,8 +29,27 @@ const ConsultancyAbout = ({ formData, setFormData }) => {
 
     try {
       const updateData = new FormData();
+
+      // ✅ Always send critical non-null data to avoid overwriting
       updateData.append("about", aboutContent);
       updateData.append("services", servicesContent);
+
+      // ✅ Protecting core arrays
+      if (formData.districts) {
+        updateData.append("districts", JSON.stringify(formData.districts));
+      }
+      if (formData.study_abroad_destinations) {
+        updateData.append("study_abroad_destinations", JSON.stringify(formData.study_abroad_destinations));
+      }
+      if (formData.test_preparation) {
+        updateData.append("test_preparation", JSON.stringify(formData.test_preparation));
+      }
+      if (formData.partner_universities) {
+        updateData.append("partner_universities", JSON.stringify(formData.partner_universities));
+      }
+      if (formData.branches) {
+        updateData.append("branches", JSON.stringify(formData.branches));
+      }
 
       await updateConsultancyDashboard(updateData);
 

@@ -5,7 +5,7 @@ import { Upload, Image, FileText, Trash } from "lucide-react";
 import { updateConsultancyDashboard } from "@/utils/api";
 
 const ConsultancyHeader = ({ formData, setFormData }) => {
-  if (!formData) return null; // ✅ Prevent crash if formData is undefined
+  if (!formData) return null;
 
   const [logoPreview, setLogoPreview] = useState(null);
   const [coverPreview, setCoverPreview] = useState(null);
@@ -14,7 +14,6 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  // ✅ Load existing previews from formData
   useEffect(() => {
     if (typeof formData.logo === "string") setLogoPreview(formData.logo);
     if (typeof formData.cover_photo === "string") setCoverPreview(formData.cover_photo);
@@ -24,7 +23,6 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     }
   }, [formData]);
 
-  // ✅ Cleanup URLs
   useEffect(() => {
     return () => {
       if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
@@ -32,39 +30,31 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     };
   }, [logoPreview, coverPreview]);
 
-  // ✅ File change handler
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (files.length === 0) return;
 
     const file = files[0];
+    const objectURL = URL.createObjectURL(file);
 
-    if (name === "logo" || name === "cover_photo") {
-      const objectURL = URL.createObjectURL(file);
-      if (name === "logo") {
-        if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
-        setLogoPreview(objectURL);
-      }
-      if (name === "cover_photo") {
-        if (coverPreview && typeof coverPreview !== "string") URL.revokeObjectURL(coverPreview);
-        setCoverPreview(objectURL);
-      }
-    }
-
-    if (name === "brochure") {
+    if (name === "logo") {
+      if (logoPreview && typeof logoPreview !== "string") URL.revokeObjectURL(logoPreview);
+      setLogoPreview(objectURL);
+    } else if (name === "cover_photo") {
+      if (coverPreview && typeof coverPreview !== "string") URL.revokeObjectURL(coverPreview);
+      setCoverPreview(objectURL);
+    } else if (name === "brochure") {
       setBrochureName(file.name);
     }
 
     setFormData((prev) => ({ ...prev, [name]: file }));
   };
 
-  // ✅ Input text change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Remove file
   const handleRemoveFile = (type) => {
     if (type === "logo") setLogoPreview(null);
     if (type === "cover_photo") setCoverPreview(null);
@@ -72,7 +62,6 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
     setFormData((prev) => ({ ...prev, [type]: null }));
   };
 
-  // ✅ Submit update
   const handleUpdate = async () => {
     setLoading(true);
     setError(null);
@@ -80,10 +69,28 @@ const ConsultancyHeader = ({ formData, setFormData }) => {
 
     try {
       const updateData = new FormData();
+
       if (formData.name) updateData.append("name", formData.name);
       if (formData.logo) updateData.append("logo", formData.logo);
       if (formData.cover_photo) updateData.append("cover_photo", formData.cover_photo);
       if (formData.brochure) updateData.append("brochure", formData.brochure);
+
+      // ✅ Protect relational fields
+      if (formData.districts) {
+        updateData.append("districts", JSON.stringify(formData.districts));
+      }
+      if (formData.study_abroad_destinations) {
+        updateData.append("study_abroad_destinations", JSON.stringify(formData.study_abroad_destinations));
+      }
+      if (formData.test_preparation) {
+        updateData.append("test_preparation", JSON.stringify(formData.test_preparation));
+      }
+      if (formData.partner_universities) {
+        updateData.append("partner_universities", JSON.stringify(formData.partner_universities));
+      }
+      if (formData.branches) {
+        updateData.append("branches", JSON.stringify(formData.branches));
+      }
 
       await updateConsultancyDashboard(updateData);
       setSuccessMessage("Consultancy header updated successfully!");

@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { Upload, Trash } from "lucide-react";
 
 const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
-  if (!formData) return null; // ✅ Prevents crash if formData is undefined
+  if (!formData) return null;
 
   const [previewImages, setPreviewImages] = useState([]);
 
-  // ✅ Load existing images on mount
+  // ✅ Load existing images (API returns them as { id, image })
   useEffect(() => {
     if (formData.gallery_images && Array.isArray(formData.gallery_images)) {
       const loadedImages = formData.gallery_images.map((img) => ({
@@ -21,20 +21,21 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
     }
   }, [formData.gallery_images]);
 
-  // ✅ Cleanup blob URLs on unmount
+  // ✅ Cleanup object URLs
   useEffect(() => {
     return () => {
       previewImages.forEach((img) => {
-        if (img.file) {
+        if (img.file && typeof img.image === "string") {
           URL.revokeObjectURL(img.image);
         }
       });
     };
   }, [previewImages]);
 
-  // ✅ Handle file selection & preview
+  // ✅ Add image previews and update local formData (used for tracking)
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+
     const newImages = files.map((file) => ({
       id: Date.now() + Math.random(),
       image: URL.createObjectURL(file),
@@ -42,40 +43,40 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
       isNew: true,
     }));
 
-    const updatedImages = [...previewImages, ...newImages];
-    setPreviewImages(updatedImages);
+    const updatedPreview = [...previewImages, ...newImages];
+    setPreviewImages(updatedPreview);
 
-    const updatedFormData = {
-      ...formData,
-      gallery_images: [...(formData.gallery_images || []), ...newImages],
-    };
-    setFormData(updatedFormData);
-    onUpdate(updatedFormData);
+    // ✅ Only track the preview locally; actual file is appended during update
+    setFormData((prev) => ({
+      ...prev,
+      gallery_images: updatedPreview,
+    }));
+
+    onUpdate({ gallery_images: updatedPreview }); // ✅ Inform parent
   };
 
-  // ✅ Handle image deletion
+  // ✅ Handle delete (mark existing image for deletion or remove new one)
   const handleDeleteImage = (index) => {
     const imageToDelete = previewImages[index];
     const updatedImages = previewImages.filter((_, i) => i !== index);
 
+    setPreviewImages(updatedImages);
+
     if (!imageToDelete.isNew) {
-      const updatedDeletedImages = [
-        ...(formData.deleted_gallery_images || []),
-        imageToDelete.id,
-      ];
+      const updatedDeleted = [...(formData.deleted_gallery_images || []), imageToDelete.id];
       setFormData((prev) => ({
         ...prev,
-        deleted_gallery_images: updatedDeletedImages,
+        gallery_images: updatedImages,
+        deleted_gallery_images: updatedDeleted,
       }));
-      onUpdate({ deleted_gallery_images: updatedDeletedImages });
+      onUpdate({ gallery_images: updatedImages, deleted_gallery_images: updatedDeleted });
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        gallery_images: updatedImages,
+      }));
+      onUpdate({ gallery_images: updatedImages });
     }
-
-    setPreviewImages(updatedImages);
-    setFormData((prev) => ({
-      ...prev,
-      gallery_images: updatedImages,
-    }));
-    onUpdate({ gallery_images: updatedImages });
   };
 
   return (
@@ -98,10 +99,10 @@ const ConsultancyGallery = ({ formData, setFormData, onUpdate }) => {
       {/* Gallery Preview */}
       {previewImages.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-          {previewImages.map((image, index) => (
-            <div key={image.id} className="relative">
+          {previewImages.map((img, index) => (
+            <div key={img.id} className="relative">
               <img
-                src={image.image}
+                src={img.image}
                 alt={`Gallery ${index + 1}`}
                 className="w-full h-28 md:h-40 object-cover rounded-lg cursor-pointer transition-transform hover:scale-105"
               />
