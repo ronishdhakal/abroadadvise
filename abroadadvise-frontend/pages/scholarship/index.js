@@ -1,3 +1,4 @@
+// ScholarshipList.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,7 @@ import Footer from "@/components/footer";
 import HeroSection from "./HeroSection";
 import ScholarshipFilters from "./ScholarshipFilters";
 import ScholarshipCard from "./ScholarshipCard";
-import Pagination from "@/pages/consultancy/Pagination"; // ✅ Reuse pagination
+import Pagination from "@/pages/consultancy/Pagination";
 
 const ScholarshipList = ({ initialScholarships, initialTotalPages, destinations }) => {
   const [scholarships, setScholarships] = useState(initialScholarships);
@@ -18,11 +19,9 @@ const ScholarshipList = ({ initialScholarships, initialTotalPages, destinations 
   const [studyLevel, setStudyLevel] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  // ✅ Fetch scholarships with filters
   const fetchScholarships = async () => {
     try {
       const queryParams = new URLSearchParams({ page: currentPage });
-
       if (search) queryParams.append("search", search);
       if (destination) queryParams.append("destination", destination);
       if (studyLevel) queryParams.append("study_level", studyLevel);
@@ -56,7 +55,6 @@ const ScholarshipList = ({ initialScholarships, initialTotalPages, destinations 
       <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
-        {/* 🔍 Filters */}
         <ScholarshipFilters
           search={search}
           setSearch={setSearch}
@@ -67,7 +65,6 @@ const ScholarshipList = ({ initialScholarships, initialTotalPages, destinations 
           destinations={destinations}
         />
 
-        {/* 🎓 Scholarship Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {scholarships.length > 0 ? (
             scholarships.map((scholarship) => (
@@ -78,7 +75,6 @@ const ScholarshipList = ({ initialScholarships, initialTotalPages, destinations 
           )}
         </div>
 
-        {/* 📄 Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -97,7 +93,7 @@ export async function getServerSideProps() {
   try {
     const [scholarshipRes, destinationRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/scholarship/?page=1`),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/?page_size=1000`),
     ]);
 
     if (!scholarshipRes.ok || !destinationRes.ok) {

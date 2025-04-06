@@ -24,43 +24,25 @@ const ScholarshipFilters = ({
 }) => {
   const [loadingDestinations, setLoadingDestinations] = useState(false);
   const [destinations, setDestinations] = useState(initialDestinations);
-  const [error, setError] = useState(null); // Added for error tracking
+  const [error, setError] = useState(null);
 
-  // ✅ Fetch Destinations with Debugging
   useEffect(() => {
-    console.log("Initial Destinations:", initialDestinations); // Log initial prop
     if (!initialDestinations.length) {
-      console.log("Fetching destinations...");
       setLoadingDestinations(true);
-      fetchDestinationsDropdown()
-        .then((data) => {
-          console.log("Fetched Destinations:", data); // Log fetched data
-          setDestinations(data || []);
-          if (!data || data.length === 0) {
-            setError("No destinations fetched from API");
-          }
-        })
+      fetchDestinationsDropdown({ page_size: 1000 })
+        .then((data) => setDestinations(data || []))
         .catch((error) => {
           console.error("Error fetching destinations:", error);
-          setError("Failed to fetch destinations: " + error.message);
+          setError("Failed to load destinations");
         })
-        .finally(() => {
-          setLoadingDestinations(false);
-          console.log("Loading complete. Current destinations:", destinations);
-        });
-    } else {
-      console.log("Using provided initial destinations:", initialDestinations);
+        .finally(() => setLoadingDestinations(false));
     }
   }, [initialDestinations]);
 
-  // ✅ Handle Destination Change
   const handleDestinationChange = (selectedOption) => {
-    const newValue = selectedOption ? selectedOption.value : "";
-    console.log("Destination changed to:", newValue); // Log change
-    setDestination(newValue);
+    setDestination(selectedOption ? selectedOption.value : "");
   };
 
-  // ✅ Custom styles for react-select
   const customStyles = {
     control: (base) => ({
       ...base,
@@ -74,7 +56,6 @@ const ScholarshipFilters = ({
       ...base,
       borderRadius: "0.5rem",
       boxShadow: "rgba(0, 0, 0, 0.1) 0px 4px 12px",
-      maxHeight: "200px",
     }),
     menuList: (base) => ({
       ...base,
@@ -104,7 +85,6 @@ const ScholarshipFilters = ({
             setSearch("");
             setDestination("");
             setStudyLevel("");
-            console.log("Filters cleared"); // Log clear action
           }}
           className="text-sm text-blue-600 hover:underline"
         >
@@ -119,39 +99,34 @@ const ScholarshipFilters = ({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Search by title or keyword */}
+        {/* 🔍 Search Field */}
         <div className="relative">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <input
             type="text"
             placeholder="Search scholarships..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              console.log("Search updated:", e.target.value); // Log search
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
             aria-label="Search Scholarships"
           />
         </div>
 
-        {/* Destination Dropdown */}
+        {/* 🌍 Destination Dropdown (using slug) */}
         <div className="relative">
           <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
           <Select
             isLoading={loadingDestinations}
             options={destinations.map((dest) => ({
-              value: dest.id,
+              value: dest.slug, // ✅ use slug here
               label: dest.title,
             }))}
-            value={
-              destinations
-                .map((dest) => ({
-                  value: dest.id,
-                  label: dest.title,
-                }))
-                .find((opt) => opt.value === destination) || null
-            }
+            value={destinations
+              .map((dest) => ({
+                value: dest.slug,
+                label: dest.title,
+              }))
+              .find((opt) => opt.value === destination) || null}
             onChange={handleDestinationChange}
             className="w-full"
             placeholder="All Destinations"
@@ -162,15 +137,12 @@ const ScholarshipFilters = ({
           />
         </div>
 
-        {/* Study Level Dropdown */}
+        {/* 🎓 Study Level Dropdown */}
         <div className="relative">
           <GraduationCap className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <select
             value={studyLevel}
-            onChange={(e) => {
-              setStudyLevel(e.target.value);
-              console.log("Study Level updated:", e.target.value); // Log study level
-            }}
+            onChange={(e) => setStudyLevel(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
             aria-label="Select Study Level"
           >

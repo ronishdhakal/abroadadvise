@@ -20,7 +20,15 @@ from core.serializers import DistrictMinimalSerializer
 # ✅ Import Consultancy, University, and Course models
 from consultancy.models import Consultancy
 from university.models import University
+from college.models import College
 from course.models import Course
+from destination.models import Destination
+from exam.models import Exam
+
+# For Search Algorith
+from core.utils.levenshtein import levenshtein_distance
+
+
 
 # ✅ API for Fetching All Districts (paginated)
 class DistrictListAPIView(generics.ListAPIView):
@@ -136,7 +144,26 @@ class AdListAPIView(generics.ListAPIView):
 
         return queryset
 
-# ✅ NEW: Global Search API (Search in Consultancies, Universities, Courses)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
+from rest_framework.renderers import JSONRenderer
+from django.conf import settings
+from django.db.models import Q
+
+from consultancy.models import Consultancy
+from university.models import University
+from college.models import College
+from course.models import Course
+from destination.models import Destination
+from exam.models import Exam
+
+from core.utils.levenshtein import levenshtein_distance
+
+
+
+# GlobalSearchAPI
+
 class GlobalSearchAPIView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
@@ -146,45 +173,120 @@ class GlobalSearchAPIView(APIView):
         if not query:
             return Response({"results": []})
 
-        # Function to generate full image URL
         def get_full_url(image_path):
             if image_path:
                 return request.build_absolute_uri(settings.MEDIA_URL + image_path)
             return None
 
-        # 🔎 Search in Consultancies (Include location)
-        consultancies = Consultancy.objects.filter(
-            Q(name__icontains=query) | Q(about__icontains=query)
-        ).values("id", "name", "slug", "logo", "address")
+        def search_all(q):
+            """Runs all model lookups and formats image URLs"""
+            consultancies = Consultancy.objects.filter(
+                Q(name__icontains=q) | Q(about__icontains=q)
+            ).values("id", "name", "slug", "logo", "address")
+            for item in consultancies:
+                item["logo"] = get_full_url(item["logo"])
 
-        # 🔎 Search in Universities (Include country)
-        universities = University.objects.filter(
-            Q(name__icontains=query) | Q(about__icontains=query)
-        ).values("id", "name", "slug", "logo", "country")
+            universities = University.objects.filter(
+                Q(name__icontains=q) | Q(about__icontains=q)
+            ).values("id", "name", "slug", "logo", "country")
+            for item in universities:
+                item["logo"] = get_full_url(item["logo"])
 
-        # 🔎 Search in Courses (Include university name)
-        courses = Course.objects.filter(
-            Q(name__icontains=query) | Q(short_description__icontains=query)
-        ).select_related("university").values("id", "name", "slug", "cover_image", "university__name")
+            colleges = College.objects.filter(
+                Q(name__icontains=q) | Q(about__icontains=q)
+            ).values("id", "name", "slug", "logo", "address")
+            for item in colleges:
+                item["logo"] = get_full_url(item["logo"])
 
-        # Convert relative paths to full URLs
-        for item in consultancies:
-            item["logo"] = get_full_url(item["logo"])
+            courses = Course.objects.filter(
+                Q(name__icontains=q) | Q(short_description__icontains=q)
+            ).select_related("university").values("id", "name", "slug", "cover_image", "university__name")
+            for item in courses:
+                item["cover_image"] = get_full_url(item["cover_image"])
+                item["university"] = {"name": item.pop("university__name", None)}
 
-        for item in universities:
-            item["logo"] = get_full_url(item["logo"])
+            destinations = Destination.objects.filter(
+                Q(title__icontains=q) | Q(why_choose__icontains=q)
+            ).values("id", "title", "slug", "country_logo")
+            for item in destinations:
+                item["country_logo"] = get_full_url(item["country_logo"])
 
-        for item in courses:
-            item["cover_image"] = get_full_url(item["cover_image"])
-            item["university"] = {"name": item.pop("university__name", None)}  # ✅ Fix university structure
+            exams = Exam.objects.filter(
+                Q(name__icontains=q) | Q(short_description__icontains=q)
+            ).values("id", "name", "slug", "icon", "type")
+            for item in exams:
+                item["icon"] = get_full_url(item["icon"])
 
-        results = {
-            "consultancies": list(consultancies),
-            "universities": list(universities),
-            "courses": list(courses),
+            return {
+                "consultancies": list(consultancies),
+                "universities": list(universities),
+                "colleges": list(colleges),
+                "courses": list(courses),
+                "destinations": list(destinations),
+                "exams": list(exams),
+            }
+
+        # ✅ Initial Search
+        results = search_all(query)
+
+        # ✅ Determine most relevant section for ordering
+        top_result = None
+        lowest_distance = float("inf")
+
+        section_terms = {
+            "consultancies": Consultancy.objects.values_list("name", flat=True),
+            "universities": University.objects.values_list("name", flat=True),
+            "colleges": College.objects.values_list("name", flat=True),
+            "courses": Course.objects.values_list("name", flat=True),
+            "destinations": Destination.objects.values_list("title", flat=True),
+            "exams": Exam.objects.values_list("name", flat=True),
         }
 
-        return Response({"results": results})
+        for section, terms in section_terms.items():
+            for word in terms:
+                dist = levenshtein_distance(query.lower(), word.lower())
+                if dist < lowest_distance:
+                    lowest_distance = dist
+                    top_result = section
+
+        # ✅ If no results found, suggest alternative
+        if all(len(v) == 0 for v in results.values()):
+            dictionary = []
+            for terms in section_terms.values():
+                dictionary.extend(terms)
+
+            best_match = None
+            lowest_distance = float("inf")
+
+            for word in dictionary:
+                distance = levenshtein_distance(query.lower(), word.lower())
+                if distance < lowest_distance:
+                    lowest_distance = distance
+                    best_match = word
+
+            if best_match and lowest_distance <= 2:
+                corrected_results = search_all(best_match)
+
+                # Recalculate top result for suggestion match
+                corrected_top_result = None
+                min_dist = float("inf")
+                for section, terms in section_terms.items():
+                    for word in terms:
+                        d = levenshtein_distance(best_match.lower(), word.lower())
+                        if d < min_dist:
+                            min_dist = d
+                            corrected_top_result = section
+
+                return Response({
+                    "results": corrected_results,
+                    "suggestion": best_match,
+                    "top_result": corrected_top_result
+                })
+
+        return Response({
+            "results": results,
+            "top_result": top_result
+        })
 
 
 # ✅ Create District

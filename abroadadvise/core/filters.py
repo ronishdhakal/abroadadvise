@@ -10,6 +10,8 @@ from news.models import News
 from blog.models import BlogPost
 from django.apps import apps
 from core.models import District, Discipline
+from college.models import College
+from scholarship.models import Scholarship
 
 class ConsultancyFilter(django_filters.FilterSet):
     name = django_filters.CharFilter(lookup_expr="icontains")
@@ -21,10 +23,9 @@ class ConsultancyFilter(django_filters.FilterSet):
         to_field_name="id",
     )
 
-    destination = django_filters.ModelMultipleChoiceFilter(
+    destination = django_filters.CharFilter(
         field_name="study_abroad_destinations__slug",
-        queryset=Destination.objects.all(),
-        to_field_name="slug",
+        lookup_expr="iexact",
     )
 
     exam = django_filters.ModelMultipleChoiceFilter(
@@ -36,7 +37,6 @@ class ConsultancyFilter(django_filters.FilterSet):
     class Meta:
         model = Consultancy
         fields = ["name", "districts", "moe_certified", "destination", "exam"]
-
 
 class UniversityFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -51,7 +51,6 @@ class UniversityFilter(filters.FilterSet):
     class Meta:
         model = University
         fields = ["name", "country", "disciplines"]
-
 
 class CourseFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -69,14 +68,12 @@ class CourseFilter(filters.FilterSet):
         model = Course
         fields = ["name", "university", "duration", "disciplines", "country"]
 
-
 class DestinationFilter(filters.FilterSet):
     title = filters.CharFilter(lookup_expr="icontains")
 
     class Meta:
         model = Destination
         fields = ["title"]
-
 
 class ExamFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -85,7 +82,6 @@ class ExamFilter(filters.FilterSet):
     class Meta:
         model = Exam
         fields = ["name", "type"]
-
 
 class EventFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
@@ -101,7 +97,6 @@ class EventFilter(filters.FilterSet):
         model = Event
         fields = ["name", "event_type", "registration_type", "destination"]
 
-
 class NewsFilter(filters.FilterSet):
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     category = filters.CharFilter(field_name="category__slug", lookup_expr="iexact")
@@ -109,7 +104,6 @@ class NewsFilter(filters.FilterSet):
     class Meta:
         model = News
         fields = ["title", "category"]
-
 
 class ReviewFilter(filters.FilterSet):
     rating = filters.NumberFilter()
@@ -120,7 +114,6 @@ class ReviewFilter(filters.FilterSet):
         model = apps.get_model("core", "Review")
         fields = ["rating", "content_type", "is_approved"]
 
-
 class BlogPostFilter(filters.FilterSet):
     title = filters.CharFilter(field_name="title", lookup_expr="icontains")
     category = filters.CharFilter(field_name="category__slug", lookup_expr="iexact")
@@ -129,27 +122,21 @@ class BlogPostFilter(filters.FilterSet):
         model = BlogPost
         fields = ["title", "category"]
 
-
-# ✅ NEW: CollegeFilter
-from college.models import College
-
 class CollegeFilter(filters.FilterSet):
     name = django_filters.CharFilter(field_name="name", lookup_expr="icontains")
 
     destination = django_filters.CharFilter(
-        field_name="study_abroad_destinations__slug", lookup_expr="iexact"
+        field_name="study_abroad_destinations__slug",
+        lookup_expr="iexact"
     )
     university = django_filters.CharFilter(
-        field_name="affiliated_universities__slug", lookup_expr="iexact"
+        field_name="affiliated_universities__slug",
+        lookup_expr="iexact"
     )
 
     class Meta:
         model = College
         fields = ["name", "destination", "university"]
-
-
-# ✅ NEW: ScholarshipFilter (⬇️ Add this at the end)
-from scholarship.models import Scholarship
 
 class ScholarshipFilter(filters.FilterSet):
     destination = filters.CharFilter(field_name="destination__slug", lookup_expr="iexact")

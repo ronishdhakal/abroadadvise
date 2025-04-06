@@ -122,8 +122,8 @@ export async function getServerSideProps() {
   try {
     const [collegeRes, destRes, uniRes] = await Promise.all([
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/college/?page=1`),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/`),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/?page_size=1000`),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/university/?page_size=1000`),
     ]);
 
     if (!collegeRes.ok || !destRes.ok || !uniRes.ok) throw new Error("API call failed");

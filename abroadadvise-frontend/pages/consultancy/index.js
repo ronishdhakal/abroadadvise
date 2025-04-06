@@ -21,7 +21,6 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // ✅ Fetch consultancies based on filters
   const fetchConsultancies = async () => {
     try {
       const queryParams = new URLSearchParams({ page: currentPage });
@@ -41,13 +40,12 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
 
       const data = await response.json();
       setConsultancies(data.results || []);
-      setTotalPages(Math.ceil(data.count / 10)); // ✅ Updated: use count to calculate total pages
+      setTotalPages(Math.ceil(data.count / 10));
     } catch (error) {
       console.error("Error fetching consultancies:", error.message);
     }
   };
 
-  // ✅ Fetch consultancies on filter change
   useEffect(() => {
     fetchConsultancies();
   }, [search, selectedDistricts, destination, exam, moeCertified, currentPage]);
@@ -66,7 +64,6 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
       <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-white">
-        {/* 🔍 Search & Filter */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -88,7 +85,6 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
           </button>
         </div>
 
-        {/* 🧩 Filter Panel */}
         {isFilterOpen && (
           <ConsultancyFilters
             search={search}
@@ -102,12 +98,10 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
             moeCertified={moeCertified}
             setMoeCertified={setMoeCertified}
             exams={exams}
-            destinations={destinations}
             districts={districts}
           />
         )}
 
-        {/* 📦 List */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
           {consultancies.length > 0 ? (
             consultancies.map((consultancy) => (
@@ -118,7 +112,6 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
           )}
         </div>
 
-        {/* 📄 Pagination */}
         {totalPages > 1 && (
           <Pagination
             currentPage={currentPage}
@@ -157,7 +150,7 @@ export async function getServerSideProps() {
     return {
       props: {
         initialConsultancies: consultancyData.results || [],
-        initialTotalPages: Math.ceil(consultancyData.count / 10) || 1, // ✅ Updated: use count for pagination
+        initialTotalPages: Math.ceil(consultancyData.count / 10) || 1,
         districts: districtData.results || [],
         exams: examData.results || [],
         destinations: destinationData.results || [],

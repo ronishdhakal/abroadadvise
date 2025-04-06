@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, Award, FileText, MapPin, Globe } from "lucide-react";
 import Select from "react-select";
+import { fetchDestinationsDropdown, fetchDistrictsDropdown } from "@/utils/api"; // ✅ New import
 
 const ConsultancyFilters = ({
   search = "",
@@ -15,9 +17,30 @@ const ConsultancyFilters = ({
   moeCertified = "",
   setMoeCertified = () => {},
   exams = [],
-  destinations = [],
-  districts = [],
 }) => {
+  const [destinations, setDestinations] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [loadingDest, setLoadingDest] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+
+  // Fetch all destinations
+  useEffect(() => {
+    setLoadingDest(true);
+    fetchDestinationsDropdown()
+      .then((data) => setDestinations(data || []))
+      .catch((error) => console.error("Error fetching destinations:", error))
+      .finally(() => setLoadingDest(false));
+  }, []);
+
+  // Fetch all districts
+  useEffect(() => {
+    setLoadingDistricts(true);
+    fetchDistrictsDropdown()
+      .then((data) => setDistricts(data || []))
+      .catch((error) => console.error("Error fetching districts:", error))
+      .finally(() => setLoadingDistricts(false));
+  }, []);
+
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
       <div className="flex items-center justify-between mb-4">
@@ -55,6 +78,7 @@ const ConsultancyFilters = ({
           <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
           <Select
             isMulti
+            isLoading={loadingDistricts}
             options={districts.map((d) => ({ value: d.id, label: d.name }))}
             value={selectedDistricts}
             onChange={setSelectedDistricts}
@@ -70,6 +94,7 @@ const ConsultancyFilters = ({
           <select
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
+            disabled={loadingDest}
             className="block w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm bg-white text-gray-900 text-sm"
             aria-label="Select Destination"
           >

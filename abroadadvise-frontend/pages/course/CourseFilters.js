@@ -3,7 +3,11 @@
 import { useEffect, useState } from "react";
 import { Search, Filter, MapPin, GraduationCap, Globe } from "lucide-react";
 import Select from "react-select";
-import { fetchDisciplines, fetchUniversitiesDropdown, fetchDestinationsDropdown } from "@/utils/api";
+import {
+  fetchDisciplines,
+  fetchUniversitiesDropdown,
+  fetchDestinationsDropdown,
+} from "@/utils/api";
 
 const CourseFilters = ({
   searchQuery,
@@ -18,16 +22,41 @@ const CourseFilters = ({
   universities: initialUniversities = [],
   countries: initialCountries = [],
 }) => {
-  const [showFilters, setShowFilters] = useState(false); // Toggle state for filters
+  const [showFilters, setShowFilters] = useState(false);
   const [loadingDisciplines, setLoadingDisciplines] = useState(false);
   const [loadingUniversities, setLoadingUniversities] = useState(false);
   const [loadingCountries, setLoadingCountries] = useState(false);
-  
+
   const [disciplineOptions, setDisciplineOptions] = useState([]);
   const [universityOptions, setUniversityOptions] = useState([]);
   const [countryOptions, setCountryOptions] = useState([]);
 
-  // ✅ Fetch all pages of disciplines
+  useEffect(() => {
+    if (!initialDisciplines.length) loadAllDisciplines();
+    else
+      setDisciplineOptions(
+        initialDisciplines.map((d) => ({ value: d.id, label: d.name }))
+      );
+
+    if (!initialUniversities.length) loadUniversities();
+    else
+      setUniversityOptions(
+        initialUniversities.map((u) => ({
+          value: u.slug || u.id,
+          label: u.name,
+        }))
+      );
+
+    if (!initialCountries.length) loadCountries();
+    else
+      setCountryOptions(
+        initialCountries.map((c) => ({
+          value: c.name,
+          label: c.name,
+        }))
+      );
+  }, [initialDisciplines, initialUniversities, initialCountries]);
+
   const loadAllDisciplines = async () => {
     setLoadingDisciplines(true);
     let all = [];
@@ -43,20 +72,15 @@ const CourseFilters = ({
         page++;
       }
 
-      const options = all.map((discipline) => ({
-        value: discipline.id,
-        label: discipline.name,
-      }));
-
+      const options = all.map((d) => ({ value: d.id, label: d.name }));
       setDisciplineOptions(options);
-    } catch (error) {
-      console.error("❌ Error fetching disciplines:", error);
+    } catch (err) {
+      console.error("❌ Error fetching disciplines:", err);
     } finally {
       setLoadingDisciplines(false);
     }
   };
 
-  // ✅ Fetch universities
   const loadUniversities = async () => {
     setLoadingUniversities(true);
     try {
@@ -66,42 +90,34 @@ const CourseFilters = ({
         label: uni.name,
       }));
       setUniversityOptions(options);
-    } catch (error) {
-      console.error("❌ Error fetching universities:", error);
+    } catch (err) {
+      console.error("❌ Error fetching universities:", err);
     } finally {
       setLoadingUniversities(false);
     }
   };
 
-  // ✅ Fetch countries (destinations)
   const loadCountries = async () => {
     setLoadingCountries(true);
     try {
       const data = await fetchDestinationsDropdown();
       const options = (data || []).map((country) => ({
-        value: country.slug || country.id,
+        value: country.title,
         label: country.title,
       }));
       setCountryOptions(options);
-    } catch (error) {
-      console.error("❌ Error fetching countries:", error);
+    } catch (err) {
+      console.error("❌ Error fetching countries:", err);
     } finally {
       setLoadingCountries(false);
     }
   };
 
-  useEffect(() => {
-    if (!initialDisciplines.length) loadAllDisciplines();
-    else setDisciplineOptions(initialDisciplines.map((d) => ({ value: d.id, label: d.name })));
-    
-    if (!initialUniversities.length) loadUniversities();
-    else setUniversityOptions(initialUniversities.map((u) => ({ value: u.slug || u.id, label: u.name })));
-    
-    if (!initialCountries.length) loadCountries();
-    else setCountryOptions(initialCountries.map((c) => ({ value: c.slug || c.id, label: c.title })));
-  }, [initialDisciplines, initialUniversities, initialCountries]);
+  // Custom filter for country input suggestions (case-insensitive, partial match)
+  const filteredCountrySuggestions = countryOptions.filter((c) =>
+    c.label.toLowerCase().includes((countryQuery || "").toLowerCase())
+  );
 
-  // ✅ Custom styles
   const customStyles = {
     control: (provided) => ({
       ...provided,
@@ -109,7 +125,7 @@ const CourseFilters = ({
       borderColor: "#D1D5DB",
       boxShadow: "none",
       "&:hover": { borderColor: "#2563EB" },
-      paddingLeft: "2.5rem", // Space for icons
+      paddingLeft: "2.5rem",
     }),
     option: (provided, state) => ({
       ...provided,
@@ -132,7 +148,6 @@ const CourseFilters = ({
 
   return (
     <div className="bg-white p-6 shadow-lg rounded-xl border border-gray-200 mt-4">
-      {/* Search Bar & Filter Button */}
       <div className="flex items-center justify-between mb-4">
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -154,7 +169,6 @@ const CourseFilters = ({
         </button>
       </div>
 
-      {/* Show Filters Only When "Filters" is Clicked */}
       {showFilters && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {/* University Dropdown */}
@@ -172,7 +186,7 @@ const CourseFilters = ({
             />
           </div>
 
-          {/* Country Search Filter (Updated to Input like UniversityFilters) */}
+          {/* Country Input (with suggestions below input) */}
           <div className="relative">
             <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
@@ -182,7 +196,21 @@ const CourseFilters = ({
               onChange={(e) => setCountryQuery(e.target.value)}
               className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-sm text-black"
               aria-label="Search Country"
+              autoComplete="off"
             />
+            {countryQuery && filteredCountrySuggestions.length > 0 && (
+              <ul className="absolute z-20 bg-white shadow-md border rounded mt-1 max-h-40 overflow-y-auto w-full">
+                {filteredCountrySuggestions.map((c) => (
+                  <li
+                    key={c.value}
+                    onClick={() => setCountryQuery(c.value)}
+                    className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm"
+                  >
+                    {c.label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Discipline Multi-Select */}
@@ -202,7 +230,6 @@ const CourseFilters = ({
         </div>
       )}
 
-      {/* Clear Filters Button (Visible only when filters are shown) */}
       {showFilters && (
         <button
           onClick={() => {
