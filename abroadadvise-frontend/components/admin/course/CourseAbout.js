@@ -17,6 +17,8 @@ const CourseAbout = ({ formData, setFormData }) => {
     job_prospects: "",
     features: "",
     scholarship: "",
+    next_intake: "",
+    entry_score: "",
   });
 
   // ✅ Sync form data when editing
@@ -28,6 +30,8 @@ const CourseAbout = ({ formData, setFormData }) => {
       job_prospects: formData.job_prospects || "",
       features: formData.features || "",
       scholarship: formData.scholarship || "",
+      next_intake: formData.next_intake || "",
+      entry_score: formData.entry_score || "",
     });
   }, [formData]);
 
@@ -35,14 +39,22 @@ const CourseAbout = ({ formData, setFormData }) => {
   const handleEditorChange = useCallback(
     (field, contentValue) => {
       setContent((prev) => ({ ...prev, [field]: contentValue }));
-
-      // Update formData only when the content changes
       setFormData((prev) => {
         if (prev[field] !== contentValue) {
           return { ...prev, [field]: contentValue };
         }
         return prev;
       });
+    },
+    [setFormData]
+  );
+
+  // ✅ Handle text field updates
+  const handleInputChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setContent((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     },
     [setFormData]
   );
@@ -114,6 +126,32 @@ const CourseAbout = ({ formData, setFormData }) => {
           value={content.scholarship}
           tabIndex={1}
           onBlur={(newContent) => handleEditorChange("scholarship", newContent)}
+        />
+      </div>
+
+      {/* ✅ Next Intake (Text Input) */}
+      <div className="mb-6">
+        <label htmlFor="next_intake" className="block text-gray-700 font-medium mb-2">Next Intake</label>
+        <input
+          type="text"
+          name="next_intake"
+          id="next_intake"
+          value={content.next_intake}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* ✅ Entry Score (Text Input) */}
+      <div className="mb-6">
+        <label htmlFor="entry_score" className="block text-gray-700 font-medium mb-2">Entry Score</label>
+        <input
+          type="text"
+          name="entry_score"
+          id="entry_score"
+          value={content.entry_score}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
     </div>

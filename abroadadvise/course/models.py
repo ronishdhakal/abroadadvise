@@ -12,11 +12,9 @@ class Course(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     abbreviation = models.CharField(max_length=50, blank=True, null=True)
 
-    # ✅ University is now optional (null=True, blank=True)
     university = models.ForeignKey(
         University, on_delete=models.SET_NULL, null=True, blank=True, related_name='university_courses'
     )
-    
     destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True, related_name='courses')
 
     duration = models.CharField(max_length=50, blank=True, null=True)
@@ -25,9 +23,7 @@ class Course(models.Model):
     cover_image = models.ImageField(upload_to='cover_images/', blank=True, null=True)
     fee = models.CharField(max_length=100, blank=True, null=True)
 
-    # ✅ Many-to-Many relationship with Discipline
     disciplines = models.ManyToManyField(Discipline, related_name="courses", blank=True)
-
     priority = models.PositiveIntegerField(null=True, blank=True, default=None, help_text="Lower the number, higher the priority")
 
     short_description = HTMLField(blank=True, null=True)
@@ -37,10 +33,14 @@ class Course(models.Model):
     scholarship = HTMLField(blank=True, null=True)
     features = HTMLField(blank=True, null=True)
 
+    # ✅ New fields added
+    next_intake = models.CharField(max_length=100, blank=True, null=True)
+    entry_score = models.CharField(max_length=100, blank=True, null=True)
+
     def __str__(self):
-        """ ✅ Return Course name along with its linked disciplines """
         discipline_names = ', '.join(discipline.name for discipline in self.disciplines.all())
         return f"{self.name} ({discipline_names})" if discipline_names else self.name
+
 
 @receiver(pre_save, sender=Course)
 def create_slug(sender, instance, **kwargs):

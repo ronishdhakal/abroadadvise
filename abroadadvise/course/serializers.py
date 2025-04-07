@@ -37,12 +37,13 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'
+        # ✅ You could alternatively list them explicitly if needed:
         # fields = [
         #     'id', 'name', 'slug', 'abbreviation', 'university', 'destination',
         #     'duration', 'level', 'icon', 'cover_image', 'fee', 'disciplines',
         #     'priority', 'short_description', 'eligibility', 'course_structure',
-        #     'job_prospects', 'scholarship', 'features', 'university_details',
-        #     'disciplines_details', 'destination_details'
+        #     'job_prospects', 'scholarship', 'features', 'next_intake', 'entry_score',
+        #     'university_details', 'disciplines_details', 'destination_details'
         # ]
 
     def get_university_details(self, obj):

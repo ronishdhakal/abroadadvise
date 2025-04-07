@@ -1,6 +1,6 @@
 "use client";
 
-import { Building, Calendar, GraduationCap, DollarSign } from "lucide-react";
+import { Building, Calendar, GraduationCap, DollarSign, Globe } from "lucide-react";
 import Link from "next/link";
 
 const CourseOverview = ({ course }) => {
@@ -33,6 +33,19 @@ const CourseOverview = ({ course }) => {
           ) : (
             <span className="text-sm font-semibold text-gray-700">N/A</span>
           )}
+        </div>
+      </div>
+
+      {/* Country */}
+      <div className="flex items-start gap-3 mb-4">
+        <Globe className="h-5 w-5 text-[#4c9bd5] mt-1" />
+        <div>
+          <p className="text-xs text-gray-500 uppercase font-medium tracking-wide mb-1">
+            Country
+          </p>
+          <p className="text-sm font-semibold text-gray-800">
+            {course.university?.country || "N/A"}
+          </p>
         </div>
       </div>
 

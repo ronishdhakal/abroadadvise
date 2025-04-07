@@ -15,6 +15,8 @@ const DestinationAbout = ({ formData, setFormData }) => {
   const [documentsRequired, setDocumentsRequired] = useState("");
   const [scholarships, setScholarships] = useState("");
   const [moreInformation, setMoreInformation] = useState("");
+  const [eptRequirement, setEptRequirement] = useState("");
+  const [gpaRequirement, setGpaRequirement] = useState("");
   const [faqs, setFaqs] = useState([{ question: "", answer: "" }]);
 
   useEffect(() => {
@@ -23,6 +25,8 @@ const DestinationAbout = ({ formData, setFormData }) => {
     setDocumentsRequired(formData.documents_required || "");
     setScholarships(formData.scholarships || "");
     setMoreInformation(formData.more_information || "");
+    setEptRequirement(formData.ept_requirement || "");
+    setGpaRequirement(formData.gpa_requirement || "");
 
     try {
       const parsed = JSON.parse(formData.faqs);
@@ -55,6 +59,7 @@ const DestinationAbout = ({ formData, setFormData }) => {
     <div className="bg-white p-6 rounded-2xl shadow-md space-y-6">
       <h2 className="text-xl font-bold text-gray-800">Destination Details</h2>
 
+      {/* Rich Text Sections */}
       {[
         { label: "Why Choose This Destination?", value: whyChoose, set: setWhyChoose, key: "why_choose" },
         { label: "Requirements", value: requirements, set: setRequirements, key: "requirements" },
@@ -75,6 +80,36 @@ const DestinationAbout = ({ formData, setFormData }) => {
           />
         </div>
       ))}
+
+      {/* ✅ EPT Requirement */}
+      <div>
+        <label className="block text-gray-700 font-medium mb-1">EPT Requirement</label>
+        <input
+          type="text"
+          value={eptRequirement}
+          onChange={(e) => {
+            setEptRequirement(e.target.value);
+            setFormData((prev) => ({ ...prev, ept_requirement: e.target.value }));
+          }}
+          placeholder="e.g. IELTS 6.5 or TOEFL 85"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4c9bd5] focus:border-[#4c9bd5]"
+        />
+      </div>
+
+      {/* ✅ GPA Requirement */}
+      <div>
+        <label className="block text-gray-700 font-medium mb-1">GPA Requirement</label>
+        <input
+          type="text"
+          value={gpaRequirement}
+          onChange={(e) => {
+            setGpaRequirement(e.target.value);
+            setFormData((prev) => ({ ...prev, gpa_requirement: e.target.value }));
+          }}
+          placeholder="e.g. Minimum GPA 2.8 or 65%"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#4c9bd5] focus:border-[#4c9bd5]"
+        />
+      </div>
 
       {/* FAQs Section */}
       <div>

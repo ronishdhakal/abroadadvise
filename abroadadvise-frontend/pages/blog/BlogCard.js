@@ -5,7 +5,13 @@ import Link from "next/link";
 const BlogCard = ({ blog }) => {
   if (!blog) return null; // ✅ Prevent crash if blog is undefined
 
-  const formattedDate = blog.date ? blog.date.split("T")[0] : "Unknown Date"; // ✅ Prevent error
+  const formattedDate = blog.published_date
+    ? new Date(blog.published_date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "Unknown Date";
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl transition-all transform hover:-translate-y-1 cursor-pointer overflow-hidden">

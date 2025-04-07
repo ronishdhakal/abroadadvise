@@ -17,6 +17,10 @@ class Destination(models.Model):
     more_information = HTMLField(blank=True, null=True)
     faqs = HTMLField(blank=True, null=True)
 
+    # ✅ New Fields
+    ept_requirement = models.CharField(max_length=255, blank=True, null=True)
+    gpa_requirement = models.CharField(max_length=255, blank=True, null=True)
+
     # Keeping relationships optional
     courses_to_study = models.ManyToManyField(
         'course.Course', related_name='destinations', blank=True

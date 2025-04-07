@@ -215,12 +215,12 @@ const ConsultanciesPage = () => {
                       <td className="p-4">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            consultancy.is_verified
+                            consultancy.verified
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {consultancy.is_verified ? "Yes" : "No"}
+                          {consultancy.verified ? "Yes" : "No"}
                         </span>
                       </td>
                       <td className="p-4">

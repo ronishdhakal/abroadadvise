@@ -58,9 +58,12 @@ const ConsultancyCard = ({ consultancy }) => {
 
         {/* 📌 Info Section - Left aligned */}
         <div className="p-4 flex-grow flex flex-col justify-center text-left">
-          {/* ✅ Title - Slightly increased size */}
-          <h2 className="text-lg sm:text-xl md:text-xl font-semibold text-gray-800 line-clamp-1">
+          {/* ✅ Title with Verified Icon */}
+          <h2 className="text-lg sm:text-xl md:text-xl font-semibold text-gray-800 line-clamp-1 flex items-center gap-1">
             {consultancy.name}
+            {consultancy.verified && (
+              <BadgeCheck className="h-5 w-5 text-[#4c9bd5]" title="Verified Consultancy" />
+            )}
           </h2>
 
           {/* ✅ Location */}
