@@ -26,7 +26,8 @@ urlpatterns = [
     path("blog/", include("blog.urls")),
     path("college/", include("college.urls")),
     path("scholarship/", include("scholarship.urls")),  # ✅ NEW: Scholarship endpoints
-
+    # ✅ Featured Pages
+    path("featured/", include("featured.urls")),  # ✅ NEW
     # ✅ Core utilities
     path("", include("core.urls")),
     path("discipline/", DisciplineListAPIView.as_view(), name="list-disciplines"),

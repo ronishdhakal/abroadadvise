@@ -2426,3 +2426,80 @@ export const fetchConsultanciesDropdown = async (search = "") => {
     return [];
   }
 };
+
+
+// ✅ List featured pages (with search and pagination)
+export const getFeaturedPages = async ({ page = 1, search = "" }) => {
+  const res = await fetch(`${API_BASE_URL}/featured/?page=${page}&search=${search}`);
+  if (!res.ok) throw new Error("Failed to fetch featured pages");
+  return await res.json();
+};
+export const getFeaturedBySlug = async (slug) => {
+  const res = await fetch(`${API_BASE_URL}/featured/${slug}/`);
+  if (!res.ok) throw new Error("Failed to fetch featured detail");
+  return await res.json();
+};
+
+
+// ✅ Get a single featured page by slug (used in edit mode)
+export const fetchFeaturedDetails = async (slug) => {
+  const res = await fetch(`${API_BASE_URL}/featured/${slug}/`);
+  if (!res.ok) throw new Error("Failed to fetch featured detail");
+  return await res.json();
+};
+
+// ✅ Create a featured page (with multipart/form-data and auth)
+export const createFeaturedPage = async (data) => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formData.append(key, value);
+    }
+  });
+
+  const res = await fetch(`${API_BASE_URL}/featured/create/`, {
+    method: "POST",
+    headers: getAuthHeaders(), // ✅ Auth added
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(`Failed to create featured page: ${errorText}`);
+  }
+
+  return await res.json();
+};
+
+export const updateFeaturedPage = async (slug, data) => {
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formData.append(key, value);
+    }
+  });
+
+  const response = await fetch(`${API_BASE_URL}/featured/${slug}/update/`, {
+    method: "PATCH",
+    headers: getAuthHeaders(), // ✅ USE THIS for safe token handling
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("API Response Error:", errorData);
+    throw new Error(errorData.error || "Failed to update featured page");
+  }
+
+  return await response.json();
+};
+
+// ✅ Delete a featured page (with auth)
+export const deleteFeaturedPage = async (slug) => {
+  const res = await fetch(`${API_BASE_URL}/featured/${slug}/delete/`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to delete featured page");
+};
