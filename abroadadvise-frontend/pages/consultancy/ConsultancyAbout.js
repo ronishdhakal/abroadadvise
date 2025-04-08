@@ -1,27 +1,32 @@
 "use client";
 
 const ConsultancyAbout = ({ consultancy }) => {
-  if (!consultancy) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-semibold text-gray-900">About</h2>
-        <p className="text-gray-600 mt-2">No consultancy data available.</p>
-      </div>
-    );
-  }
+  const name = consultancy?.name || "this consultancy";
+  const aboutHtml = consultancy?.about?.trim();
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-semibold text-gray-900">
-        {`About ${consultancy.name || "this Consultancy"}`}
+    <section
+      className="bg-white rounded-lg shadow-md p-6"
+      aria-labelledby="about-consultancy-heading"
+    >
+      <h2
+        id="about-consultancy-heading"
+        className="text-2xl font-semibold text-gray-900"
+      >
+        About {name}
       </h2>
-      <div
-        className="text-gray-800 leading-relaxed mt-4 font-normal prose prose-sm sm:prose lg:prose-lg max-w-none"
-        dangerouslySetInnerHTML={{
-          __html: consultancy.about || "No additional details available.",
-        }}
-      />
-    </div>
+
+      {aboutHtml ? (
+        <div
+          className="text-gray-800 leading-relaxed mt-4 font-normal prose prose-sm sm:prose lg:prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: aboutHtml }}
+        />
+      ) : (
+        <p className="text-gray-600 mt-2">
+          No additional details are available about {name}.
+        </p>
+      )}
+    </section>
   );
 };
 

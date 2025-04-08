@@ -32,13 +32,21 @@ const FeaturedIndex = () => {
           name="description"
           content="Explore curated lists of top consultancies for popular destinations like Canada, USA, UK and more."
         />
+        <link rel="canonical" href="https://abroadadvise.com/featured" />
       </Head>
 
       <Header />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-gray-50 min-h-screen">
-        <section className="text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-extrabold text-gray-900 mb-4 leading-tight tracking-tight">
+        {/* 🧠 Page Intro Section */}
+        <section
+          className="text-center"
+          aria-labelledby="featured-guides-heading"
+        >
+          <h1
+            id="featured-guides-heading"
+            className="text-3xl sm:text-4xl md:text-5xl font-serif font-extrabold text-gray-900 mb-4 leading-tight tracking-tight"
+          >
             Featured Study Abroad Guides
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 font-light max-w-2xl mx-auto leading-relaxed">
@@ -46,28 +54,47 @@ const FeaturedIndex = () => {
           </p>
         </section>
 
+        {/* 🔄 Loading/Error States */}
         {loading ? (
-          <p className="text-center text-gray-600 mt-8">Loading featured pages...</p>
+          <p className="text-center text-gray-600 mt-8" role="status">
+            Loading featured pages...
+          </p>
         ) : error ? (
-          <p className="text-center text-red-500 mt-8">{error}</p>
+          <p className="text-center text-red-500 mt-8" role="alert">
+            {error}
+          </p>
         ) : (
-          <div className="mt-10 grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <section
+            className="mt-10 grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3"
+            aria-labelledby="featured-list-heading"
+          >
+            <h2 id="featured-list-heading" className="sr-only">
+              List of featured country guides
+            </h2>
+
             {featuredPages.map((page) => (
               <div
                 key={page.slug}
                 className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 hover:-translate-y-1"
               >
-                <Link href={`/featured/${page.slug}`} className="flex items-center gap-3">
-                  <span className="text-2xl">{page.flag_emoji || "🌍"}</span>
+                <Link
+                  href={`/featured/${page.slug}`}
+                  className="flex items-center gap-3"
+                  aria-label={`View featured consultancies for ${page.title}`}
+                >
+                  <span className="text-2xl" role="img" aria-label={`${page.title} flag`}>
+                    {page.flag_emoji || "🌍"}
+                  </span>
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 hover:text-[#4c9bd5] transition-colors duration-200">
                     {page.title}
                   </h3>
                 </Link>
               </div>
             ))}
-          </div>
+          </section>
         )}
 
+        {/* 📢 Footer Note */}
         <div className="mt-12 text-center">
           <p className="text-sm text-gray-500 font-light">
             More destinations coming soon — stay tuned for updates!

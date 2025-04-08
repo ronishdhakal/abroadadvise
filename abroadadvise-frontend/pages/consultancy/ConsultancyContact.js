@@ -5,21 +5,26 @@ import { Globe, Mail, Phone, Calendar, CheckCircle } from "lucide-react";
 const ConsultancyContact = ({ consultancy }) => {
   if (!consultancy) {
     return (
-      <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
+      <section className="bg-white rounded-2xl shadow-md p-6 border border-gray-200">
         <p className="text-gray-400 italic">Consultancy data not available.</p>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">Contact Information</h2>
+    <section
+      className="bg-white rounded-2xl shadow-md p-6 border border-gray-100"
+      aria-labelledby="consultancy-contact-heading"
+    >
+      <h2 id="consultancy-contact-heading" className="text-2xl font-semibold text-gray-900 mb-6">
+        Contact Information
+      </h2>
 
       <div className="space-y-5 text-sm text-gray-800">
         {/* Website */}
         {consultancy.website && (
           <div className="flex items-start gap-3">
-            <Globe className="h-5 w-5 text-[#4c9bd5]" />
+            <Globe className="h-5 w-5 text-[#4c9bd5]" aria-hidden="true" />
             <div>
               <p className="text-gray-500">Website</p>
               <a
@@ -27,6 +32,7 @@ const ConsultancyContact = ({ consultancy }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#4c9bd5] font-medium hover:underline"
+                aria-label={`Visit ${consultancy.name} website`}
               >
                 {consultancy.website}
               </a>
@@ -37,7 +43,7 @@ const ConsultancyContact = ({ consultancy }) => {
         {/* Email */}
         {consultancy.email && (
           <div className="flex items-start gap-3">
-            <Mail className="h-5 w-5 text-[#4c9bd5]" />
+            <Mail className="h-5 w-5 text-[#4c9bd5]" aria-hidden="true" />
             <div>
               <p className="text-gray-500">Email</p>
               <a
@@ -53,7 +59,7 @@ const ConsultancyContact = ({ consultancy }) => {
         {/* Phone */}
         {consultancy.phone && (
           <div className="flex items-start gap-3">
-            <Phone className="h-5 w-5 text-[#4c9bd5]" />
+            <Phone className="h-5 w-5 text-[#4c9bd5]" aria-hidden="true" />
             <div>
               <p className="text-gray-500">Phone</p>
               <a
@@ -69,7 +75,7 @@ const ConsultancyContact = ({ consultancy }) => {
         {/* Establishment Date */}
         {consultancy.establishment_date && (
           <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-[#4c9bd5]" />
+            <Calendar className="h-5 w-5 text-[#4c9bd5]" aria-hidden="true" />
             <div>
               <p className="text-gray-500">Established</p>
               <p className="text-gray-800 font-medium">
@@ -85,7 +91,10 @@ const ConsultancyContact = ({ consultancy }) => {
 
         {/* MOE Certification */}
         {consultancy.moe_certified && (
-          <div className="flex items-center gap-2 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-lg mt-2 text-sm font-medium">
+          <div
+            className="flex items-center gap-2 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-lg mt-2 text-sm font-medium"
+            aria-label="MOE Certified Consultancy"
+          >
             <CheckCircle className="w-4 h-4 text-green-600" />
             <span>Certified by Ministry of Education</span>
           </div>
@@ -108,18 +117,19 @@ const ConsultancyContact = ({ consultancy }) => {
           </div>
         )}
 
-        {/* Brochure */}
+        {/* Brochure Download */}
         {consultancy.brochure && (
           <a
             href={consultancy.brochure}
             download
             className="mt-6 inline-block w-full text-center bg-[#4c9bd5] hover:bg-[#3a8cc1] text-white font-medium py-3 rounded-lg transition-all shadow-sm"
+            aria-label={`Download brochure for ${consultancy.name}`}
           >
             📄 Download Brochure
           </a>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

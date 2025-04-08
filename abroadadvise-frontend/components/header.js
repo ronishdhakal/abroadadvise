@@ -6,11 +6,9 @@ import { useRouter } from "next/router";
 import { FiSearch } from "react-icons/fi";
 import { HiMenu, HiX } from "react-icons/hi";
 import Image from "next/image";
-import { API_BASE_URL } from "@/utils/api";
 
 export default function Header() {
   const router = useRouter();
-  const [siteLogo, setSiteLogo] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,38 +19,20 @@ export default function Header() {
   // Detect screen size
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Mobile breakpoint at 768px
+      setIsMobile(window.innerWidth < 768);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch Site Logo
-  useEffect(() => {
-    const fetchSiteLogo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
-        const data = await res.json();
-        if (data.site_logo_url) {
-          setSiteLogo(data.site_logo_url);
-        }
-      } catch (error) {
-        console.error("Error fetching site logo:", error);
-      }
-    };
-    fetchSiteLogo();
-  }, []);
-
-  // Fetch General Below-Navbar Ad
+  // Fetch general ad
   useEffect(() => {
     const fetchAd = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=exclusive_below_navbar`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ads/?placement=exclusive_below_navbar`);
         const data = await res.json();
-        if (data.results.length > 0) {
-          setAd(data.results[0]);
-        }
+        if (data.results.length > 0) setAd(data.results[0]);
       } catch (error) {
         console.error("Error fetching ad:", error);
       }
@@ -60,17 +40,15 @@ export default function Header() {
     fetchAd();
   }, []);
 
-  // Fetch Blog/News-Specific Below-Navbar Ad
+  // Fetch blog/news-specific ad
   useEffect(() => {
     if (!router.isReady) return;
     if (router.pathname.startsWith("/blog") || router.pathname.startsWith("/news")) {
       const fetchBlogNewsAd = async () => {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/ads/?placement=below_navbar_blog_news`);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ads/?placement=below_navbar_blog_news`);
           const data = await res.json();
-          if (data.results.length > 0) {
-            setBlogNewsAd(data.results[0]);
-          }
+          if (data.results.length > 0) setBlogNewsAd(data.results[0]);
         } catch (error) {
           console.error("Error fetching blog/news ad:", error);
         }
@@ -93,64 +71,45 @@ export default function Header() {
       {/* Navbar */}
       <header className="bg-white px-4 sm:px-6 md:px-10 py-4 flex justify-between items-center sticky top-0 z-50 w-full border-b border-gray-100 transition-all duration-300">
         <div className="flex items-center">
-          {siteLogo ? (
-            <Link href="/" className="flex items-center">
-              <Image src={siteLogo} alt="Abroad Advise Logo" width={140} height={50} className="object-contain w-36 sm:w-44" />
-            </Link>
-          ) : (
-            <span className="text-gray-700 font-medium text-sm sm:text-base">Loading...</span>
-          )}
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo/default-logo.png" // ✅ updated to public folder path
+              alt="Abroad Advise Logo"
+              width={140}
+              height={50}
+              priority
+              className="object-contain w-36 sm:w-44"
+            />
+          </Link>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop nav */}
         <nav className="hidden lg:flex items-center space-x-8 text-gray-700 font-medium text-base tracking-wide">
-          <Link href="/" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Home
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/university" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Universities
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/college" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Colleges
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/course" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Courses
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Consultancies
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/destination" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Destinations
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/scholarship" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Scholarships
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/exam" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Exams
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/event" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Events
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            News
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
-          <Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200 relative group">
-            Blog
-            <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
-          </Link>
+          {[
+            ["Home", "/"],
+            ["Universities", "/university"],
+            ["Colleges", "/college"],
+            ["Courses", "/course"],
+            ["Consultancies", "/consultancy"],
+            ["Destinations", "/destination"],
+            ["Scholarships", "/scholarship"],
+            ["Exams", "/exam"],
+            ["Events", "/event"],
+            ["News", "/news"],
+            ["Blog", "/blog"],
+          ].map(([label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              className="hover:text-[#4c9bd5] transition-colors duration-200 relative group"
+            >
+              {label}
+              <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-[#4c9bd5] transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+          ))}
         </nav>
 
-        {/* Search & Menu Buttons */}
+        {/* Icons */}
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
@@ -167,43 +126,32 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu */}
       {menuOpen && (
         <div className="lg:hidden fixed top-[72px] left-0 w-full bg-white z-40 border-b border-gray-100 shadow-sm animate-slide-down">
           <nav className="flex flex-col px-4 py-6 space-y-4 text-gray-700 font-medium text-base">
-            <Link href="/" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Home
-            </Link>
-            <Link href="/university" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Universities
-            </Link>
-            <Link href="/college" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              College
-            </Link>
-            <Link href="/course" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Courses
-            </Link>
-            <Link href="/consultancy" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Consultancies
-            </Link>
-            <Link href="/destination" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Destinations
-            </Link>
-            <Link href="/scholarship" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Scholarships
-            </Link>
-            <Link href="/exam" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Exams
-            </Link>
-            <Link href="/event" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Events
-            </Link>
-            <Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              News
-            </Link>
-            <Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200 py-2" onClick={() => setMenuOpen(false)}>
-              Blog
-            </Link>
+            {[
+              ["Home", "/"],
+              ["Universities", "/university"],
+              ["College", "/college"],
+              ["Courses", "/course"],
+              ["Consultancies", "/consultancy"],
+              ["Destinations", "/destination"],
+              ["Scholarships", "/scholarship"],
+              ["Exams", "/exam"],
+              ["Events", "/event"],
+              ["News", "/news"],
+              ["Blog", "/blog"],
+            ].map(([label, href]) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => setMenuOpen(false)}
+                className="hover:text-[#4c9bd5] transition-colors duration-200 py-2"
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
         </div>
       )}
@@ -219,12 +167,12 @@ export default function Header() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search universities, courses..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] focus:border-transparent text-gray-700 text-sm sm:text-base transition-all duration-200"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4c9bd5] text-gray-700 text-sm"
               />
             </div>
             <button
               type="submit"
-              className="bg-[#4c9bd5] text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-[#4c9bd5]/90 transition-colors duration-200 text-sm sm:text-base font-medium"
+              className="bg-[#4c9bd5] text-white px-4 sm:px-6 py-2.5 rounded-lg hover:bg-[#3a8cc1] transition"
             >
               Search
             </button>
@@ -269,17 +217,11 @@ export default function Header() {
   );
 }
 
-// Add this to your CSS (e.g., in a global CSS file or Tailwind config)
+// Optional CSS (tailwind global)
 const styles = `
   @keyframes slide-down {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .animate-slide-down {
     animation: slide-down 0.3s ease-out;

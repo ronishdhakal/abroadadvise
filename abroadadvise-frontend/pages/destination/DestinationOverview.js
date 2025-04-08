@@ -1,26 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Award } from "lucide-react"; // Icons for EPT and GPA
+import { BookOpen, Award } from "lucide-react";
 
-const DestinationOverview = ({ destination, universities, consultancies }) => {
+const DestinationOverview = ({ destination = {}, universities = [], consultancies = [] }) => {
   const [universityCount, setUniversityCount] = useState(0);
   const [courseCount, setCourseCount] = useState(0);
   const [consultancyCount, setConsultancyCount] = useState(0);
 
   useEffect(() => {
-    if (!destination) return;
+    if (!destination?.id || !destination?.title || !destination?.slug) return;
 
     console.log("🟢 Universities Data:", universities);
     console.log("🟢 Consultancies Data:", consultancies);
 
-    // ✅ Count Universities where country matches destination title
+    // ✅ Count matching universities
     const matchedUniversities = universities.filter(
       (university) => university.country === destination.title
     );
     setUniversityCount(matchedUniversities.length);
 
-    // ✅ Count Consultancies assigned to this destination
+    // ✅ Count consultancies with this destination
     const matchedConsultancies = consultancies.filter(
       (consultancy) =>
         Array.isArray(consultancy.study_abroad_destinations) &&
@@ -28,7 +28,7 @@ const DestinationOverview = ({ destination, universities, consultancies }) => {
     );
     setConsultancyCount(matchedConsultancies.length);
 
-    // ✅ Fetch courses dynamically
+    // ✅ Fetch course count
     const fetchCourses = async () => {
       try {
         console.log("Fetching courses for:", destination.title);
@@ -51,21 +51,18 @@ const DestinationOverview = ({ destination, universities, consultancies }) => {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 bg-gradient-to-b from-white to-gray-50 mt-6 shadow-sm rounded-lg">
-      {/* University, Courses, Consultancies Section */}
+      {/* University, Courses, Consultancies Stats */}
       <div className="grid grid-cols-3 gap-4 text-center border-b border-gray-200 pb-6">
-        {/* Universities Count */}
         <div className="flex flex-col items-center">
           <h2 className="text-2xl sm:text-3xl font-medium text-[#4c9bd5]">{universityCount}+</h2>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">Universities</p>
         </div>
 
-        {/* Courses Count */}
         <div className="flex flex-col items-center">
           <h2 className="text-2xl sm:text-3xl font-medium text-[#4c9bd5]">{courseCount}+</h2>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">Courses</p>
         </div>
 
-        {/* Consultancies Count */}
         <div className="flex flex-col items-center">
           <h2 className="text-2xl sm:text-3xl font-medium text-[#4c9bd5]">{consultancyCount}+</h2>
           <p className="text-gray-500 text-xs sm:text-sm font-normal">Consultancies</p>
@@ -84,10 +81,9 @@ const DestinationOverview = ({ destination, universities, consultancies }) => {
               EPT Requirement
             </p>
             <p className="text-lg font-semibold text-gray-800">
-              {destination.ept_requirement || "Not Specified"}
+              {destination?.ept_requirement || "Not Specified"}
             </p>
           </div>
-          {/* Subtle hover overlay */}
           <div className="absolute inset-0 bg-[#e6f3fc] opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300" />
         </div>
 
@@ -101,10 +97,9 @@ const DestinationOverview = ({ destination, universities, consultancies }) => {
               GPA Requirement
             </p>
             <p className="text-lg font-semibold text-gray-800">
-              {destination.gpa_requirement || "Not Specified"}
+              {destination?.gpa_requirement || "Not Specified"}
             </p>
           </div>
-          {/* Subtle hover overlay */}
           <div className="absolute inset-0 bg-[#e6f3fc] opacity-0 group-hover:opacity-10 rounded-xl transition-opacity duration-300" />
         </div>
       </div>

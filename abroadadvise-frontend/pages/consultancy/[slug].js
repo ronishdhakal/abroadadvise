@@ -1,10 +1,14 @@
-"use client";
-
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import Head from "next/head";
+import { useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 
-// Importing consultancy sections
+// Components
+import SeoHead from "../../components/SeoHead";
+import Header from "../../components/header";
+import Footer from "../../components/footer";
+import InquiryModal from "../../components/InquiryModal";
+
+// Import all essential components
 import ConsultancyHeader from "./ConsultancyHeader";
 import ConsultancyContact from "./ConsultancyContact";
 import ConsultancyAbout from "./ConsultancyAbout";
@@ -12,76 +16,62 @@ import ConsultancyServices from "./ConsultancyServices";
 import ConsultancyExams from "./ConsultancyExams";
 import ConsultancyUniversities from "./ConsultancyUniversities";
 import ConsultancyDestinations from "./ConsultancyDestinations";
-import ConsultancyGallery from "./ConsultancyGallery";
-import ConsultancyBranches from "./ConsultancyBranches";
-import ConsultancyMap from "./ConsultancyMap";
-import ConsultancyEvent from "./ConsultancyEvent";
 
-// Inquiry Modal
-import InquiryModal from "../../components/InquiryModal";
+// Lazy-loaded heavy components
+const ConsultancyGallery = dynamic(() => import("./ConsultancyGallery"));
+const ConsultancyBranches = dynamic(() => import("./ConsultancyBranches"));
+const ConsultancyMap = dynamic(() => import("./ConsultancyMap"));
+const ConsultancyEvent = dynamic(() => import("./ConsultancyEvent"));
 
-// Global layout
-import Footer from "../../components/footer";
-import Header from "../../components/header";
-import Custom404 from "../404";
-
-const ConsultancyDetailPage = () => {
+const ConsultancyDetailPage = ({ consultancy }) => {
   const router = useRouter();
-  const { slug } = router.query;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-  const [consultancy, setConsultancy] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isNotFound, setIsNotFound] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState({
     entityType: "consultancy",
     entityId: null,
     entityName: "",
+    consultancyId: null,
+    consultancyName: "",
   });
-
-  useEffect(() => {
-    if (!router.isReady || !slug) return;
-
-    const fetchConsultancy = async () => {
-      try {
-        const res = await fetch(`${API_URL}/consultancy/${slug}/`);
-        if (!res.ok) {
-          setIsNotFound(true);
-          return;
-        }
-        const data = await res.json();
-        setConsultancy(data);
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setIsNotFound(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConsultancy();
-  }, [router.isReady, slug, API_URL]);
 
   const openInquiryModal = (entityType, entityId, entityName, consultancyId, consultancyName) => {
     if (!entityType || !entityId) {
-      alert("Something went wrong! Missing entity type or ID.");
+      console.error("Missing entity type or ID.");
       return;
     }
-
     setSelectedEntity({ entityType, entityId, entityName, consultancyId, consultancyName });
     setIsModalOpen(true);
   };
 
-  if (loading) return <p className="text-center text-lg font-semibold mt-10">Loading...</p>;
-  if (isNotFound) return <Custom404 />;
+  const schemaMarkup = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: consultancy.name,
+    description: consultancy.about || "Study abroad consultancy services",
+    url: `https://abroadadvise.com/consultancy/${consultancy.slug}`,
+    logo: consultancy.logo || "https://abroadadvise.com/logo/default-logo.png", // ✅ FIXED
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: consultancy.phone || "",
+      contactType: "Customer Service",
+    },
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: consultancy.city || "",
+      addressCountry: consultancy.country || "",
+    },
+  }), [consultancy]);
 
   return (
     <>
-      <Head>
-        <title>{consultancy.name} - Consultancy</title>
-        <meta name="description" content={consultancy.about || "Study abroad consultancy details"} />
-      </Head>
+      <SeoHead
+        title={`${consultancy.name} - Study Abroad Consultancy`}
+        description={consultancy.about || "Expert study abroad consultancy services"}
+        keywords={`study abroad, consultancy, ${consultancy.name}, education`}
+        url={`https://abroadadvise.com/consultancy/${consultancy.slug}`}
+        image={consultancy.logo || "https://abroadadvise.com/logo/default-logo.png"} // ✅ FIXED
+        schemaMarkup={schemaMarkup}
+      />
 
       <Header />
 
@@ -97,13 +87,9 @@ const ConsultancyDetailPage = () => {
           <div className="md:col-span-1 space-y-6">
             <ConsultancyContact consultancy={consultancy} />
             <ConsultancyMap google_map_url={consultancy.google_map_url} consultancyName={consultancy.name} />
-
-            {/* 🔥 Sticky Events on Desktop */}
             <div className="hidden md:block sticky top-28 h-fit">
               <ConsultancyEvent slug={consultancy.slug} />
             </div>
-
-            {/* 📱 Fallback for mobile */}
             <div className="md:hidden">
               <ConsultancyEvent slug={consultancy.slug} />
             </div>
@@ -112,33 +98,29 @@ const ConsultancyDetailPage = () => {
           {/* Right Column */}
           <div className="md:col-span-2 space-y-6">
             <ConsultancyDestinations
-              destinations={consultancy.study_abroad_destinations}
+              destinations={consultancy.study_abroad_destinations || []}
               openInquiryModal={openInquiryModal}
               consultancyId={consultancy.id}
               consultancyName={consultancy.name}
               verified={consultancy.verified}
             />
-
             <ConsultancyExams
-              exams={consultancy.test_preparation}
+              exams={consultancy.test_preparation || []}
               openInquiryModal={openInquiryModal}
               consultancyId={consultancy.id}
               consultancyName={consultancy.name}
               verified={consultancy.verified}
             />
-
-            <ConsultancyBranches branches={consultancy.branches} />
-            <ConsultancyGallery gallery={consultancy.gallery_images} />
-
+            <ConsultancyBranches branches={consultancy.branches || []} />
+            <ConsultancyGallery gallery={consultancy.gallery_images || []} />
             <ConsultancyUniversities
-              allUniversities={consultancy.partner_universities}
-              preselectedIds={consultancy.partner_universities.map((u) => u.id)}
+              allUniversities={consultancy.partner_universities || []}
+              preselectedIds={(consultancy.partner_universities || []).map((u) => u.id)}
               openInquiryModal={openInquiryModal}
               consultancyId={consultancy.id}
               consultancyName={consultancy.name}
               verified={consultancy.verified}
             />
-
             <ConsultancyAbout consultancy={consultancy} />
             <ConsultancyServices consultancy={consultancy} />
           </div>
@@ -161,5 +143,22 @@ const ConsultancyDetailPage = () => {
     </>
   );
 };
+
+export async function getServerSideProps(context) {
+  const { slug } = context.params;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  try {
+    const res = await fetch(`${API_URL}/consultancy/${slug}/`);
+    if (!res.ok) {
+      return { notFound: true };
+    }
+    const consultancy = await res.json();
+    return { props: { consultancy } };
+  } catch (err) {
+    console.error("Fetch error:", err);
+    return { notFound: true };
+  }
+}
 
 export default ConsultancyDetailPage;

@@ -1,14 +1,15 @@
-"use client";
-
 import { useState, useEffect } from "react";
+import { Search, Filter } from "lucide-react";
+
+// Components
 import Head from "next/head";
+import SeoHead from "../../components/SeoHead";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import HeroSection from "./HeroSection";
 import ConsultancyFilters from "./ConsultancyFilters";
 import ConsultancyCard from "./ConsultancyCard";
 import Pagination from "./Pagination";
-import { Search, Filter } from "lucide-react";
 
 const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, exams, destinations }) => {
   const [consultancies, setConsultancies] = useState(initialConsultancies);
@@ -52,13 +53,13 @@ const ConsultancyList = ({ initialConsultancies, initialTotalPages, districts, e
 
   return (
     <>
-      <Head>
-        <title>Best Consultancies in Nepal to Study Abroad - Abroad Advise</title>
-        <meta
-          name="description"
-          content="Explore top study abroad education consultancies for Nepalese students and plan your international education journey."
-        />
-      </Head>
+      <SeoHead
+        title="Best Consultancies in Nepal to Study Abroad - Abroad Advise"
+        description="Explore top study abroad education consultancies for Nepalese students and plan your international education journey."
+        keywords="study abroad, consultancy, Nepal, education consultancy, best consultancy in Nepal"
+        url="https://abroadadvise.com/consultancy"
+        image="https://abroadadvise.com/logo/default-logo.png" // ✅ Corrected path
+      />
 
       <Header />
       <HeroSection />
@@ -135,10 +136,9 @@ export async function getServerSideProps() {
       fetch(`${process.env.NEXT_PUBLIC_API_URL}/destination/`)
     ]);
 
-    if (!consultancyRes.ok) throw new Error(`Consultancy API failed: ${consultancyRes.status}`);
-    if (!districtRes.ok) throw new Error(`District API failed: ${districtRes.status}`);
-    if (!examRes.ok) throw new Error(`Exam API failed: ${examRes.status}`);
-    if (!destinationRes.ok) throw new Error(`Destination API failed: ${destinationRes.status}`);
+    if (!consultancyRes.ok || !districtRes.ok || !examRes.ok || !destinationRes.ok) {
+      throw new Error("API failed");
+    }
 
     const [consultancyData, districtData, examData, destinationData] = await Promise.all([
       consultancyRes.json(),

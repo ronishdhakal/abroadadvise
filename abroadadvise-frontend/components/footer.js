@@ -15,27 +15,11 @@ export default function Footer() {
   // Detect screen size
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Mobile breakpoint at 768px
+      setIsMobile(window.innerWidth < 768);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Fetch Site Logo
-  useEffect(() => {
-    const fetchSiteLogo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
-        const data = await res.json();
-        if (data.site_logo_url) {
-          setSiteLogo(data.site_logo_url);
-        }
-      } catch (error) {
-        console.error("Error fetching site logo:", error);
-      }
-    };
-    fetchSiteLogo();
   }, []);
 
   // Fetch General Above-Footer Ad
@@ -115,20 +99,16 @@ export default function Footer() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 text-left">
             {/* Logo & Info */}
             <div className="md:col-span-2">
-              {siteLogo ? (
-                <Link href="/" className="flex items-center">
-                  <Image
-                    src={siteLogo}
-                    alt="Abroad Advise Logo"
-                    width={160}
-                    height={50}
-                    className="object-contain w-40 sm:w-48 transition-all duration-200 hover:opacity-90"
-                    priority
-                  />
-                </Link>
-              ) : (
-                <span className="text-gray-600 font-light text-sm tracking-wide">Loading...</span>
-              )}
+              <Link href="/" className="flex items-center">
+                <Image
+                  src={siteLogo || "/logo/default-logo.png"} // ✅ fallback to public static logo
+                  alt="Abroad Advise Logo"
+                  width={160}
+                  height={50}
+                  className="object-contain w-40 sm:w-48 transition-all duration-200 hover:opacity-90"
+                  priority
+                />
+              </Link>
               <p className="text-gray-500 text-sm mt-4 leading-relaxed tracking-wide">
                 Abroad Advise Pvt. Ltd.<br />
                 Kathmandu, Nepal<br />
