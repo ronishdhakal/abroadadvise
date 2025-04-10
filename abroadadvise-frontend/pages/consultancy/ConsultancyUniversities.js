@@ -16,7 +16,8 @@ const ConsultancyUniversities = ({
   const [universities, setUniversities] = useState([]);
   const [filteredUniversities, setFilteredUniversities] = useState([]);
   const [showAll, setShowAll] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchNameQuery, setSearchNameQuery] = useState("");
+  const [searchCountryQuery, setSearchCountryQuery] = useState("");
 
   useEffect(() => {
     const loadUniversities = async () => {
@@ -42,15 +43,24 @@ const ConsultancyUniversities = ({
   }, [allUniversities, preselectedIds]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUniversities(universities);
-    } else {
-      const query = searchQuery.toLowerCase();
-      setFilteredUniversities(
-        universities.filter((uni) => uni.name.toLowerCase().includes(query))
+    let filtered = universities;
+
+    if (searchNameQuery.trim()) {
+      const nameQuery = searchNameQuery.toLowerCase();
+      filtered = filtered.filter((uni) =>
+        uni.name.toLowerCase().includes(nameQuery)
       );
     }
-  }, [searchQuery, universities]);
+
+    if (searchCountryQuery.trim()) {
+      const countryQuery = searchCountryQuery.toLowerCase();
+      filtered = filtered.filter((uni) =>
+        uni.country.toLowerCase().includes(countryQuery)
+      );
+    }
+
+    setFilteredUniversities(filtered);
+  }, [searchNameQuery, searchCountryQuery, universities]);
 
   const visibleUniversities = showAll
     ? filteredUniversities
@@ -68,16 +78,24 @@ const ConsultancyUniversities = ({
         Partner Universities
       </h2>
 
-      {/* Search Bar */}
+      {/* Search Bars */}
       {universities.length > 6 && (
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search university..."
+            value={searchNameQuery}
+            onChange={(e) => setSearchNameQuery(e.target.value)}
+            placeholder="Search university by name..."
             className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9bd5]"
-            aria-label="Search partner universities"
+            aria-label="Search partner universities by name"
+          />
+          <input
+            type="text"
+            value={searchCountryQuery}
+            onChange={(e) => setSearchCountryQuery(e.target.value)}
+            placeholder="Search university by country..."
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#4c9bd5]"
+            aria-label="Search partner universities by country"
           />
         </div>
       )}
