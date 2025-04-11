@@ -1,12 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { PiBuildings, PiGraduationCap, PiGlobeHemisphereWest, PiBookOpenText } from "react-icons/pi"
+import {
+  PiBuildings,
+  PiGraduationCap,
+  PiGlobeHemisphereWest,
+  PiBookOpenText,
+} from "react-icons/pi"
 import { motion } from "framer-motion"
 
 export default function HeroSection() {
   return (
-    <section className="bg-white py-16 md:py-24">
+    <section className="bg-white py-8 md:py-12"> {/* ⬅️ Reduced from py-16 md:py-24 */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
@@ -15,7 +20,9 @@ export default function HeroSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12 md:mb-16"
         >
-          <h1 className="text-3xl md:text-4xl font-medium text-gray-900 mb-3">Explore Global Education with Us</h1>
+          <h1 className="text-3xl md:text-4xl font-medium text-gray-900 mb-3">
+            Explore Global Education with Us
+          </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Connect with top consultancies, universities, and courses worldwide.
           </p>
@@ -62,7 +69,11 @@ function CategoryCard({ icon, title, description, href }) {
   return (
     <Link href={href} className="block h-full">
       <motion.div
-        whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)" }}
+        whileHover={{
+          y: -4,
+          boxShadow:
+            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)",
+        }}
         transition={{ duration: 0.2 }}
         className="h-full bg-gray-50 border border-gray-100 rounded-lg p-6 transition-all"
       >
@@ -75,4 +86,3 @@ function CategoryCard({ icon, title, description, href }) {
     </Link>
   )
 }
-

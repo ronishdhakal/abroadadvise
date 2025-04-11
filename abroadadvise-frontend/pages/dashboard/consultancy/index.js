@@ -35,56 +35,59 @@ const ConsultancyDashboard = () => {
   }, [])
 
   useEffect(() => {
-    const fetchInquiries = async () => {
-      try {
-        setInquiriesLoading(true)
-        setInquiriesError(null)
+    // Only fetch inquiries if consultancy is verified
+    if (consultancy?.verified) {
+      const fetchInquiries = async () => {
+        try {
+          setInquiriesLoading(true)
+          setInquiriesError(null)
 
-        const token = localStorage.getItem("accessToken")
-        const consultancyId = localStorage.getItem("consultancy_id")
+          const token = localStorage.getItem("accessToken")
+          const consultancyId = localStorage.getItem("consultancy_id")
 
-        if (!token) {
-          setInquiriesError("User not logged in")
-          return
-        }
+          if (!token) {
+            setInquiriesError("User not logged in")
+            return
+          }
 
-        if (!consultancyId) {
-          setInquiriesError("Consultancy ID is missing. Please log in again.")
-          return
-        }
+          if (!consultancyId) {
+            setInquiriesError("Consultancy ID is missing. Please log in again.")
+            return
+          }
 
-        console.log("✅ Fetching inquiries for consultancy_id:", consultancyId, "Page:", currentPage)
+          console.log("✅ Fetching inquiries for consultancy_id:", consultancyId, "Page:", currentPage)
 
-        const response = await fetch(
-          `${API_BASE_URL}/inquiry/admin/all/?consultancy_id=${consultancyId}&page=${currentPage}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+          const response = await fetch(
+            `${API_BASE_URL}/inquiry/admin/all/?consultancy_id=${consultancyId}&page=${currentPage}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
             },
-          },
-        )
+          )
 
-        if (!response.ok) {
-          const errorData = await response.json()
-          setInquiriesError(errorData.detail || "Failed to fetch inquiries")
-        } else {
-          const data = await response.json()
-          console.log("✅ Inquiry Data Received:", data)
+          if (!response.ok) {
+            const errorData = await response.json()
+            setInquiriesError(errorData.detail || "Failed to fetch inquiries")
+          } else {
+            const data = await response.json()
+            console.log("✅ Inquiry Data Received:", data)
 
-          setInquiries(data.results || [])
-          setTotalPages(Math.ceil(data.count / 10))
+            setInquiries(data.results || [])
+            setTotalPages(Math.ceil(data.count / 10))
+          }
+        } catch (error) {
+          setInquiriesError(error.message || "Error fetching inquiries")
+        } finally {
+          setInquiriesLoading(false)
         }
-      } catch (error) {
-        setInquiriesError(error.message || "Error fetching inquiries")
-      } finally {
-        setInquiriesLoading(false)
       }
-    }
 
-    fetchInquiries()
-  }, [currentPage])
+      fetchInquiries()
+    }
+  }, [currentPage, consultancy?.verified])
 
   if (loading) {
     return (
@@ -269,134 +272,156 @@ const ConsultancyDashboard = () => {
             </div>
           </div>
 
-          {inquiriesError && (
-            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg flex items-center text-sm shadow-sm">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 0a10 10 0 100 20 10 10 0 000-20zm1 14H9v2h2v-2zm0-10H9v8h2V4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              {inquiriesError}
-            </div>
-          )}
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            {inquiriesLoading ? (
-              <div className="text-center py-12 text-gray-500">
-                <svg
-                  className="animate-spin h-8 w-8 mx-auto mb-3 text-[#4c9bd5]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
-                  />
-                </svg>
-                <p className="font-medium">Loading inquiries...</p>
-              </div>
-            ) : inquiries.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                  <Mail className="w-8 h-8 text-gray-400" />
+          {consultancy?.verified ? (
+            <>
+              {inquiriesError && (
+                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-lg flex items-center text-sm shadow-sm">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 0a10 10 0 100 20 10 10 0 000-20zm1 14H9v2h2v-2zm0-10H9v8h2V4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {inquiriesError}
                 </div>
-                <p className="font-medium mb-1">No inquiries yet</p>
-                <p className="text-sm text-gray-400">Once your consultancy is active, inquiries will appear here</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead className="bg-[#4c9bd5]/5 text-gray-700 sticky top-0 z-10">
-                    <tr>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Name</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Email</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Contact Number</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Message</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Consultancy</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">University</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Destination</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Exam</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Event</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Course</th>
-                      <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Created At</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {inquiries.map((inquiry) => (
-                      <tr key={inquiry.id} className="hover:bg-gray-50 transition-all duration-200">
-                        <td className="p-4 text-gray-800 font-medium">{inquiry.name}</td>
-                        <td className="p-4 text-gray-700">{inquiry.email}</td>
-                        <td className="p-4 text-gray-700">{inquiry.phone || "-"}</td>
-                        <td className="p-4 text-gray-700 max-w-[200px] truncate" title={inquiry.message}>
-                          {inquiry.message || "-"}
-                        </td>
-                        <td className="p-4 text-gray-700">{inquiry.consultancy_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{inquiry.university_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{inquiry.destination_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{inquiry.exam_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{inquiry.event_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{inquiry.course_name || "-"}</td>
-                        <td className="p-4 text-gray-700">{new Date(inquiry.created_at).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+              )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 mt-8">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-[#4c9bd5]/30 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm flex items-center gap-2"
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                {inquiriesLoading ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <svg
+                      className="animate-spin h-8 w-8 mx-auto mb-3 text-[#4c9bd5]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"
+                      />
+                    </svg>
+                    <p className="font-medium">Loading inquiries...</p>
+                  </div>
+                ) : inquiries.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Mail className="w-8 h-8 text-gray-400" />
+                    </div>
+                    <p className="font-medium mb-1">No inquiries yet</p>
+                    <p className="text-sm text-gray-400">Once your consultancy is active, inquiries will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-sm">
+                      <thead className="bg-[#4c9bd5]/5 text-gray-700 sticky top-0 z-10">
+                        <tr>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Name</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Email</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Contact Number</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Message</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Consultancy</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">University</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Destination</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Exam</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Event</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Course</th>
+                          <th className="p-4 font-semibold text-left uppercase text-xs tracking-wider">Created At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {inquiries.map((inquiry) => (
+                          <tr key={inquiry.id} className="hover:bg-gray-50 transition-all duration-200">
+                            <td className="p-4 text-gray-800 font-medium">{inquiry.name}</td>
+                            <td className="p-4 text-gray-700">{inquiry.email}</td>
+                            <td className="p-4 text-gray-700">{inquiry.phone || "-"}</td>
+                            <td className="p-4 text-gray-700 max-w-[200px] truncate" title={inquiry.message}>
+                              {inquiry.message || "-"}
+                            </td>
+                            <td className="p-4 text-gray-700">{inquiry.consultancy_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{inquiry.university_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{inquiry.destination_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{inquiry.exam_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{inquiry.event_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{inquiry.course_name || "-"}</td>
+                            <td className="p-4 text-gray-700">{new Date(inquiry.created_at).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8">
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-[#4c9bd5]/30 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-chevron-left"
+                    >
+                      <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Previous
+                  </button>
+                  <span className="text-gray-700 font-medium">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-[#4c9bd5]/30 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm flex items-center gap-2"
+                  >
+                    Next
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-chevron-right"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="font-medium text-gray-700 mb-2">Upgrade Your Plan</p>
+              <p className="text-sm text-gray-500">
+                Please upgrade your plan to collect and view inquiries.
+              </p>
+              <a
+                href="/contact"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-4 px-6 py-2.5 bg-[#4c9bd5] text-white rounded-lg hover:bg-[#3d8bc5] focus:ring-2 focus:ring-[#4c9bd5]/30 focus:outline-none transition-all duration-300 text-sm font-medium shadow-sm"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-chevron-left"
-                >
-                  <path d="m15 18-6-6 6-6" />
-                </svg>
-                Previous
-              </button>
-              <span className="text-gray-700 font-medium">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="px-5 py-2.5 bg-white text-gray-700 rounded-lg border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-[#4c9bd5]/30 focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm flex items-center gap-2"
-              >
-                Next
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-chevron-right"
-                >
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              </button>
+                Learn More
+              </a>
             </div>
           )}
         </div>
@@ -406,4 +431,3 @@ const ConsultancyDashboard = () => {
 }
 
 export default ConsultancyDashboard
-

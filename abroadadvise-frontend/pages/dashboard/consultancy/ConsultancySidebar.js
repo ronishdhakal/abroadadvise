@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/utils/api";
-import { User, MessageSquare, Home } from "lucide-react";
+import { User, MessageSquare, Home, LogOut } from "lucide-react";
 
 const sections = [
   {
@@ -19,6 +19,7 @@ const sections = [
 
 const ConsultancySidebar = () => {
   const pathname = usePathname(); // Get the current route
+  const router = useRouter(); // Initialize router for navigation
   const [siteLogo, setSiteLogo] = useState(null);
 
   // Fetch Site Logo
@@ -36,6 +37,19 @@ const ConsultancySidebar = () => {
     };
     fetchSiteLogo();
   }, []);
+
+  // Handle Logout
+  const handleLogout = () => {
+    try {
+      // Clear authentication data (e.g., access token, consultancy ID)
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("consultancy_id");
+      // Redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
 
   return (
     <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sticky top-0">
@@ -80,9 +94,18 @@ const ConsultancySidebar = () => {
       </nav>
 
       {/* Footer */}
-      <div className="mt-auto text-center text-gray-500 text-xs">
-        <p>© {new Date().getFullYear()}</p>
-        <p className="mt-1 text-[#4c9bd5] font-medium">Abroad Advise</p>
+      <div className="mt-auto">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 p-3 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-[#4c9bd5] transition-all duration-300"
+        >
+          <LogOut className="w-4 h-4" />
+          <span className="text-sm font-medium">Logout</span>
+        </button>
+        <div className="mt-4 text-center text-gray-500 text-xs">
+          <p>© {new Date().getFullYear()}</p>
+          <p className="mt-1 text-[#4c9bd5] font-medium">Abroad Advise</p>
+        </div>
       </div>
     </aside>
   );

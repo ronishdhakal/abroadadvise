@@ -17,8 +17,7 @@ export default function Home() {
       <HeroSection />
 
       {/* ✅ Main Content */}
-      <main className="flex-1 bg-white py-12">
-        {/* 🔽 Removed max-width limit to push content toward edges */}
+      <main className="flex-1 bg-white py-6"> {/* ⬅️ reduced padding from py-12 to py-6 */}
         <div className="w-full px-4 sm:px-6 lg:px-8">
           {/* Featured Consultancies */}
           <FeaturedConsultancies />
