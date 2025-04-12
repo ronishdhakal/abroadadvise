@@ -13,7 +13,7 @@ SECRET_KEY = 'django-insecure-r51rcl7)3*++$0napu*gx#fl-kn(pqb1yfh+_9*^xx94gqx$qt
 DEBUG = True  # Set to False in production
 
 # ✅ Allowed Hosts
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "abroadadvise-backend.onrender.com"]
 
 # ✅ Installed Apps
 INSTALLED_APPS = [
