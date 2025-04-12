@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: abroadadvise-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn abroadadvise.wsgi
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: abroadadvise.settings
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: True
