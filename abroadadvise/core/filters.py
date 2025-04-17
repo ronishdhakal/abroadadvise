@@ -41,6 +41,8 @@ class ConsultancyFilter(django_filters.FilterSet):
 class UniversityFilter(filters.FilterSet):
     name = filters.CharFilter(lookup_expr="icontains")
     country = filters.CharFilter(lookup_expr="icontains")
+    type = filters.CharFilter(lookup_expr="exact")  # ✅ Filter for type: 'private' or 'community'
+
 
     disciplines = django_filters.ModelMultipleChoiceFilter(
         field_name="disciplines__id",

@@ -44,7 +44,7 @@ class ConsultancyListView(ListAPIView):
             "partner_universities",
             "gallery_images",
             "branches",
-        ).order_by("priority", "-id").distinct()
+        ).order_by("priority", "-verified", "-id").distinct()
 
 # ✅ Publicly Accessible Single Consultancy Detail View
 class ConsultancyDetailView(RetrieveAPIView):

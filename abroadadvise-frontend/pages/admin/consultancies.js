@@ -201,6 +201,7 @@ const ConsultanciesPage = () => {
                     <th className="p-4 text-left font-semibold min-w-[200px]">Name</th>
                     <th className="p-4 text-left font-semibold min-w-[100px]">Verified</th>
                     <th className="p-4 text-left font-semibold min-w-[100px]">Logo</th>
+                    <th className="p-4 text-left font-semibold min-w-[100px]">Priority</th>
                     <th className="p-4 text-left font-semibold min-w-[150px]">Actions</th>
                   </tr>
                 </thead>
@@ -233,6 +234,11 @@ const ConsultanciesPage = () => {
                         ) : (
                           <span className="text-gray-500">No Logo</span>
                         )}
+                      </td>
+                      <td className="p-4 text-gray-600">
+                        {consultancy.priority !== undefined && consultancy.priority !== null
+                          ? consultancy.priority
+                          : "N/A"}
                       </td>
                       <td className="p-4 flex gap-2">
                         <button

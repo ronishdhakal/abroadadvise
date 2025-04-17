@@ -15,6 +15,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [searchQuery, setSearchQuery] = useState("");
   const [countryQuery, setCountryQuery] = useState("");
+  const [typeQuery, setTypeQuery] = useState(""); // ✅ University type: 'private' or 'community'
   const [selectedDisciplines, setSelectedDisciplines] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -26,6 +27,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
 
       if (searchQuery) queryParams.append("search", searchQuery);
       if (countryQuery) queryParams.append("country", countryQuery);
+      if (typeQuery) queryParams.append("type", typeQuery);
       if (selectedDisciplines.length > 0) {
         queryParams.append("disciplines", selectedDisciplines.map(d => d.value).join(","));
       }
@@ -35,7 +37,7 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
 
       const data = await response.json();
       setUniversities(data.results || []);
-      setTotalPages(Math.ceil(data.count / 10)); // ✅ Updated for paginated API
+      setTotalPages(Math.ceil(data.count / 10)); // ✅ Adjust to match pagination
     } catch (error) {
       console.error("Error fetching universities:", error.message);
     }
@@ -43,13 +45,16 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
 
   useEffect(() => {
     fetchUniversities();
-  }, [searchQuery, countryQuery, selectedDisciplines, currentPage]);
+  }, [searchQuery, countryQuery, typeQuery, selectedDisciplines, currentPage]);
 
   return (
     <>
       <Head>
         <title>Best Universities for Nepalese Students to Study Abroad - Abroad Advise</title>
-        <meta name="description" content="Explore top study abroad universities for Nepalese students and plan your international education journey." />
+        <meta
+          name="description"
+          content="Explore top study abroad universities for Nepalese students and plan your international education journey."
+        />
       </Head>
 
       <Header />
@@ -86,6 +91,8 @@ const UniversityList = ({ initialUniversities, initialTotalPages, disciplines })
             setSearchQuery={setSearchQuery}
             countryQuery={countryQuery}
             setCountryQuery={setCountryQuery}
+            typeQuery={typeQuery} // ✅
+            setTypeQuery={setTypeQuery} // ✅
             selectedDisciplines={selectedDisciplines}
             setSelectedDisciplines={setSelectedDisciplines}
             disciplines={disciplines}
@@ -134,7 +141,7 @@ export async function getServerSideProps() {
     return {
       props: {
         initialUniversities: data.results || [],
-        initialTotalPages: Math.ceil(data.count / 10) || 1, // ✅ Updated to use count
+        initialTotalPages: Math.ceil(data.count / 10) || 1,
         disciplines: disciplines.results || [],
       },
     };

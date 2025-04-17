@@ -10,13 +10,14 @@ const UniversityFilters = ({
   setSearchQuery = () => {},
   countryQuery = "",
   setCountryQuery = () => {},
+  typeQuery = "",
+  setTypeQuery = () => {},
   selectedDisciplines = [],
   setSelectedDisciplines = () => {},
 }) => {
   const [disciplineOptions, setDisciplineOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch all pages of disciplines and merge
   const loadAllDisciplines = async () => {
     setLoading(true);
     let all = [];
@@ -49,7 +50,6 @@ const UniversityFilters = ({
     loadAllDisciplines();
   }, []);
 
-  // ✅ Custom styles for react-select
   const customStyles = {
     control: (provided) => ({
       ...provided,
@@ -81,6 +81,7 @@ const UniversityFilters = ({
           onClick={() => {
             setSearchQuery("");
             setCountryQuery("");
+            setTypeQuery("");
             setSelectedDisciplines([]);
           }}
           className="text-sm text-blue-600 hover:underline"
@@ -114,22 +115,38 @@ const UniversityFilters = ({
           />
         </div>
 
-        {/* 📘 Discipline Filter */}
-        {disciplineOptions.length > 0 && (
-          <div className="col-span-full">
-            <label className="text-sm font-medium text-gray-700">Discipline</label>
-            <Select
-              options={disciplineOptions}
-              isMulti
-              isLoading={loading}
-              value={selectedDisciplines}
-              onChange={setSelectedDisciplines}
-              placeholder="Select disciplines..."
-              styles={customStyles}
-              className="mt-1"
-            />
-          </div>
-        )}
+        {/* 🏛️ University Type */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-1">
+            University Type
+          </label>
+          <select
+            value={typeQuery}
+            onChange={(e) => setTypeQuery(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg py-3 px-4 text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Types</option>
+            <option value="private">Private</option>
+            <option value="community">Community</option>
+          </select>
+        </div>
+
+        {/* 📘 Discipline (side-by-side with type on desktop) */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-1">
+            Discipline
+          </label>
+          <Select
+            options={disciplineOptions}
+            isMulti
+            isLoading={loading}
+            value={selectedDisciplines}
+            onChange={setSelectedDisciplines}
+            placeholder="Select disciplines..."
+            styles={customStyles}
+            className="mt-1"
+          />
+        </div>
       </div>
     </div>
   );
