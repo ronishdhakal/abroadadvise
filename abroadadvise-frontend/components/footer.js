@@ -143,6 +143,7 @@ export default function Footer() {
             <div>
               <h2 className="text-[#4c9bd5] font-light text-lg tracking-wider mb-4">More</h2>
               <ul className="text-gray-600 text-sm space-y-3 font-light tracking-wide">
+                <li><Link href="/featured" className="hover:text-[#4c9bd5] transition-colors duration-200">Featured </Link></li>
                 <li><Link href="/blog" className="hover:text-[#4c9bd5] transition-colors duration-200">Blogs</Link></li>
                 <li><Link href="/news" className="hover:text-[#4c9bd5] transition-colors duration-200">News</Link></li>
                 <li><Link href="/faqs" className="hover:text-[#4c9bd5] transition-colors duration-200">FAQs</Link></li>

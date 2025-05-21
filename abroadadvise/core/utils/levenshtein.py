@@ -1,7 +1,10 @@
+import re
+
 def levenshtein_distance(a: str, b: str) -> int:
     """
     Calculate the Levenshtein Distance between two strings.
-    This represents the number of single-character edits required to change one string into another.
+    This represents the number of single-character edits required
+    to change one string into another.
     """
     n, m = len(a), len(b)
 
@@ -27,3 +30,21 @@ def levenshtein_distance(a: str, b: str) -> int:
             )
 
     return dp[n][m]
+
+
+def levenshtein_distance_phrase(query: str, text: str) -> int:
+    """
+    Calculate the minimum Levenshtein Distance between the query
+    and any word in the target text.
+    This helps match short queries against longer phrases or sentences.
+    """
+    words = re.findall(r'\b\w+\b', text.lower())
+    query = query.lower()
+    min_dist = float("inf")
+
+    for word in words:
+        dist = levenshtein_distance(query, word)
+        if dist < min_dist:
+            min_dist = dist
+
+    return min_dist

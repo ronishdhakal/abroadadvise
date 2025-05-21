@@ -7,7 +7,7 @@ from django.conf import settings
 
 from .models import FeaturedPage
 from .serializers import FeaturedPageSerializer
-from core.pagination import StandardResultsSetPagination  # or your custom one
+from .pagination import FeaturedPagination  # or your custom one
 import os
 
 # ✅ List all featured pages (Public, with optional search)
@@ -17,8 +17,7 @@ class FeaturedPageListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'slug']
-    pagination_class = StandardResultsSetPagination
-
+    pagination_class = FeaturedPagination  # ✅ handles ?page=1&page_size=12
 
 # ✅ Get a single featured page by slug (Public)
 @api_view(['GET'])

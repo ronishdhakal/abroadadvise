@@ -3,10 +3,11 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import InquiryModal from "@/components/InquiryModal";
 import ConsultancyCard from "@/components/featured/ConsultancyCard";
+import Pagination from "@/pages/featured/Pagination"; // ✅ Import pagination
 import { API_BASE_URL } from "@/utils/api";
 import { useState } from "react";
 
-const FeaturedPage = ({ pageData, consultancies }) => {
+const FeaturedPage = ({ pageData, consultancies, currentPage, totalPages }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState(null);
   const currentYear = new Date().getFullYear();
@@ -31,20 +32,14 @@ const FeaturedPage = ({ pageData, consultancies }) => {
         <meta name="description" content={pageData.meta_description} />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={`https://www.abroadadvise.com/featured/${pageData.slug}`} />
-
-        {/* Open Graph */}
         <meta property="og:title" content={pageData.meta_title || pageData.title} />
         <meta property="og:description" content={pageData.meta_description} />
         <meta property="og:url" content={`https://www.abroadadvise.com/featured/${pageData.slug}`} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="Abroad Advise" />
-
-        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageData.meta_title || pageData.title} />
         <meta name="twitter:description" content={pageData.meta_description} />
-
-        {/* Schema Markup */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
@@ -100,6 +95,11 @@ const FeaturedPage = ({ pageData, consultancies }) => {
           )}
         </section>
 
+        {/* 🔹 Pagination Component */}
+        <div className="mt-8">
+          <Pagination currentPage={currentPage} totalPages={totalPages} />
+        </div>
+
         {/* 🔹 Bottom Section */}
         {pageData.description_bottom && (
           <section className="pt-10">
@@ -129,6 +129,7 @@ const FeaturedPage = ({ pageData, consultancies }) => {
 
 export async function getServerSideProps(context) {
   const { slug } = context.params;
+  const page = context.query.page || 1;
 
   try {
     const featuredRes = await fetch(`${API_BASE_URL}/featured/${slug}/`);
@@ -138,13 +139,15 @@ export async function getServerSideProps(context) {
       return { notFound: true };
     }
 
-    const consultRes = await fetch(`${API_BASE_URL}/${featured.api_route}`);
-    const consultancies = await consultRes.json();
+    const consultRes = await fetch(`${API_BASE_URL}/${featured.api_route}&page=${page}&page_size=12`);
+    const consultData = await consultRes.json();
 
     return {
       props: {
         pageData: featured,
-        consultancies: consultancies.results || [],
+        consultancies: consultData.results || [],
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(consultData.count / 12),
       },
     };
   } catch (error) {

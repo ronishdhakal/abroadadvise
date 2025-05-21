@@ -18,7 +18,8 @@ import json
 from django.core.exceptions import ValidationError
 from .pagination import EventPagination
 from django.db.models.functions import Coalesce
-from django.db.models import Value, IntegerField
+from django.db.models import Value,Case, When, IntegerField, DateField
+
 
 
 class EventListView(generics.ListAPIView):
@@ -29,15 +30,32 @@ class EventListView(generics.ListAPIView):
     search_fields = ['name', 'event_type', 'registration_type', 'location']
 
     def get_queryset(self):
+        today = now().date()
+
         return Event.objects.annotate(
-            priority_order=Coalesce('priority', Value(9999, output_field=IntegerField()))
+            # ✅ Use fallback priority for missing values
+            priority_order=Coalesce('priority', Value(9999, output_field=IntegerField())),
+
+            # ✅ Mark whether the event is expired
+            is_expired=Case(
+                When(date__lt=today, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField()
+            ),
+
+            # ✅ Use date for upcoming events, but keep today for expired to push them down
+            sort_date=Case(
+                When(date__lt=today, then=Value(today)),
+                default='date',
+                output_field=DateField()
+            )
         ).order_by(
-            'priority_order',
-            '-date',
-            '-id'
+            'priority_order',   # 1. By priority (lower first)
+            'is_expired',       # 2. Upcoming (0) before expired (1)
+            'sort_date',        # 3. Upcoming: nearest first
+            '-date',            # 4. Expired: latest first
+            '-id'               # 5. Tie-breaker
         )
-
-
 @api_view(['GET'])
 @permission_classes([])  # Public access
 def active_events(request):

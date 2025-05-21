@@ -12,19 +12,29 @@ export default function RoadblockAd() {
   const [ad, setAd] = useState(null);
 
   useEffect(() => {
-    if (!pathname) return;
-
     // Don't show ad on admin or dashboard pages
-    if (pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) return;
+    if (!pathname || pathname.startsWith("/admin") || pathname.startsWith("/dashboard")) {
+      return;
+    }
+
+    // Check if ad has already been shown in this session
+    const hasShownAd = sessionStorage.getItem("roadblockAdShown");
+    if (hasShownAd) {
+      return;
+    }
 
     const fetchAd = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=roadblock_ad`);
+        const res = await fetch(`${API_BASE_URL}/api/ads/?placement=roadblock_ad`, {
+          cache: "no-store", // Prevent caching to ensure fresh ad data
+        });
         const data = await res.json();
 
-        if (data.results.length > 0) {
+        if (data.results?.length > 0) {
           setAd(data.results[0]);
           setShowAd(true);
+          // Mark ad as shown in sessionStorage
+          sessionStorage.setItem("roadblockAdShown", "true");
         }
       } catch (error) {
         console.error("Error fetching roadblock ad:", error);
@@ -32,7 +42,7 @@ export default function RoadblockAd() {
     };
 
     fetchAd();
-  }, [pathname]);
+  }, []); // Empty dependency array to run only once on mount
 
   const closeAd = () => {
     setShowAd(false);

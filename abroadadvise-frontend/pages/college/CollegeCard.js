@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, BadgeCheck } from "lucide-react";
 
 const CollegeCard = ({ college }) => {
   if (!college) return null;
@@ -9,7 +9,7 @@ const CollegeCard = ({ college }) => {
   return (
     <Link href={`/college/${college.slug}`} className="block h-full max-w-[100%] sm:max-w-none">
       <div className="h-full rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 bg-white border border-gray-100 flex flex-col group">
-        
+
         {/* 📌 Mobile: Show Cover Photo | Desktop: Show Logo */}
         <div className="relative w-full overflow-hidden">
           {/* ✅ Mobile View: Show Cover Photo */}
@@ -48,8 +48,15 @@ const CollegeCard = ({ college }) => {
 
         {/* 📌 Info Section */}
         <div className="p-4 flex-grow flex flex-col justify-center text-left">
-          <h2 className="text-lg sm:text-xl md:text-xl font-semibold text-gray-800 line-clamp-1">
+          <h2 className="text-lg sm:text-xl md:text-xl font-semibold text-gray-800 line-clamp-1 flex items-center gap-1">
             {college.name}
+            {college.verified && (
+              <BadgeCheck
+                className="h-5 w-5 text-[#4c9bd5]"
+                title="Verified College"
+                aria-label="Verified College"
+              />
+            )}
           </h2>
 
           {/* ✅ Destination (Instead of address) */}

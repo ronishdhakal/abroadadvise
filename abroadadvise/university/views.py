@@ -32,7 +32,7 @@ class UniversityListView(ListAPIView):
     def get_queryset(self):
         # ✅ Priority first (lowest number = higher priority), then fallback to latest created
         return University.objects.prefetch_related("disciplines").order_by(
-            "-priority", "-id"
+            "priority", "-id"
         )
 
 

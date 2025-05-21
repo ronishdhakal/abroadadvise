@@ -27,7 +27,7 @@ from exam.models import Exam
 
 # For Search Algorith
 
-from core.utils.levenshtein import levenshtein_distance
+from core.utils.levenshtein import levenshtein_distance, levenshtein_distance_phrase
 
 
 
@@ -153,6 +153,7 @@ class AdListAPIView(generics.ListAPIView):
 
 # GlobalSearchAPI
 
+
 class GlobalSearchAPIView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
@@ -168,26 +169,42 @@ class GlobalSearchAPIView(APIView):
             return None
 
         def search_all(q):
+            # 🔹 Consultancy
             consultancies = Consultancy.objects.filter(
-                Q(name__icontains=q) | Q(about__icontains=q)
-            ).values("id", "name", "slug", "logo", "address")
+                Q(name__icontains=q) |
+                Q(about__icontains=q) |
+                Q(address__icontains=q)
+            ).values("id", "name", "slug", "logo", "cover_photo", "address")
             for item in consultancies:
                 item["logo"] = get_full_url(item["logo"])
+                item["cover_photo"] = get_full_url(item["cover_photo"])
 
+            # 🔹 University
             universities = University.objects.filter(
-                Q(name__icontains=q) | Q(about__icontains=q)
-            ).values("id", "name", "slug", "logo", "country")
+                Q(name__icontains=q) |
+                Q(about__icontains=q) |
+                Q(address__icontains=q)
+            ).values("id", "name", "slug", "logo", "cover_photo", "country")
             for item in universities:
                 item["logo"] = get_full_url(item["logo"])
+                item["cover_photo"] = get_full_url(item["cover_photo"])
 
+            # 🔹 College
             colleges = College.objects.filter(
-                Q(name__icontains=q) | Q(about__icontains=q)
-            ).values("id", "name", "slug", "logo", "address")
+                Q(name__icontains=q) |
+                Q(about__icontains=q) |
+                Q(address__icontains=q)
+            ).values("id", "name", "slug", "logo", "cover_photo", "address")
             for item in colleges:
                 item["logo"] = get_full_url(item["logo"])
+                item["cover_photo"] = get_full_url(item["cover_photo"])
 
+            # 🔹 Course (includes abbreviation)
             courses = Course.objects.filter(
-                Q(name__icontains=q) | Q(short_description__icontains=q)
+                Q(name__icontains=q) |
+                Q(abbreviation__icontains=q) |
+                Q(short_description__icontains=q) |
+                Q(eligibility__icontains=q)
             ).select_related("university").values(
                 "id", "name", "slug", "cover_image", "university__name"
             )
@@ -195,14 +212,21 @@ class GlobalSearchAPIView(APIView):
                 item["cover_image"] = get_full_url(item["cover_image"])
                 item["university"] = {"name": item.pop("university__name", None)}
 
+            # 🔹 Destination
             destinations = Destination.objects.filter(
-                Q(title__icontains=q) | Q(why_choose__icontains=q)
+                Q(title__icontains=q) |
+                Q(why_choose__icontains=q) |
+                Q(requirements__icontains=q) |
+                Q(more_information__icontains=q)
             ).values("id", "title", "slug", "country_logo")
             for item in destinations:
                 item["country_logo"] = get_full_url(item["country_logo"])
 
+            # 🔹 Exam
             exams = Exam.objects.filter(
-                Q(name__icontains=q) | Q(short_description__icontains=q)
+                Q(name__icontains=q) |
+                Q(short_description__icontains=q) |
+                Q(about__icontains=q)
             ).values("id", "name", "slug", "icon", "type")
             for item in exams:
                 item["icon"] = get_full_url(item["icon"])
@@ -216,13 +240,11 @@ class GlobalSearchAPIView(APIView):
                 "exams": list(exams),
             }
 
-        # ✅ Initial Search
         results = search_all(query)
 
-        # ✅ Calculate most relevant section based on minimum distance
+        # 🔍 Determine top_result section by Levenshtein
         top_result = None
         lowest_distance = float("inf")
-
         section_terms = {
             "consultancies": Consultancy.objects.values_list("name", flat=True),
             "universities": University.objects.values_list("name", flat=True),
@@ -234,12 +256,12 @@ class GlobalSearchAPIView(APIView):
 
         for section, terms in section_terms.items():
             for word in terms:
-                dist = levenshtein_distance(query.lower(), word.lower())
+                dist = levenshtein_distance_phrase(query.lower(), word.lower())
                 if dist < lowest_distance:
                     lowest_distance = dist
                     top_result = section
 
-        # ✅ Suggest closest match if no results
+        # 🤖 Suggestion if no results
         if all(len(v) == 0 for v in results.values()):
             dictionary = []
             for terms in section_terms.values():
@@ -257,7 +279,6 @@ class GlobalSearchAPIView(APIView):
             if best_match and lowest_distance <= 2:
                 corrected_results = search_all(best_match)
 
-                # Recalculate top result from suggestion
                 corrected_top_result = None
                 min_dist = float("inf")
                 for section, terms in section_terms.items():
@@ -273,13 +294,10 @@ class GlobalSearchAPIView(APIView):
                     "top_result": corrected_top_result
                 })
 
-        # ✅ Default return with real results and best-matching section
         return Response({
             "results": results,
             "top_result": top_result
         })
-
-
 
 # ✅ Create District
 class DistrictCreateAPIView(generics.CreateAPIView):

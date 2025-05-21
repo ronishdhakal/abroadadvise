@@ -50,7 +50,7 @@ class University(models.Model):
     consultancies_to_apply = models.ManyToManyField('consultancy.Consultancy', blank=True, related_name='universities')
 
     about = HTMLField(blank=True, null=True)
-    faqs = HTMLField(blank=True, null=True)
+    faqs = models.JSONField(blank=True, null=True)
 
     # ✅ Many-to-Many relationship with Discipline
     disciplines = models.ManyToManyField(Discipline, related_name="universities", blank=True)

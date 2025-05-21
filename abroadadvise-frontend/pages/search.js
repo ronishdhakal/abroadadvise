@@ -22,7 +22,7 @@ export default function SearchResults() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(query || "");
   const [suggestion, setSuggestion] = useState(null);
-  const [topResult, setTopResult] = useState(null); // ✅ New
+  const [topResult, setTopResult] = useState(null);
 
   const fetchSearchResults = useCallback(async (searchTerm) => {
     setLoading(true);

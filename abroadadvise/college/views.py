@@ -35,7 +35,7 @@ class CollegeListView(ListAPIView):
         return College.objects.prefetch_related(
             "districts", "study_abroad_destinations", "affiliated_universities",
             "gallery_images", "branches"
-        ).order_by("-priority", "-id").distinct()
+        ).order_by("priority", "-id").distinct()
 
 
 class CollegeDetailView(RetrieveAPIView):

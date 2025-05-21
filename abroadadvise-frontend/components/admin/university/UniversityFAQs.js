@@ -4,33 +4,55 @@ import { useState, useEffect } from "react";
 import { PlusCircle, Trash2 } from "lucide-react";
 
 const UniversityFAQs = ({ formData, setFormData }) => {
-  const [faqs, setFaqs] = useState(formData.faqs || [{ question: "", answer: "" }]);
+  // Initialize faqs state
+  const [faqs, setFaqs] = useState(() => {
+    const defaultInitialFaqs = [{ question: "", answer: "" }];
 
-  // ✅ Sync faqs with formData on mount or when formData changes
+    // Guard against formData being undefined or null, as accessing formData.faqs would throw an error.
+    if (!formData) {
+      return defaultInitialFaqs;
+    }
+
+    // If formData is available, proceed with the original logic to parse formData.faqs
+    if (Array.isArray(formData.faqs)) {
+      return formData.faqs.length > 0 ? formData.faqs : defaultInitialFaqs;
+    }
+    // Attempt to parse if formData.faqs is a string or handle if it's undefined/null
+    try {
+      const parsed = JSON.parse(formData.faqs || "[]"); // `|| "[]"` handles undefined, null, or empty string for faqs
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultInitialFaqs;
+    } catch (error) { // Catches errors from JSON.parse (e.g., if formData.faqs is an invalid JSON string)
+      console.error("Failed to parse FAQs from formData:", error);
+      return defaultInitialFaqs;
+    }
+  });
+
+  // Sync faqs back to formData
   useEffect(() => {
-    setFaqs(formData.faqs && formData.faqs.length > 0 ? formData.faqs : [{ question: "", answer: "" }]);
-  }, [formData.faqs]);
+    // Only update formData if faqs has actually changed to avoid infinite loops
+    // if formData.faqs is already the same object or deeply equal.
+    // A simple check for reference or length might be sufficient if deep equality is too complex here.
+    if (formData && formData.faqs !== faqs) {
+      setFormData((prev) => ({
+        ...prev,
+        faqs: faqs,
+      }));
+    }
+  }, [faqs, setFormData, formData]);
 
-  // ✅ Handle FAQ Input Changes
   const handleFaqChange = (index, field, value) => {
     const updatedFaqs = [...faqs];
     updatedFaqs[index][field] = value;
     setFaqs(updatedFaqs);
-    setFormData((prev) => ({ ...prev, faqs: updatedFaqs }));
   };
 
-  // ✅ Add New FAQ
   const addFaq = () => {
-    const updatedFaqs = [...faqs, { question: "", answer: "" }];
-    setFaqs(updatedFaqs);
-    setFormData((prev) => ({ ...prev, faqs: updatedFaqs }));
+    setFaqs([...faqs, { question: "", answer: "" }]);
   };
 
-  // ✅ Remove FAQ
   const removeFaq = (index) => {
     const updatedFaqs = faqs.filter((_, i) => i !== index);
     setFaqs(updatedFaqs.length ? updatedFaqs : [{ question: "", answer: "" }]);
-    setFormData((prev) => ({ ...prev, faqs: updatedFaqs.length ? updatedFaqs : [{ question: "", answer: "" }] }));
   };
 
   return (

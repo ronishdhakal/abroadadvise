@@ -17,19 +17,22 @@ class EventSerializer(serializers.ModelSerializer):
         queryset=University.objects.all(),
         many=True,
         slug_field="slug",
-        required=False
+        required=False,
+        allow_null=True
     )
     related_consultancies = serializers.SlugRelatedField(
         queryset=Consultancy.objects.all(),
         many=True,
         slug_field="slug",
-        required=False
+        required=False,
+        allow_null=True
     )
     targeted_destinations = serializers.SlugRelatedField(
         queryset=Destination.objects.all(),
         many=True,
         slug_field="slug",
-        required=False
+        required=False,
+        allow_null=True
     )
 
     # ✅ Organizer Handling (Using Slugs)
