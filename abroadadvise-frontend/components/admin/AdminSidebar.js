@@ -1,7 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { API_BASE_URL } from "@/utils/api";
 import {
   LayoutDashboard,
   Building,
@@ -19,23 +20,6 @@ import {
 const AdminSidebar = () => {
   const router = useRouter();
   const [active, setActive] = useState(router.pathname);
-  const [siteLogo, setSiteLogo] = useState(null);
-
-  // Fetch Site Logo
-  useEffect(() => {
-    const fetchSiteLogo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
-        const data = await res.json();
-        if (data.site_logo_url) {
-          setSiteLogo(data.site_logo_url);
-        }
-      } catch (error) {
-        console.error("Error fetching site logo:", error);
-      }
-    };
-    fetchSiteLogo();
-  }, []);
 
   useEffect(() => {
     setActive(router.pathname);
@@ -75,16 +59,14 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <aside className="w-64 md:w-56 sm:w-full bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sm:p-4">
+    <aside className="w-64 md:w-56 sm:w-full bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sm:p-4 sticky top-0 z-30">
       {/* Logo Section */}
       <div className="mb-10 flex items-center justify-start">
-        {siteLogo ? (
-          <img src={siteLogo} alt="Abroad Advise Logo" className="w-32 h-10 object-contain sm:w-28 sm:h-8" />
-        ) : (
-          <div className="w-32 h-10 bg-gray-200 rounded flex items-center justify-center sm:w-28 sm:h-8">
-            <span className="text-2xl font-bold text-[#4c9bd5] sm:text-xl">AA</span>
-          </div>
-        )}
+        <img
+          src="/logo/default-logo.png"
+          alt="Abroad Advise Logo"
+          className="w-32 h-10 object-contain sm:w-28 sm:h-8 transition-all duration-300 hover:opacity-90"
+        />
       </div>
 
       {/* Navigation */}

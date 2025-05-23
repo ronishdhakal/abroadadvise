@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { API_BASE_URL } from "@/utils/api";
 import { User, MessageSquare, Home, LogOut } from "lucide-react";
 
 const sections = [
@@ -18,63 +16,41 @@ const sections = [
 ];
 
 const ConsultancySidebar = () => {
-  const pathname = usePathname(); // Get the current route
-  const router = useRouter(); // Initialize router for navigation
-  const [siteLogo, setSiteLogo] = useState(null);
+  const pathname = usePathname();
+  const router = useRouter();
 
-  // Fetch Site Logo
-  useEffect(() => {
-    const fetchSiteLogo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
-        const data = await res.json();
-        if (data.site_logo_url) {
-          setSiteLogo(data.site_logo_url);
-        }
-      } catch (error) {
-        console.error("Error fetching site logo:", error);
-      }
-    };
-    fetchSiteLogo();
-  }, []);
-
-  // Handle Logout
   const handleLogout = () => {
     try {
-      // Clear authentication data (e.g., access token, consultancy ID)
       localStorage.removeItem("accessToken");
       localStorage.removeItem("consultancy_id");
-      // Redirect to login page
       router.push("/login");
-    } catch (error) {
-      console.error("Error during logout:", error);
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
   return (
-    <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sticky top-0">
+    <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sticky top-0 z-30">
       {/* Logo Section */}
       <div className="mb-10 flex items-center justify-start">
-        {siteLogo ? (
-          <img src={siteLogo} alt="Abroad Advise Logo" className="w-32 h-10 object-contain" />
-        ) : (
-          <div className="w-32 h-10 bg-gray-200 rounded flex items-center justify-center">
-            <span className="text-2xl font-bold text-[#4c9bd5]">AA</span>
-          </div>
-        )}
+        <img
+          src="/logo/default-logo.png"
+          alt="Abroad Advise Logo"
+          className="w-32 h-10 object-contain transition-all duration-300 hover:opacity-90"
+        />
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Links */}
       <nav className="flex-grow">
-        {sections.map((group, index) => (
-          <div key={index} className="mb-6">
+        {sections.map((group, idx) => (
+          <div key={idx} className="mb-6">
             <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
               {group.title}
             </h2>
             <ul className="space-y-1">
               {group.items.map(({ key, label, href, icon }) => (
                 <li key={key}>
-                  <Link href={href} className="w-full">
+                  <Link href={href}>
                     <span
                       className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-300 ${
                         pathname === href
@@ -93,7 +69,7 @@ const ConsultancySidebar = () => {
         ))}
       </nav>
 
-      {/* Footer */}
+      {/* Footer + Logout */}
       <div className="mt-auto">
         <button
           onClick={handleLogout}

@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { API_BASE_URL } from "@/utils/api";
-import { User, MessageSquare, Home } from "lucide-react"; // ✅ Imported Home icon
+import { User, MessageSquare, Home } from "lucide-react";
 
 const sections = [
   {
@@ -34,34 +32,16 @@ const sections = [
 
 const UniversitySidebar = () => {
   const pathname = usePathname();
-  const [siteLogo, setSiteLogo] = useState(null);
-
-  useEffect(() => {
-    const fetchSiteLogo = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/site-settings/`);
-        const data = await res.json();
-        if (data.site_logo_url) {
-          setSiteLogo(data.site_logo_url);
-        }
-      } catch (error) {
-        console.error("Error fetching site logo:", error);
-      }
-    };
-    fetchSiteLogo();
-  }, []);
 
   return (
-    <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sticky top-0">
+    <aside className="w-64 bg-gray-50 text-gray-800 h-screen p-6 flex flex-col shadow-sm sticky top-0 z-30">
       {/* Logo Section */}
       <div className="mb-10 flex items-center justify-start">
-        {siteLogo ? (
-          <img src={siteLogo} alt="Abroad Advise Logo" className="w-32 h-10 object-contain" />
-        ) : (
-          <div className="w-32 h-10 bg-gray-200 rounded flex items-center justify-center">
-            <span className="text-2xl font-bold text-[#4c9bd5]">AA</span>
-          </div>
-        )}
+        <img
+          src="/logo/default-logo.png"
+          alt="Abroad Advise Logo"
+          className="w-32 h-10 object-contain transition-all duration-300 hover:opacity-90"
+        />
       </div>
 
       {/* Navigation */}
