@@ -1,27 +1,20 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"; // Fallback in case env is missing
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 import axios from "axios";
-import { fetchWithAuth } from "./auth"; // ✅ Import fetchWithAuth
+import { fetchWithAuth } from "./auth"; // Used in authenticated endpoints
 
+/** ✅ Auth Header Helper */
+const getAuthHeaders = () => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+  return {};
+};
 
-
-
-    // ✅ Helper Function: Get Auth Headers
-    const getAuthHeaders = () => {
-    if (typeof window !== "undefined") {  // ✅ Ensure running in browser
-        const token = localStorage.getItem("access_token"); // updated code
-        return token ? { Authorization: `Bearer ${token}` } : {};
-    }
-    return {}; // ✅ Return empty headers on server-side
-    };
-
-
-
-
-
-// ✅ Fetch Study Destinations with Pagination and Search
+/** ✅ Fetch Study Destinations with Pagination & Search */
 export const fetchDestinations = async (page = 1, search = "") => {
   try {
-    const params = new URLSearchParams({ page }); // Add page parameter
+    const params = new URLSearchParams({ page });
     if (search) params.append("search", search);
 
     const url = `${API_BASE_URL}/destination/?${params.toString()}`;
@@ -31,184 +24,183 @@ export const fetchDestinations = async (page = 1, search = "") => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch study destinations");
+      const error = await response.text();
+      throw new Error(`Failed to fetch destinations: ${error}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching destinations:", error);
+    console.error("❌ Error fetching destinations:", error);
     throw error;
   }
 };
 
-
-
-
-// ✅ Fetch Exams with Pagination and Filtering Support
+/** ✅ Fetch Exams with Pagination and Optional Type Filter */
 export const fetchExams = async (page = 1, search = "", type = "") => {
   try {
-    const queryParams = new URLSearchParams();
+    const params = new URLSearchParams({ page });
+    if (search) params.append("search", search);
+    if (type) params.append("type", type);
 
-    queryParams.append("page", page);
-    if (search) queryParams.append("search", search); // ✅ DRF uses `search` param
-    if (type) queryParams.append("type", type);
-
-    const url = `${API_BASE_URL}/exam/?${queryParams.toString()}`;
-
+    const url = `${API_BASE_URL}/exam/?${params.toString()}`;
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to fetch exams: ${response.status} - ${errorText}`);
+      const error = await response.text();
+      throw new Error(`Failed to fetch exams: ${error}`);
     }
 
-    return await response.json(); // ✅ Returns { count, results, ... }
+    return await response.json();
   } catch (error) {
     console.error("❌ Error fetching exams:", error);
     throw error;
   }
 };
 
-// Fetch Courses with Pagination + Search
+/** ✅ Fetch Courses with Pagination + Search */
 export const fetchCourses = async (page = 1, search = "") => {
   try {
-    const pageNumber = Number(page) || 1;
+    const params = new URLSearchParams({ page });
+    if (search) params.append("search", search);
 
-    const queryParams = new URLSearchParams({ page: pageNumber });
-
-    if (search) {
-      queryParams.append("search", search); // ✅ Use 'search' for DRF search filter
-    }
-
-    const url = `${process.env.NEXT_PUBLIC_API_URL}/course/?${queryParams.toString()}`;
-    console.log("🔍 Fetching courses from:", url);
-
+    const url = `${API_BASE_URL}/course/?${params.toString()}`;
     const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      const errorMessage = await response.text();
-      throw new Error(`Failed to fetch courses: ${errorMessage}`);
+      const error = await response.text();
+      throw new Error(`Failed to fetch courses: ${error}`);
     }
 
-    return await response.json(); // ✅ Returns { count, next, previous, results }
+    return await response.json();
   } catch (error) {
     console.error("❌ Error fetching courses:", error);
     throw error;
   }
 };
 
-
-
-// ✅ Fetch Universities (With Pagination & Search)
+/** ✅ Fetch Universities with Pagination + Search */
 export const fetchUniversities = async (page = 1, search = "") => {
   try {
-    const response = await fetch(`${API_BASE_URL}/university/?page=${page}&search=${search}`, {
+    const params = new URLSearchParams({ page });
+    if (search) params.append("search", search);
+
+    const url = `${API_BASE_URL}/university/?${params.toString()}`;
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch universities");
+      const error = await response.text();
+      throw new Error(`Failed to fetch universities: ${error}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching universities:", error);
+    console.error("❌ Error fetching universities:", error);
     throw error;
   }
 };
 
-// ✅ Fetch all universities without pagination
+/** ✅ Fetch All Universities (no pagination) */
 export const fetchAllUniversities = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/university/?page_size=1000`, {
+    const url = `${API_BASE_URL}/university/?page_size=1000`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch all universities: ${error}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching all universities:", error);
+    throw error;
+  }
+};
+
+/** ✅ Fetch University Details by Slug */
+export const fetchUniversityDetails = async (slug) => {
+  try {
+    const url = `${API_BASE_URL}/university/${slug}/`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to fetch university details: ${error}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching university details:", error);
+    throw error;
+  }
+};
+
+/** ✅ Fetch Consultancies with Pagination & Search */
+export const fetchConsultancies = async (page = 1, search = "") => {
+  try {
+    const params = new URLSearchParams({ page });
+    if (search) params.append("search", search);
+
+    const url = `${API_BASE_URL}/consultancy/?${params.toString()}`;
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeaders(),
       },
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch universities");
-    }
-
-    return await response.json(); // should return { results: [...] }
-  } catch (error) {
-    console.error("Error fetching all universities:", error);
-    throw error;
-  }
-};
-
-
-// ✅ Fetch Single University Details
-export const fetchUniversityDetails = async (slug) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/university/${slug}/`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch university details");
+      const error = await response.text();
+      throw new Error(`Failed to fetch consultancies: ${error}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching university details:", error);
+    console.error("❌ Error fetching consultancies:", error);
     throw error;
   }
 };
 
-// ✅ Fetch Consultancies with Pagination & Search
-export const fetchConsultancies = async (page = 1, search = "") => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/consultancy/?page=${page}&search=${search}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch consultancies");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching consultancies:", error);
-    throw error;
-  }
-};
-
-// ✅ Fetch Single Consultancy Details
+/** ✅ Fetch Single Consultancy Details by Slug */
 export const fetchConsultancyDetails = async (slug) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/`, {
+    const url = `${API_BASE_URL}/consultancy/${slug}/`;
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch consultancy details");
+      const error = await response.text();
+      throw new Error(`Failed to fetch consultancy details: ${error}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching consultancy details:", error);
+    console.error("❌ Error fetching consultancy details:", error);
     throw error;
   }
 };
 
-
-
-// ✅ Utility function to ensure proper JSON conversion for arrays
+/** ✅ Utility: Convert array-like fields to JSON string in FormData */
 const convertToJson = (formData, key) => {
   let value = formData.get(key);
-
   if (typeof value === "string") {
     try {
       value = JSON.parse(value);
@@ -216,166 +208,113 @@ const convertToJson = (formData, key) => {
       value = [];
     }
   }
+  if (!Array.isArray(value)) value = [];
 
-  if (!Array.isArray(value)) {
-    value = [];
-  }
+  const converted = value
+    .map((item) => {
+      const parsed = parseInt(item, 10);
+      return isNaN(parsed) ? item : parsed;
+    })
+    .filter((item) => typeof item === "number" || typeof item === "string");
 
-  // Check if we're dealing with disciplines (This is the university-specific fix)
-  if (key === "disciplines") {
-    // ✅ Convert values to integers, filter NaN values, and convert to string
-    const intArray = value.map(Number).filter((id) => !isNaN(id));
-    formData.set(key, JSON.stringify(intArray)); // Store as JSON string in FormData
-  } else {
-    // ✅ Existing logic for other fields (e.g., districts, study_abroad_destinations)
-    // Convert values to integers or keep them as they are, filter NaN values, and convert to string
-    const convertedArray = value
-      .map((item) => {
-        if (typeof item === "string") {
-          const parsedItem = parseInt(item, 10);
-          return isNaN(parsedItem) ? item : parsedItem;
-        } else {
-          return item;
-        }
-      })
-      .filter((item) => typeof item === "number" || typeof item === "string");
-    formData.set(key, JSON.stringify(convertedArray));
-  }
+  formData.set(key, JSON.stringify(converted));
 };
 
-
-
-
-// ✅ Create Consultancy
-// ✅ Create Consultancy
+/** ✅ Create Consultancy */
 export const createConsultancy = async (formData) => {
-  // ✅ Convert boolean fields correctly
-  formData.set("moe_certified", formData.get("moe_certified") === "true");
-  formData.set("verified", formData.get("verified") === "true"); // Corrected line
-
-  // ✅ Convert JSON fields before sending
-  ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
-      convertToJson(formData, key);
-  });
-
-  const response = await fetch(`${API_BASE_URL}/consultancy/create/`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: formData,
-  });
-
-  if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Response Error:", errorData);
-      throw new Error(errorData.error || "Failed to create consultancy");
-  }
-
-  return await response.json();
-};
-
-
-
-// ✅ Update Consultancy
-export const updateConsultancy = async (slug, formData) => {
-  // ✅ Convert JSON fields before sending
-  ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) => {
-      convertToJson(formData, key);
-  });
-
-  const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      body: formData,
-  });
-
-  if (!response.ok) {
-      const errorData = await response.json();
-      console.error("API Response Error:", errorData);
-      throw new Error(errorData.error || "Failed to update consultancy");
-  }
-
-  return await response.json();
-};
-
-
-// ✅ Delete Consultancy
-export const deleteConsultancy = async (slug) => {
-try {
-  const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/delete/`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json", // ✅ JSON request
-      ...getAuthHeaders(),
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error("❌ Delete Consultancy API Error:", errorData);
-
-    throw new Error(errorData.detail || "Failed to delete consultancy");
-  }
-
-  return { success: true, message: "✅ Consultancy deleted successfully!" };
-} catch (error) {
-  console.error("❌ Error deleting consultancy:", error);
-  throw error;
-}
-};
-
-
-
-// ✅ Utility function to ensure proper JSON conversion
-// const convertToJson = (formData, key) => {
-//   let value = formData.get(key);
-//   if (typeof value === "string") {
-//     try {
-//       value = JSON.parse(value);
-//     } catch {
-//       value = [];
-//     }
-//   }
-//   if (!Array.isArray(value)) {
-//     value = [];
-//   }
-//   const convertedArray = value.map((item) => {
-//     if (typeof item === "string") {
-//       const parsedItem = parseInt(item, 10);
-//       return isNaN(parsedItem) ? item : parsedItem;
-//     } else {
-//       return item;
-//     }
-//   }).filter((item) => typeof item === 'number' || typeof item === 'string');
-
-//   formData.set(key, JSON.stringify(convertedArray));
-// };
-
-// ... (Other API functions - I'm omitting those that are not related to the university to avoid redundancy)
-
-// ✅ Create University (Handles FormData & File Uploads)
-export const createUniversity = async (formData) => {
   try {
-    console.log("📤 Submitting University FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
+    // Boolean conversions
+    formData.set("moe_certified", formData.get("moe_certified") === "true");
+    formData.set("verified", formData.get("verified") === "true");
 
-    // ✅ Ensure disciplines are converted to JSON
-    convertToJson(formData, "disciplines");
+    // Array fields
+    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) =>
+      convertToJson(formData, key)
+    );
 
-    // Ensure that faqs are properly converted.
-    convertToJson(formData, "faqs");
-
-    const response = await fetch(`${API_BASE_URL}/university/create/`, {
+    const response = await fetch(`${API_BASE_URL}/consultancy/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Create University API Error:", errorData);
-      throw new Error(JSON.stringify(errorData));
+      throw new Error(errorData.error || "Failed to create consultancy");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating consultancy:", error);
+    throw error;
+  }
+};
+
+/** ✅ Update Consultancy */
+export const updateConsultancy = async (slug, formData) => {
+  try {
+    ["districts", "study_abroad_destinations", "test_preparation", "partner_universities"].forEach((key) =>
+      convertToJson(formData, key)
+    );
+
+    const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to update consultancy");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error updating consultancy:", error);
+    throw error;
+  }
+};
+
+/** ✅ Delete Consultancy */
+export const deleteConsultancy = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/consultancy/${slug}/delete/`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to delete consultancy");
+    }
+
+    return { success: true, message: "✅ Consultancy deleted successfully!" };
+  } catch (error) {
+    console.error("❌ Error deleting consultancy:", error);
+    throw error;
+  }
+};
+
+
+/** ✅ Create University (Handles FormData & File Uploads) */
+export const createUniversity = async (formData) => {
+  try {
+    // ✅ Convert necessary fields to JSON
+    convertToJson(formData, "disciplines");
+    convertToJson(formData, "faqs");
+
+    const response = await fetch(`${API_BASE_URL}/university/create/`, {
+      method: "POST",
+      headers: getAuthHeaders(), // Do NOT set Content-Type for FormData
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Failed to create university");
     }
 
     return await response.json();
@@ -385,40 +324,20 @@ export const createUniversity = async (formData) => {
   }
 };
 
-
-// ✅ Update University (Handles FormData & File Uploads)
-// ✅ Update University (Handles FormData & File Uploads)
+/** ✅ Update University (Handles FormData & File Uploads) */
 export const updateUniversity = async (slug, formData) => {
   try {
-    console.log("📤 Updating University FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Ensure disciplines are converted to JSON
     convertToJson(formData, "disciplines");
-
-    // Ensure that faqs are properly converted.
     convertToJson(formData, "faqs");
 
-    const response = await fetch(
-      `${API_BASE_URL}/university/${slug}/update/`,
-      {
-        method: "PATCH",
-        headers: getAuthHeaders(), // ⚠️ Do NOT set "Content-Type" for FormData
-        body: formData,
-      }
-    );
-
-    // ✅ Logging the full response object
-    console.log("Response:", response);
+    const response = await fetch(`${API_BASE_URL}/university/${slug}/update/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(), // Do NOT set Content-Type for FormData
+      body: formData,
+    });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: "Failed to parse JSON error" })); // Attempt to parse error JSON, even if it fails
-      console.error("❌ Update University API Error:");
-      console.error("Status:", response.status); // Log status code
-      console.error("Headers:", response.headers); // Log headers
-      console.error("Error Data:", errorData); // Log error data
+      const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
       throw new Error(errorData.detail || "Failed to update university");
     }
 
@@ -428,27 +347,20 @@ export const updateUniversity = async (slug, formData) => {
     throw error;
   }
 };
-//... rest of the code is same
 
-
-
-
-
-// ✅ Delete University
+/** ✅ Delete University */
 export const deleteUniversity = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/university/${slug}/delete/`, {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json", // ✅ JSON request
+        "Content-Type": "application/json",
         ...getAuthHeaders(),
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete University API Error:", errorData);
-
       throw new Error(errorData.detail || "Failed to delete university");
     }
 
@@ -459,8 +371,7 @@ export const deleteUniversity = async (slug) => {
   }
 };
 
-
-// ✅ Fetch Single Course Details
+/** ✅ Fetch Single Course Details */
 export const fetchCourseDetails = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/course/${slug}/`, {
@@ -469,7 +380,8 @@ export const fetchCourseDetails = async (slug) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch course details");
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch course details: ${errorText}`);
     }
 
     return await response.json();
@@ -479,27 +391,26 @@ export const fetchCourseDetails = async (slug) => {
   }
 };
 
-// ... (other imports and code) ...
-// ✅ Create Course (Handles FormData & File Uploads)
+
+/** ✅ Create Course (Handles FormData & File Uploads) */
 export const createCourse = async (formData) => {
   try {
-    // ✅ Remove empty fields to prevent API errors
+    // ✅ Remove null/undefined/"null" fields
     for (let [key, value] of formData.entries()) {
       if (value === null || value === "null" || value === undefined) {
         formData.delete(key);
       }
     }
 
-    const response = await fetchWithAuth(`${API_BASE_URL}/course/create/`, {
+    const response = await fetch(`${API_BASE_URL}/course/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ✅ No "Content-Type" needed for FormData
+      headers: getAuthHeaders(), // Do NOT manually set Content-Type
       body: formData,
     });
 
     if (!response.ok) {
-      const errorData = await response.text(); // ✅ Get response text to debug
-      console.error("❌ Create Course API Error:", errorData);
-      throw new Error(errorData);
+      const errorText = await response.text();
+      throw new Error(`Failed to create course: ${errorText}`);
     }
 
     return await response.json();
@@ -509,33 +420,33 @@ export const createCourse = async (formData) => {
   }
 };
 
-// ✅ Update Course (Handles FormData & File Uploads)
+/** ✅ Update Course (Handles FormData & File Uploads) */
 export const updateCourse = async (slug, formData) => {
   try {
-    // ✅ Ensure we only send new files
+    // ✅ Only send updated files
     if (!formData.get("icon") || !(formData.get("icon") instanceof File)) {
       formData.delete("icon");
     }
     if (!formData.get("cover_image") || !(formData.get("cover_image") instanceof File)) {
       formData.delete("cover_image");
     }
-    // ✅ Remove empty fields to prevent API errors
+
+    // ✅ Remove empty fields
     for (let [key, value] of formData.entries()) {
       if (value === null || value === "null" || value === undefined) {
         formData.delete(key);
       }
     }
 
-    const response = await fetchWithAuth(`${API_BASE_URL}/course/${slug}/update/`, {
+    const response = await fetch(`${API_BASE_URL}/course/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(), // ⚠️ Do NOT manually set "Content-Type"
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text(); // Debug raw response
-      console.error("❌ Update Course API Error:", errorText);
-      throw new Error(errorText);
+      const errorText = await response.text();
+      throw new Error(`Failed to update course: ${errorText}`);
     }
 
     return await response.json();
@@ -544,25 +455,20 @@ export const updateCourse = async (slug, formData) => {
     throw error;
   }
 };
-// ... (rest of the code) ...
 
-
-
-// ✅ Delete Course
+/** ✅ Delete Course */
 export const deleteCourse = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/course/${slug}/delete/`, {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json", // ✅ JSON request
+        "Content-Type": "application/json",
         ...getAuthHeaders(),
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete Course API Error:", errorData);
-
       throw new Error(errorData.detail || "Failed to delete course");
     }
 
@@ -573,13 +479,7 @@ export const deleteCourse = async (slug) => {
   }
 };
 
-// Destination
-
-/**
- * ✅ Fetch Single Destination Details
- * @param {string} slug - Destination slug
- * @returns {Promise} - API response
- */
+/** ✅ Fetch Destination Details by Slug */
 export const fetchDestinationDetails = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/destination/${slug}/`, {
@@ -588,7 +488,8 @@ export const fetchDestinationDetails = async (slug) => {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch destination details");
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch destination details: ${errorText}`);
     }
 
     return await response.json();
@@ -599,56 +500,42 @@ export const fetchDestinationDetails = async (slug) => {
 };
 
 /**
- * ✅ Formats FormData before sending (Handles JSON conversion & boolean values)
- * @param {FormData} formData - The form data object
- * @returns {FormData} - FormData with properly formatted values
+ * ✅ Prepare FormData for Submission
+ * Converts booleans + array-like fields to proper JSON string format
  */
 const prepareFormData = (formData) => {
-  // ✅ Convert boolean values to "true" or "false" (String format)
   if (formData.has("moe_certified")) {
     formData.set("moe_certified", formData.get("moe_certified") === "true");
   }
 
-  // ✅ Convert JSON fields to strings before sending (For related courses, universities, consultancies)
   const jsonFields = ["courses_to_study", "universities", "consultancies"];
   jsonFields.forEach((field) => {
     if (formData.has(field)) {
       let value = formData.get(field);
-      if (typeof value === "string") {
-        try {
-          value = JSON.parse(value); // Ensure it's an array
-        } catch (e) {
-          console.warn(`⚠️ Skipping JSON parse for ${field}: Already a valid string.`);
-        }
+      try {
+        value = typeof value === "string" ? JSON.parse(value) : value;
+      } catch {
+        // fallback to existing string
       }
-      formData.set(field, JSON.stringify(value || [])); // Store as JSON string
+      formData.set(field, JSON.stringify(value || []));
     }
   });
 
   return formData;
 };
 
-/**
- * ✅ Create a New Destination (Handles FormData & File Uploads)
- * @param {FormData} formData - New Destination data
- * @returns {Promise} - API response
- */
+
+/** ✅ Create Destination (FormData & Uploads) */
 export const createDestination = async (formData) => {
   try {
-    console.log("📤 Sending Destination FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]); // ✅ Logs all form data values
-    }
-
     const response = await fetch(`${API_BASE_URL}/destination/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ✅ Include Auth Headers if needed
-      body: formData, // ✅ No "Content-Type" needed (auto-set for FormData)
+      headers: getAuthHeaders(), // Do NOT set Content-Type for FormData
+      body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Create Destination API Error:", errorData);
       throw new Error(errorData.detail || "Failed to create destination");
     }
 
@@ -659,37 +546,25 @@ export const createDestination = async (formData) => {
   }
 };
 
-
-/**
- * ✅ Update an Existing Destination (Handles FormData & File Uploads)
- * @param {string} slug - Destination slug
- * @param {FormData} formData - Updated Destination data
- * @returns {Promise} - API response
- */
+/** ✅ Update Destination (FormData & Conditional File Handling) */
 export const updateDestination = async (slug, formData) => {
   try {
-    console.log("📤 Updating Destination FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Only send files if they are changed
-    if (!formData.get("country_logo")) {
+    // Only include files if newly uploaded
+    if (!formData.get("country_logo") || !(formData.get("country_logo") instanceof File)) {
       formData.delete("country_logo");
     }
-    if (!formData.get("cover_page")) {
+    if (!formData.get("cover_page") || !(formData.get("cover_page") instanceof File)) {
       formData.delete("cover_page");
     }
 
     const response = await fetch(`${API_BASE_URL}/destination/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(), // ✅ No need for "Content-Type" for FormData
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Update Destination API Error:", errorData);
       throw new Error(errorData.detail || "Failed to update destination");
     }
 
@@ -700,31 +575,22 @@ export const updateDestination = async (slug, formData) => {
   }
 };
 
-
-/**
- * ✅ Delete a Destination
- * @param {string} slug - Destination slug
- * @returns {Promise} - API response
- */
+/** ✅ Delete Destination by Slug */
 export const deleteDestination = async (slug) => {
   try {
-    console.log(`🗑️ Deleting Destination: ${slug}`);
-
     const response = await fetch(`${API_BASE_URL}/destination/${slug}/delete/`, {
       method: "DELETE",
       headers: {
-        ...getAuthHeaders(), // ✅ Include authentication if needed
+        ...getAuthHeaders(),
         "Accept": "application/json",
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete Destination API Error:", errorData);
       throw new Error(errorData.detail || "Failed to delete destination");
     }
 
-    console.log("✅ Destination deleted successfully!");
     return { success: true, message: "✅ Destination deleted successfully!" };
   } catch (error) {
     console.error("❌ Error deleting destination:", error);
@@ -733,24 +599,17 @@ export const deleteDestination = async (slug) => {
 };
 
 
-/**
- * ✅ Fetch Single Exam by Slug (Detail Page)
- * @param {string} slug - Exam slug
- * @returns {Promise} - API response
- */
+
+/** ✅ Fetch Single Exam by Slug */
 export const fetchExamDetails = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/exam/${slug}/`, {
       method: "GET",
-      headers: {
-        "Accept": "application/json",
-        
-      },
+      headers: { Accept: "application/json" },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Get Exam API Error:", errorData);
       throw new Error(errorData.detail || "Failed to fetch exam details");
     }
 
@@ -761,30 +620,20 @@ export const fetchExamDetails = async (slug) => {
   }
 };
 
-/**
- * ✅ Create a New Exam (Handles FormData & File Uploads)
- * @param {FormData} formData - New Exam data
- * @returns {Promise} - API response
- */
+/** ✅ Create Exam (Handles FormData & File Uploads) */
 export const createExam = async (formData) => {
   try {
-    console.log("📤 Creating Exam with FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]); // ✅ Logs all form data values
-    }
-
     const response = await fetch(`${API_BASE_URL}/exam/create/`, {
       method: "POST",
       headers: {
-        ...getAuthHeaders(), // ✅ Include authentication if needed
-        "Accept": "application/json", // ✅ Accept JSON response
+        ...getAuthHeaders(), // Auth only; no Content-Type
+        Accept: "application/json",
       },
-      body: formData, // ✅ Do NOT set "Content-Type", it is auto-set for FormData
+      body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Create Exam API Error:", errorData);
       throw new Error(errorData.detail || "Failed to create exam");
     }
 
@@ -795,36 +644,25 @@ export const createExam = async (formData) => {
   }
 };
 
-/**
- * ✅ Update an Existing Exam (Handles FormData & File Uploads)
- * @param {string} slug - Exam slug
- * @param {FormData} formData - Updated Exam data
- * @returns {Promise} - API response
- */
+/** ✅ Update Exam (Handles FormData & File Uploads) */
 export const updateExam = async (slug, formData) => {
   try {
-    console.log("📤 Updating Exam with FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Ensure we do not send empty fields (avoids overwriting with null)
-    if (!formData.get("icon")) {
+    // ✅ Only include icon if updated
+    if (!formData.get("icon") || !(formData.get("icon") instanceof File)) {
       formData.delete("icon");
     }
 
     const response = await fetch(`${API_BASE_URL}/exam/${slug}/update/`, {
       method: "PATCH",
       headers: {
-        ...getAuthHeaders(), // ✅ Include authentication if needed
-        "Accept": "application/json",
+        ...getAuthHeaders(),
+        Accept: "application/json",
       },
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Update Exam API Error:", errorData);
       throw new Error(errorData.detail || "Failed to update exam");
     }
 
@@ -835,30 +673,22 @@ export const updateExam = async (slug, formData) => {
   }
 };
 
-/**
- * ✅ Delete an Exam
- * @param {string} slug - Exam slug
- * @returns {Promise} - API response
- */
+/** ✅ Delete Exam */
 export const deleteExam = async (slug) => {
   try {
-    console.log(`🗑️ Deleting Exam: ${slug}`);
-
     const response = await fetch(`${API_BASE_URL}/exam/${slug}/delete/`, {
       method: "DELETE",
       headers: {
-        ...getAuthHeaders(), // ✅ Include authentication if needed
-        "Accept": "application/json",
+        ...getAuthHeaders(),
+        Accept: "application/json",
       },
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete Exam API Error:", errorData);
       throw new Error(errorData.detail || "Failed to delete exam");
     }
 
-    console.log("✅ Exam deleted successfully!");
     return { success: true, message: "✅ Exam deleted successfully!" };
   } catch (error) {
     console.error("❌ Error deleting exam:", error);
@@ -868,100 +698,69 @@ export const deleteExam = async (slug) => {
 
 
 
-// Event
-
-/**
- * ✅ Fetch Events with Pagination & Search
- * @param {number} page - Page number for pagination
- * @param {string} search - Search query for event names
- * @returns {Promise} - API response
- */
+// ✅ Fetch Events with Pagination & Search
 export const fetchEvents = async (page = 1, search = "") => {
   try {
-      const response = await fetch(`${API_BASE_URL}/event/?page=${page}&search=${search}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-      });
+    const response = await fetch(`${API_BASE_URL}/event/?page=${page}&search=${search}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
 
-      if (!response.ok) {
-          throw new Error("Failed to fetch events");
-      }
-
-      return await response.json();
-  } catch (error) {
-      console.error("❌ Error fetching events:", error);
-      throw error;
-  }
-};
-
-/**
-* ✅ Fetch Single Event Details
-* @param {string} slug - Event slug
-* @returns {Promise} - Event details
-*/
-export const fetchEventDetails = async (slug) => {
-  try {
-      const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-          throw new Error("Failed to fetch event details");
-      }
-
-      return await response.json();
-  } catch (error) {
-      console.error("❌ Error fetching event details:", error);
-      throw error;
-  }
-};
-
-// utils/api.js
-// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
-
-/**
- * ✅ Convert Array of Slugs to JSON String for FormData
- * @param {FormData} formData
- * @param {string} key - The field name to convert (e.g., "targeted_destinations")
- */
-const convertToSlugJson = (formData, key) => {
-  const values = formData.getAll(key); // Get all values for the key
-  if (values.length > 0) {
-      formData.delete(key); // Remove all existing entries for the key
-      formData.set(key, JSON.stringify(values)); // Add the JSON string as a single entry
-  }
-};
-
-/**
- * ✅ Create Event (Handles FormData & File Uploads)
- * @param {FormData} formData - Event data
- * @returns {Promise} - API response
- */
-// ✅ Create Event
-export const createEvent = async (formData) => {
-  try {
-    console.log("📤 Sending Event FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
+    if (!response.ok) {
+      throw new Error("Failed to fetch events");
     }
 
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching events:", error);
+    throw error;
+  }
+};
+
+// ✅ Fetch Single Event Details
+export const fetchEventDetails = async (slug) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/event/${slug}/`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch event details");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error fetching event details:", error);
+    throw error;
+  }
+};
+
+// ✅ Convert Array of Slugs to JSON String for FormData
+const convertToSlugJson = (formData, key) => {
+  const values = formData.getAll(key);
+  if (values.length > 0) {
+    formData.delete(key);
+    formData.set(key, JSON.stringify(values));
+  }
+};
+
+// ✅ Create Event (FormData & Uploads)
+export const createEvent = async (formData) => {
+  try {
     convertToSlugJson(formData, "targeted_destinations");
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
     const response = await fetch(`${API_BASE_URL}/event/create/`, {
       method: "POST",
-      headers: {
-        Authorization: getAuthHeaders().Authorization, // ✅ Only auth, no Content-Type
-      },
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Create Event API Error:", errorText);
-      throw new Error(errorText || "Failed to create event");
+      throw new Error(`Failed to create event: ${errorText}`);
     }
 
     return await response.json();
@@ -971,30 +770,22 @@ export const createEvent = async (formData) => {
   }
 };
 
-// ✅ Update Event
+// ✅ Update Event (FormData & Uploads)
 export const updateEvent = async (slug, formData) => {
   try {
-    console.log("📤 Updating Event FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
     convertToSlugJson(formData, "targeted_destinations");
     convertToSlugJson(formData, "related_universities");
     convertToSlugJson(formData, "related_consultancies");
 
     const response = await fetch(`${API_BASE_URL}/event/${slug}/update/`, {
       method: "PATCH",
-      headers: {
-        Authorization: getAuthHeaders().Authorization, // ✅ No Content-Type!
-      },
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ Update Event API Error:", errorText);
-      throw new Error(errorText || "Failed to update event");
+      throw new Error(`Failed to update event: ${errorText}`);
     }
 
     return await response.json();
@@ -1003,24 +794,17 @@ export const updateEvent = async (slug, formData) => {
     throw error;
   }
 };
-// ... (rest of your api.js file) ...
 
-
-/**
- * ✅ Delete Event
- * @param {string} slug - Event slug
- * @returns {Promise} - API response
- */
+// ✅ Delete Event
 export const deleteEvent = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/event/${slug}/delete/`, {
       method: "DELETE",
-      headers: getAuthHeaders(), // ✅ Keep authentication headers
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete Event API Error:", errorData);
       throw new Error(errorData.detail || "Failed to delete event");
     }
 
@@ -1031,64 +815,39 @@ export const deleteEvent = async (slug) => {
   }
 };
 
-// ... (rest of your api.js file) ...
-
-
-
-/**
- * ✅ Fetch Blog List with Filtering, Pagination, and Search
- * @param {Object} params - Optional filters (e.g., { search: "study", category: "scholarships" })
- * @returns {Promise} - API response
- */
+// ✅ Fetch Blog List with Filtering, Pagination, and Search
 export const getBlogs = async (params = {}) => {
   try {
-      const response = await axios.get(`${API_BASE_URL}/blog/`, { params });
-      return response.data;
+    const response = await axios.get(`${API_BASE_URL}/blog/`, { params });
+    return response.data;
   } catch (error) {
-      console.error("❌ Error fetching blogs:", error);
-      throw error;
+    console.error("❌ Error fetching blogs:", error);
+    throw error;
   }
 };
 
-/**
-* ✅ Fetch Single Blog by Slug
-* @param {string} slug - Blog post slug
-* @returns {Promise} - API response
-*/
+// ✅ Fetch Single Blog by Slug
 export const getBlogBySlug = async (slug) => {
   try {
-      const response = await axios.get(`${API_BASE_URL}/blog/${slug}/`);
-      return response.data;
+    const response = await axios.get(`${API_BASE_URL}/blog/${slug}/`);
+    return response.data;
   } catch (error) {
-      console.error("❌ Error fetching blog post:", error);
-      throw error;
+    console.error("❌ Error fetching blog post:", error);
+    throw error;
   }
 };
 
-// utils/api.js
-// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
-
-/**
- * ✅ Create Blog Post (Handles FormData & File Uploads)
- * @param {FormData} formData - Blog post form data (title, content, image, etc.)
- * @returns {Promise} - API response
- */
+// ✅ Create Blog Post (FormData Upload)
 export const createBlog = async (formData) => {
   try {
-    console.log("📤 Sending Blog FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
     const response = await fetch(`${API_BASE_URL}/blog/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: getAuthHeaders(), // ✅ Auth only — no manual Content-Type
       body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Create Blog API Error:", errorData);
       throw new Error(errorData.detail || "Failed to create blog");
     }
 
@@ -1099,29 +858,17 @@ export const createBlog = async (formData) => {
   }
 };
 
-/**
- * ✅ Update Blog Post (Handles FormData & File Uploads)
- * @param {string} slug - Blog post slug
- * @param {FormData} formData - Updated blog post data
- * @returns {Promise} - API response
- */
+// ✅ Update Blog Post
 export const updateBlog = async (slug, formData) => {
   try {
-    console.log("📤 Updating Blog FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Corrected API endpoint (Ensure slug placement is correct)
     const response = await fetch(`${API_BASE_URL}/blog/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text(); // ✅ Capture error response
-      console.error("❌ Update Blog API Error:", errorText);
+      const errorText = await response.text();
       throw new Error(`Failed to update blog: ${errorText}`);
     }
 
@@ -1132,21 +879,16 @@ export const updateBlog = async (slug, formData) => {
   }
 };
 
-/**
- * ✅ Delete Blog Post (Ensures image deletion)
- * @param {string} slug - Blog post slug
- * @returns {Promise} - API response
- */
+// ✅ Delete Blog Post
 export const deleteBlog = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/blog/${slug}/delete/`, {
       method: "DELETE",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete Blog API Error:", errorData);
       throw new Error(errorData.detail || "Failed to delete blog");
     }
 
@@ -1157,34 +899,17 @@ export const deleteBlog = async (slug) => {
   }
 };
 
-
-// News
-// utils/api.js
-
-// ... (rest of your api.js file, including API_BASE_URL, getAuthHeaders, etc.) ...
-
-// News
-/**
- * ✅ Create News (Handles FormData & File Uploads)
- * @param {FormData} formData - News form data (title, detail, image, etc.)
- * @returns {Promise} - API response
- */
+// ✅ Create News Post (FormData Upload)
 export const createNews = async (formData) => {
   try {
-    console.log("📤 Sending News FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
     const response = await fetch(`${API_BASE_URL}/news/create/`, {
       method: "POST",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text(); // ✅ Capture error as text
-      console.error("❌ Create News API Error:", errorText);
+      const errorText = await response.text();
       throw new Error(`Failed to create news: ${errorText}`);
     }
 
@@ -1195,29 +920,17 @@ export const createNews = async (formData) => {
   }
 };
 
-/**
- * ✅ Update News (Handles FormData & File Uploads)
- * @param {string} slug - News post slug
- * @param {FormData} formData - Updated news post data
- * @returns {Promise} - API response
- */
+// ✅ Update News Post
 export const updateNews = async (slug, formData) => {
   try {
-    console.log("📤 Updating News FormData:");
-    for (let pair of formData.entries()) {
-      console.log(`${pair[0]}:`, pair[1]);
-    }
-
-    // ✅ Corrected API endpoint (Ensure slug placement is correct)
     const response = await fetch(`${API_BASE_URL}/news/${slug}/update/`, {
       method: "PATCH",
-      headers: getAuthHeaders(),// ✅ Include authentication headers
+      headers: getAuthHeaders(),
       body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text(); // ✅ Capture error response
-      console.error("❌ Update News API Error:", errorText);
+      const errorText = await response.text();
       throw new Error(`Failed to update news: ${errorText}`);
     }
 
@@ -1228,21 +941,16 @@ export const updateNews = async (slug, formData) => {
   }
 };
 
-/**
- * ✅ Delete News Post (Ensures image deletion)
- * @param {string} slug - News post slug
- * @returns {Promise} - API response
- */
+// ✅ Delete News Post
 export const deleteNews = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/news/${slug}/delete/`, {
       method: "DELETE",
-      headers: getAuthHeaders(), // ✅ Include authentication headers
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Delete News API Error:", errorData);
       throw new Error(errorData.detail || "Failed to delete news");
     }
 
@@ -1253,200 +961,136 @@ export const deleteNews = async (slug) => {
   }
 };
 
-// ... (rest of your api.js file) ...
-
-
-/**
- * ✅ Fetch News List with Filtering, Pagination, and Search
- * @param {Object} params - Optional filters (e.g., { search: "scholarships", category: "education" })
- * @returns {Promise} - API response
- */
+// ✅ Fetch News List (Paginated + Filter)
 export const getNewsList = async (params = {}) => {
   try {
-      const response = await axios.get(`${API_BASE_URL}/news/`, { params });
-      return response.data;
+    const response = await axios.get(`${API_BASE_URL}/news/`, { params });
+    return response.data;
   } catch (error) {
-      console.error("❌ Error fetching news:", error);
-      throw error;
+    console.error("❌ Error fetching news:", error);
+    throw error;
   }
 };
 
-/**
- * ✅ Fetch Single News by Slug
- * @param {string} slug - News post slug
- * @returns {Promise} - API response
- */
+// ✅ Fetch News Detail by Slug
 export const getNewsBySlug = async (slug) => {
   try {
-      const response = await axios.get(`${API_BASE_URL}/news/${slug}/`);
-      return response.data;
+    const response = await axios.get(`${API_BASE_URL}/news/${slug}/`);
+    return response.data;
   } catch (error) {
-      console.error("❌ Error fetching news post:", error);
-      throw error;
+    console.error("❌ Error fetching news post:", error);
+    throw error;
   }
 };
 
-
-
-
-
-
-/**
- * ✅ Fetch all inquiries with pagination
- * @param {number} page - Current page number
- */
-import { getAuthToken } from "./auth";
-// ...
-
-// ✅ Fetch Paginated Inquiries
+// ✅ Fetch All Inquiries (Admin Only)
 export const getAllInquiries = async (page = 1) => {
   try {
     const response = await fetch(`${API_BASE_URL}/inquiry/admin/all/?page=${page}`, {
-      headers: getAuthHeaders(), // ✅ Includes access token
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch inquiries: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log(`🟢 Inquiries Fetched (Page ${page}):`, data);
-    return data;
-  } catch (err) {
-    console.error("❌ Error fetching inquiries:", err);
-    throw err;
-  }
-};
-
-
-/**
-* ✅ Fetch a single inquiry by ID
-* @param {number} id - Inquiry ID
-* @returns {Promise} - Inquiry details
-*/
-export const getInquiryById = async (id) => {
-  try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/inquiry/admin/?${id}/`);
-      return response.data;
+    return await response.json();
   } catch (error) {
-      console.error(`❌ Error fetching inquiry ${id}:`, error);
-      throw error;
-  }
-};
-
-
-// For Profile
-
-export const fetchConsultancyProfile = async (token) => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/consultancy-profile/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching consultancy profile:", error);
+    console.error("❌ Error fetching inquiries:", error);
     throw error;
   }
 };
 
-// For Constulancy Dashboard
+// ✅ Fetch Single Inquiry by ID
+export const getInquiryById = async (id) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/inquiry/admin/?${id}/`);
+    return response.data;
+  } catch (error) {
+    console.error(`❌ Error fetching inquiry ${id}:`, error);
+    throw error;
+  }
+};
 
+// ✅ Fetch Consultancy Profile by Token (Used in Auth)
+export const fetchConsultancyProfile = async (token) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/dashboard/consultancy-profile/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error fetching consultancy profile:", error);
+    throw error;
+  }
+};
+
+// ✅ Consultancy Dashboard (GET)
 export const fetchConsultancyDashboard = async () => {
   const token = localStorage.getItem("accessToken");
   const consultancyId = localStorage.getItem("consultancy_id");
 
-  console.log("🔍 Checking consultancy_id in localStorage:", consultancyId); // 🔥 Debugging
+  if (!token) throw new Error("User not logged in");
+  if (!consultancyId) throw new Error("Consultancy ID is missing. Please log in again.");
 
-  if (!token) {
-    throw new Error("User not logged in");
-  }
-  if (!consultancyId) {
-    throw new Error("Consultancy ID is missing. Please log in again.");
-  }
-
-  // ✅ Fetch consultancy profile
-  const consultancyResponse = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/consultancy/dashboard/`,
-    {
+  try {
+    const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-    }
-  );
+    });
 
-  if (!consultancyResponse.ok) {
-    throw new Error("Failed to fetch consultancy profile");
+    if (!response.ok) throw new Error("Failed to fetch consultancy profile");
+
+    const data = await response.json();
+
+    return {
+      ...data,
+      study_abroad_destinations: Array.isArray(data.study_abroad_destinations)
+        ? data.study_abroad_destinations.map((d) => d.id)
+        : [],
+      test_preparation: Array.isArray(data.test_preparation)
+        ? data.test_preparation.map((e) => e.id)
+        : [],
+      partner_universities: Array.isArray(data.partner_universities)
+        ? data.partner_universities.map((u) => u.id)
+        : [],
+      inquiries: data.inquiries || [],
+    };
+  } catch (error) {
+    console.error("❌ Error fetching consultancy dashboard:", error);
+    throw error;
   }
-
-  let consultancyData = await consultancyResponse.json();
-
-  // ✅ Normalize empty fields to avoid undefined issues
-  consultancyData = {
-    ...consultancyData,
-    study_abroad_destinations:
-      Array.isArray(consultancyData.study_abroad_destinations) &&
-      consultancyData.study_abroad_destinations.length > 0
-        ? consultancyData.study_abroad_destinations.map((dest) => dest.id)
-        : [],
-
-    test_preparation:
-      Array.isArray(consultancyData.test_preparation) &&
-      consultancyData.test_preparation.length > 0
-        ? consultancyData.test_preparation.map((exam) => exam.id)
-        : [],
-
-    partner_universities:
-      Array.isArray(consultancyData.partner_universities) &&
-      consultancyData.partner_universities.length > 0
-        ? consultancyData.partner_universities.map((uni) => uni.id)
-        : [],
-
-    inquiries: consultancyData.inquiries || [], // Ensure it's an array
-  };
-
-  console.log("✅ Final Consultancy Dashboard Data:", consultancyData);
-
-  return consultancyData;
 };
 
-
-export const updateConsultancyDashboard = async (updateData) => {
+// ✅ Update Consultancy Dashboard (PATCH)
+export const updateConsultancyDashboard = async (formData) => {
   const token = localStorage.getItem("accessToken");
-  if (!token) {
-    throw new Error("User not logged in");
-  }
+  if (!token) throw new Error("User not logged in");
 
   try {
-    // ✅ Debugging: Log FormData before sending
-    console.log("📤 Sending FormData to API:");
-    for (let [key, value] of updateData.entries()) {
-      console.log(`🔹 ${key}:`, value);
-    }
-
     const response = await fetch(`${API_BASE_URL}/consultancy/dashboard/update/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      body: updateData, // ✅ Only send relevant fields
+      body: formData,
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ API Response Error:", errorData); // ✅ Log exact error response
       throw new Error(errorData.error || "Failed to update consultancy profile");
     }
 
     return await response.json();
   } catch (error) {
-    console.error("❌ Update Failed:", error);
+    console.error("❌ Error updating consultancy dashboard:", error);
     throw error;
   }
 };
+
 
 
 // Fetch Colleges
@@ -1495,20 +1139,19 @@ export const createCollege = async (formData) => {
   formData.set("moe_certified", formData.get("moe_certified") === "true");
   formData.set("verified", formData.get("verified") === "true");
 
-  // ✅ Convert JSON fields before sending
   ["districts", "study_abroad_destinations", "affiliated_universities"].forEach((key) => {
     convertToJson(formData, key);
   });
 
   const response = await fetch(`${API_BASE_URL}/college/create/`, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: getAuthHeaders(), // ✅ Auth only, no Content-Type
     body: formData,
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("API Response Error:", errorData);
+    console.error("❌ Create College API Error:", errorData);
     throw new Error(errorData.error || "Failed to create college");
   }
 
@@ -1529,7 +1172,7 @@ export const updateCollege = async (slug, formData) => {
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("API Response Error:", errorData);
+    console.error("❌ Update College API Error:", errorData);
     throw new Error(errorData.error || "Failed to update college");
   }
 
@@ -1560,7 +1203,7 @@ export const deleteCollege = async (slug) => {
   }
 };
 
-// ✅ Fetch College Profile (used by Auth page)
+// ✅ Fetch College Profile (for login session)
 export const fetchCollegeProfile = async (token) => {
   try {
     const response = await axios.get(`${API_BASE_URL}/dashboard/college-profile/`, {
@@ -1570,22 +1213,20 @@ export const fetchCollegeProfile = async (token) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching college profile:", error);
+    console.error("❌ Error fetching college profile:", error);
     throw error;
   }
 };
 
-// ✅ College Dashboard
+// ✅ Fetch College Dashboard
 export const fetchCollegeDashboard = async () => {
   const token = localStorage.getItem("accessToken");
   const collegeId = localStorage.getItem("college_id");
 
-  console.log("🔍 Checking college_id in localStorage:", collegeId);
-
   if (!token) throw new Error("User not logged in");
   if (!collegeId) throw new Error("College ID is missing. Please log in again.");
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/college/dashboard/`, {
+  const response = await fetch(`${API_BASE_URL}/college/dashboard/`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -1595,9 +1236,9 @@ export const fetchCollegeDashboard = async () => {
 
   if (!response.ok) throw new Error("Failed to fetch college profile");
 
-  let data = await response.json();
+  const data = await response.json();
 
-  data = {
+  return {
     ...data,
     study_abroad_destinations: Array.isArray(data.study_abroad_destinations)
       ? data.study_abroad_destinations.map((d) => d.id)
@@ -1607,19 +1248,15 @@ export const fetchCollegeDashboard = async () => {
       : [],
     inquiries: data.inquiries || [],
   };
-
-  console.log("✅ Final College Dashboard Data:", data);
-  return data;
 };
 
-// ✅ Update College Profile (Dashboard)
+// ✅ Update College Dashboard (Dashboard PATCH)
 export const updateCollegeDashboard = async (updateData) => {
   const token = localStorage.getItem("accessToken");
   if (!token) throw new Error("User not logged in");
 
-  // ✅ Manually fix: stringifying arrays for Django
-  const safeFields = ["branches", "districts", "study_abroad_destinations", "affiliated_universities"];
-  safeFields.forEach((key) => {
+  const jsonFields = ["branches", "districts", "study_abroad_destinations", "affiliated_universities"];
+  jsonFields.forEach((key) => {
     if (updateData.has(key)) {
       const val = updateData.get(key);
       if (typeof val !== "string") {
@@ -1629,11 +1266,6 @@ export const updateCollegeDashboard = async (updateData) => {
   });
 
   try {
-    console.log("📤 Sending FormData to API:");
-    for (let [key, value] of updateData.entries()) {
-      console.log(`🔹 ${key}:`, value);
-    }
-
     const response = await fetch(`${API_BASE_URL}/college/dashboard/update/`, {
       method: "PATCH",
       headers: {
@@ -1644,48 +1276,42 @@ export const updateCollegeDashboard = async (updateData) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ API Response Error:", errorData);
+      console.error("❌ College Dashboard Update API Error:", errorData);
       throw new Error(errorData.error || "Failed to update college profile");
     }
 
     return await response.json();
   } catch (error) {
-    console.error("❌ Update Failed:", error);
+    console.error("❌ Error updating college dashboard:", error);
     throw error;
   }
 };
 
-
-
 // ✅ Fetch University Dashboard
 export const fetchUniversityDashboard = async () => {
-  const token = localStorage.getItem("access_token"); // ✅ Ensure consistency
+  const token = localStorage.getItem("access_token");
   const universityId = localStorage.getItem("university_id");
 
   console.log("🔍 Checking university_id in localStorage:", universityId);
-
   if (!token) throw new Error("User not logged in");
   if (!universityId) throw new Error("University ID is missing. Please log in again.");
 
   try {
-    const universityResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/university/dashboard/`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/university/dashboard/`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-    if (!universityResponse.ok) {
-      const errorResponse = await universityResponse.json();
-      console.error("❌ API Error Response:", errorResponse);
-      throw new Error(errorResponse.error || "Failed to fetch university profile");
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("❌ API Error:", error);
+      throw new Error(error.detail || "Failed to fetch university dashboard");
     }
 
-    let universityData = await universityResponse.json();
+    const universityData = await response.json();
     console.log("✅ University Dashboard Data:", universityData);
     return universityData;
   } catch (error) {
@@ -1697,15 +1323,10 @@ export const fetchUniversityDashboard = async () => {
 // ✅ Update University Dashboard Profile
 export const updateUniversityDashboard = async (updateData) => {
   const token = localStorage.getItem("access_token");
-  if (!token) {
-    throw new Error("User not logged in");
-  }
+  if (!token) throw new Error("User not logged in");
 
   try {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/university/dashboard/update/`;
-    console.log("📤 Sending Update Request to API:", apiUrl);
-
-    const response = await fetch(apiUrl, {
+    const response = await fetch(`${API_BASE_URL}/university/dashboard/update/`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -1713,60 +1334,46 @@ export const updateUniversityDashboard = async (updateData) => {
       body: updateData,
     });
 
-    // ✅ Check if API response is HTML (Error case)
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("text/html")) {
       throw new Error("❌ API returned HTML instead of JSON. Possible server error.");
     }
 
     const responseData = await response.json();
-    console.log("✅ API Response:", responseData);
-
     if (!response.ok) {
-      throw new Error(responseData.error || "Failed to update university profile");
+      throw new Error(responseData.detail || "Failed to update university profile");
     }
 
+    console.log("✅ University Update Response:", responseData);
     return responseData;
   } catch (error) {
-    console.error("❌ Update Failed:", error);
+    console.error("❌ Update University Dashboard Failed:", error);
     throw error;
   }
 };
 
-
-
-
-
-/**
- * ✅ Fetch Blog Categories
- * @returns {Promise} - List of categories
- */
+// ✅ Fetch Blog Categories
 export const fetchBlogCategories = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/blog/categories/`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
-    if (!response.ok) {
-      throw new Error("Failed to fetch blog categories");
-    }
+
+    if (!response.ok) throw new Error("Failed to fetch blog categories");
+
     const data = await response.json();
-    return data || []; // ✅ Return an empty array if data is null or undefined
+    return data || [];
   } catch (error) {
     console.error("❌ Error fetching blog categories:", error);
     throw error;
   }
 };
 
-
-
-/**
- * ✅ Create Blog Category
- * @param {Object} data - Category data (e.g., { name: "New Category" })
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const createBlogCategory = async (data, token) => {
+// ✅ Create Blog Category
+export const createBlogCategory = async (data) => {
   try {
     const response = await fetch(`${API_BASE_URL}/blog/categories/create/`, {
       method: "POST",
@@ -1779,7 +1386,7 @@ export const createBlogCategory = async (data, token) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Create Blog Category API Error:", errorData);
+      console.error("❌ Create Blog Category Error:", errorData);
       throw new Error(errorData.detail || "Failed to create blog category");
     }
 
@@ -1790,14 +1397,8 @@ export const createBlogCategory = async (data, token) => {
   }
 };
 
-/**
- * ✅ Update Blog Category
- * @param {string} slug - Category slug
- * @param {Object} data - Updated category data (e.g., { name: "Updated Category" })
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const updateBlogCategory = async (slug, data, token) => {
+// ✅ Update Blog Category
+export const updateBlogCategory = async (slug, data) => {
   try {
     const response = await fetch(`${API_BASE_URL}/blog/categories/${slug}/update/`, {
       method: "PATCH",
@@ -1810,7 +1411,7 @@ export const updateBlogCategory = async (slug, data, token) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("❌ Update Blog Category API Error:", errorData);
+      console.error("❌ Update Blog Category Error:", errorData);
       throw new Error(errorData.detail || "Failed to update blog category");
     }
 
@@ -1821,13 +1422,9 @@ export const updateBlogCategory = async (slug, data, token) => {
   }
 };
 
-/**
- * ✅ Delete Blog Category
- * @param {string} slug - Category slug
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const deleteBlogCategory = async (slug, token) => {
+
+// ✅ Delete Blog Category
+export const deleteBlogCategory = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/blog/categories/${slug}/delete/`, {
       method: "DELETE",
@@ -1847,20 +1444,16 @@ export const deleteBlogCategory = async (slug, token) => {
   }
 };
 
-
-/**
- * ✅ Fetch News Categories
- * @returns {Promise} - List of categories
- */
+// ✅ Fetch News Categories
 export const fetchNewsCategories = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/news/categories/`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
-    if (!response.ok) {
-      throw new Error("Failed to fetch news categories");
-    }
+
+    if (!response.ok) throw new Error("Failed to fetch news categories");
+
     const data = await response.json();
     return data || [];
   } catch (error) {
@@ -1869,13 +1462,8 @@ export const fetchNewsCategories = async () => {
   }
 };
 
-/**
- * ✅ Create News Category
- * @param {Object} data - Category data (e.g., { name: "New Category" })
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const createNewsCategory = async (data, token) => {
+// ✅ Create News Category
+export const createNewsCategory = async (data) => {
   try {
     const response = await fetch(`${API_BASE_URL}/news/categories/create/`, {
       method: "POST",
@@ -1899,14 +1487,8 @@ export const createNewsCategory = async (data, token) => {
   }
 };
 
-/**
- * ✅ Update News Category
- * @param {string} slug - Category slug
- * @param {Object} data - Updated category data (e.g., { name: "Updated Category" })
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const updateNewsCategory = async (slug, data, token) => {
+// ✅ Update News Category
+export const updateNewsCategory = async (slug, data) => {
   try {
     const response = await fetch(`${API_BASE_URL}/news/categories/${slug}/update/`, {
       method: "PATCH",
@@ -1930,13 +1512,8 @@ export const updateNewsCategory = async (slug, data, token) => {
   }
 };
 
-/**
- * ✅ Delete News Category
- * @param {string} slug - Category slug
- * @param {string} token - Authentication token
- * @returns {Promise} - API response
- */
-export const deleteNewsCategory = async (slug, token) => {
+// ✅ Delete News Category
+export const deleteNewsCategory = async (slug) => {
   try {
     const response = await fetch(`${API_BASE_URL}/news/categories/${slug}/delete/`, {
       method: "DELETE",
@@ -1956,9 +1533,6 @@ export const deleteNewsCategory = async (slug, token) => {
   }
 };
 
-
-// Core Features
-
 // ✅ Fetch Districts (Paginated + Searchable)
 export const fetchDistricts = async (page = 1, search = "") => {
   try {
@@ -1973,9 +1547,7 @@ export const fetchDistricts = async (page = 1, search = "") => {
       headers: { "Content-Type": "application/json" },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch districts");
-    }
+    if (!response.ok) throw new Error("Failed to fetch districts");
 
     return await response.json();
   } catch (error) {
@@ -1984,19 +1556,25 @@ export const fetchDistricts = async (page = 1, search = "") => {
   }
 };
 
-
 // ✅ Create District
 export const createDistrict = async (data) => {
-  const response = await fetch(`${API_BASE_URL}/districts/create/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-    },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error("Failed to create district");
-  return await response.json();
+  try {
+    const response = await fetch(`${API_BASE_URL}/districts/create/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) throw new Error("Failed to create district");
+
+    return await response.json();
+  } catch (error) {
+    console.error("❌ Error creating district:", error);
+    throw error;
+  }
 };
 
 // ✅ Update District
@@ -2009,7 +1587,13 @@ export const updateDistrict = async (id, data) => {
     },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to update district");
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Update District Error:", errorData);
+    throw new Error(errorData.detail || "Failed to update district");
+  }
+
   return await response.json();
 };
 
@@ -2022,38 +1606,35 @@ export const deleteDistrict = async (id) => {
       ...getAuthHeaders(),
     },
   });
-  if (!response.ok) throw new Error("Failed to delete district");
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Delete District Error:", errorData);
+    throw new Error(errorData.detail || "Failed to delete district");
+  }
+
   return { success: true };
 };
 
-// ✅ Fetch Disciplines (Paginated + Searchable)
+// ✅ Fetch Disciplines
 export const fetchDisciplines = async (page = 1, search = "") => {
   try {
     const url = new URL(`${API_BASE_URL}/disciplines/`);
     url.searchParams.append("page", page);
-    if (search) {
-      url.searchParams.append("search", search);
-    }
+    if (search) url.searchParams.append("search", search);
 
     const response = await fetch(url.toString(), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch disciplines");
-    }
-
+    if (!response.ok) throw new Error("Failed to fetch disciplines");
     return await response.json();
   } catch (error) {
     console.error("❌ Error fetching disciplines:", error);
     throw error;
   }
 };
-
-
 
 // ✅ Create Discipline
 export const createDiscipline = async (data) => {
@@ -2065,7 +1646,13 @@ export const createDiscipline = async (data) => {
     },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to create discipline");
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Create Discipline Error:", errorData);
+    throw new Error(errorData.detail || "Failed to create discipline");
+  }
+
   return await response.json();
 };
 
@@ -2079,7 +1666,13 @@ export const updateDiscipline = async (id, data) => {
     },
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error("Failed to update discipline");
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Update Discipline Error:", errorData);
+    throw new Error(errorData.detail || "Failed to update discipline");
+  }
+
   return await response.json();
 };
 
@@ -2092,12 +1685,17 @@ export const deleteDiscipline = async (id) => {
       ...getAuthHeaders(),
     },
   });
-  if (!response.ok) throw new Error("Failed to delete discipline");
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error("❌ Delete Discipline Error:", errorData);
+    throw new Error(errorData.detail || "Failed to delete discipline");
+  }
+
   return { success: true };
 };
 
-
-// ✅ Fetch Ads (Paginated)
+// ✅ Fetch Ads
 export const fetchAds = async (page = 1, search = "") => {
   try {
     const response = await fetch(
@@ -2112,7 +1710,8 @@ export const fetchAds = async (page = 1, search = "") => {
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch ads");
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch ads: ${errorText}`);
     }
 
     return await response.json();
@@ -2127,13 +1726,14 @@ export const createAd = async (formData) => {
   const response = await fetch(`${API_BASE_URL}/ads/create/`, {
     method: "POST",
     headers: {
-      ...getAuthHeaders(), // Don't include Content-Type for FormData
+      ...getAuthHeaders(), // ✅ Don't set Content-Type for FormData
     },
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create ad");
+    const errorText = await response.text();
+    throw new Error(`Failed to create ad: ${errorText}`);
   }
 
   return await response.json();
@@ -2144,13 +1744,14 @@ export const updateAd = async (id, formData) => {
   const response = await fetch(`${API_BASE_URL}/ads/${id}/update/`, {
     method: "PATCH",
     headers: {
-      ...getAuthHeaders(), // No need for Content-Type for FormData
+      ...getAuthHeaders(), // ✅ FormData: no Content-Type needed
     },
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update ad");
+    const errorText = await response.text();
+    throw new Error(`Failed to update ad: ${errorText}`);
   }
 
   return await response.json();
@@ -2167,13 +1768,16 @@ export const deleteAd = async (id) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to delete ad");
+    const errorText = await response.text();
+    throw new Error(`Failed to delete ad: ${errorText}`);
   }
 
   return { success: true };
 };
 
-// Users
+// ===================== USERS =====================
+
+// ✅ Fetch Users (Paginated + Searchable)
 export const fetchUsers = async (page = 1, search = "") => {
   const queryParams = new URLSearchParams({ page });
   if (search) queryParams.append("search", search);
@@ -2184,7 +1788,7 @@ export const fetchUsers = async (page = 1, search = "") => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...getAuthHeaders(), // ✅ Use existing helper
+        ...getAuthHeaders(),
       },
     }
   );
@@ -2197,7 +1801,7 @@ export const fetchUsers = async (page = 1, search = "") => {
   return await response.json();
 };
 
-
+// ✅ Create User
 export const createUser = async (userData) => {
   const response = await fetch(`${API_BASE_URL}/auth/users/create/`, {
     method: "POST",
@@ -2216,6 +1820,7 @@ export const createUser = async (userData) => {
   return await response.json();
 };
 
+// ✅ Update User
 export const updateUser = async (userId, updatedData) => {
   const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/`, {
     method: "PUT",
@@ -2234,6 +1839,7 @@ export const updateUser = async (userId, updatedData) => {
   return await response.json();
 };
 
+// ✅ Delete User
 export const deleteUser = async (userId) => {
   const response = await fetch(`${API_BASE_URL}/auth/users/${userId}/delete/`, {
     method: "DELETE",
@@ -2252,14 +1858,18 @@ export const deleteUser = async (userId) => {
 };
 
 
-// For Scholarship
-// ✅ Fetch Scholarships with Pagination & Search
+// ===================== SCHOLARSHIPS =====================
+
+// ✅ Fetch Scholarships (Paginated + Searchable)
 export const fetchScholarships = async (page = 1, search = "") => {
   try {
-    const response = await fetch(`${API_BASE_URL}/scholarship/?page=${page}&search=${search}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/scholarship/?page=${page}&search=${search}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
 
     if (!response.ok) {
       throw new Error("Failed to fetch scholarships");
@@ -2267,7 +1877,7 @@ export const fetchScholarships = async (page = 1, search = "") => {
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching scholarships:", error);
+    console.error("❌ Error fetching scholarships:", error);
     throw error;
   }
 };
@@ -2286,29 +1896,29 @@ export const fetchScholarshipDetails = async (slug) => {
 
     return await response.json();
   } catch (error) {
-    console.error("Error fetching scholarship details:", error);
+    console.error("❌ Error fetching scholarship details:", error);
     throw error;
   }
 };
 
-// ✅ Create Scholarship
+// ✅ Create Scholarship (FormData)
 export const createScholarship = async (formData) => {
   const response = await fetch(`${API_BASE_URL}/scholarship/create/`, {
     method: "POST",
-    headers: getAuthHeaders(), // Must include JWT token
+    headers: getAuthHeaders(),
     body: formData,
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("API Response Error:", errorData);
+    console.error("❌ API Response Error:", errorData);
     throw new Error(errorData.error || "Failed to create scholarship");
   }
 
   return await response.json();
 };
 
-// ✅ Update Scholarship
+// ✅ Update Scholarship (FormData)
 export const updateScholarship = async (slug, formData) => {
   const response = await fetch(`${API_BASE_URL}/scholarship/${slug}/update/`, {
     method: "PATCH",
@@ -2318,7 +1928,7 @@ export const updateScholarship = async (slug, formData) => {
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("API Response Error:", errorData);
+    console.error("❌ API Response Error:", errorData);
     throw new Error(errorData.error || "Failed to update scholarship");
   }
 
@@ -2349,106 +1959,84 @@ export const deleteScholarship = async (slug) => {
   }
 };
 
-// Dropdown Apis
+// =================== DROPDOWN APIS ===================
 
-// ✅ Fetch minimal list of universities for dropdown (id + name only)
+// ✅ University Dropdown
 export const fetchUniversitiesDropdown = async (search = "") => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/university/dropdown/?search=${encodeURIComponent(search)}`
+      `${API_BASE_URL}/university/dropdown/?search=${encodeURIComponent(search)}`
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch universities");
-    }
-
-    const data = await res.json();
-    return data;
+    if (!res.ok) throw new Error("Failed to fetch universities");
+    return await res.json();
   } catch (error) {
-    console.error("Error fetching university dropdown:", error);
+    console.error("❌ Error fetching university dropdown:", error);
     return [];
   }
 };
 
-// ✅ Fetch minimal list of destinations for dropdown (id + title only)
+// ✅ Destination Dropdown
 export const fetchDestinationsDropdown = async (search = "") => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/destination/dropdown/?search=${encodeURIComponent(search)}`
+      `${API_BASE_URL}/destination/dropdown/?search=${encodeURIComponent(search)}`
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch destinations");
-    }
-
-    const data = await res.json();
-    return data;
+    if (!res.ok) throw new Error("Failed to fetch destinations");
+    return await res.json();
   } catch (error) {
-    console.error("Error fetching destination dropdown:", error);
+    console.error("❌ Error fetching destination dropdown:", error);
     return [];
   }
 };
 
-// ✅ Fetch minimal list of districts for dropdown (id + name only)
+// ✅ District Dropdown
 export const fetchDistrictsDropdown = async (search = "") => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/district/dropdown/?search=${encodeURIComponent(search)}`
+      `${API_BASE_URL}/district/dropdown/?search=${encodeURIComponent(search)}`
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch districts");
-    }
-
-    const data = await res.json();
-    return data;
+    if (!res.ok) throw new Error("Failed to fetch districts");
+    return await res.json();
   } catch (error) {
-    console.error("Error fetching district dropdown:", error);
+    console.error("❌ Error fetching district dropdown:", error);
     return [];
   }
 };
 
-// ✅ Fetch minimal list of consultancies for dropdown (id + name only)
+// ✅ Consultancy Dropdown
 export const fetchConsultanciesDropdown = async (search = "") => {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/consultancy/dropdown/?search=${encodeURIComponent(search)}`
+      `${API_BASE_URL}/consultancy/dropdown/?search=${encodeURIComponent(search)}`
     );
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch consultancies");
-    }
-
-    const data = await res.json();
-    return data;
+    if (!res.ok) throw new Error("Failed to fetch consultancies");
+    return await res.json();
   } catch (error) {
-    console.error("Error fetching consultancy dropdown:", error);
+    console.error("❌ Error fetching consultancy dropdown:", error);
     return [];
   }
 };
 
+// =================== FEATURED PAGE ===================
 
-// ✅ List featured pages (with search and pagination)
+// ✅ List Featured Pages (Paginated + Search)
 export const getFeaturedPages = async ({ page = 1, search = "" }) => {
   const res = await fetch(`${API_BASE_URL}/featured/?page=${page}&search=${search}`);
   if (!res.ok) throw new Error("Failed to fetch featured pages");
   return await res.json();
 };
+
+// ✅ Get Featured Page by Slug
 export const getFeaturedBySlug = async (slug) => {
   const res = await fetch(`${API_BASE_URL}/featured/${slug}/`);
   if (!res.ok) throw new Error("Failed to fetch featured detail");
   return await res.json();
 };
 
+// ✅ Alias for Get Featured Detail
+export const fetchFeaturedDetails = getFeaturedBySlug;
 
-// ✅ Get a single featured page by slug (used in edit mode)
-export const fetchFeaturedDetails = async (slug) => {
-  const res = await fetch(`${API_BASE_URL}/featured/${slug}/`);
-  if (!res.ok) throw new Error("Failed to fetch featured detail");
-  return await res.json();
-};
-
-// ✅ Create a featured page (with multipart/form-data and auth)
+// ✅ Create Featured Page
 export const createFeaturedPage = async (data) => {
   const formData = new FormData();
   Object.entries(data).forEach(([key, value]) => {
@@ -2459,7 +2047,7 @@ export const createFeaturedPage = async (data) => {
 
   const res = await fetch(`${API_BASE_URL}/featured/create/`, {
     method: "POST",
-    headers: getAuthHeaders(), // ✅ Auth added
+    headers: getAuthHeaders(), // ✅ Include JWT only, no Content-Type
     body: formData,
   });
 
@@ -2471,9 +2059,9 @@ export const createFeaturedPage = async (data) => {
   return await res.json();
 };
 
+// ✅ Update Featured Page
 export const updateFeaturedPage = async (slug, data) => {
   const formData = new FormData();
-
   Object.entries(data).forEach(([key, value]) => {
     if (value !== null && value !== undefined) {
       formData.append(key, value);
@@ -2482,24 +2070,31 @@ export const updateFeaturedPage = async (slug, data) => {
 
   const response = await fetch(`${API_BASE_URL}/featured/${slug}/update/`, {
     method: "PATCH",
-    headers: getAuthHeaders(), // ✅ USE THIS for safe token handling
+    headers: getAuthHeaders(),
     body: formData,
   });
 
   if (!response.ok) {
     const errorData = await response.json();
-    console.error("API Response Error:", errorData);
+    console.error("❌ API Response Error:", errorData);
     throw new Error(errorData.error || "Failed to update featured page");
   }
 
   return await response.json();
 };
 
-// ✅ Delete a featured page (with auth)
+// ✅ Delete Featured Page
 export const deleteFeaturedPage = async (slug) => {
   const res = await fetch(`${API_BASE_URL}/featured/${slug}/delete/`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
-  if (!res.ok) throw new Error("Failed to delete featured page");
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("❌ Delete Featured Page Error:", errorText);
+    throw new Error("Failed to delete featured page");
+  }
+
+  return { success: true };
 };
