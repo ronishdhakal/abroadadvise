@@ -229,7 +229,7 @@ const LoginPage = () => {
                 </label>
               </div>
               <a
-                href="#"
+                href="/passreset/passreset"
                 className="text-sm text-[#4c9bd5] font-light hover:underline transition-colors duration-200"
               >
                 Forgot Password?

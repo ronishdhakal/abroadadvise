@@ -13,6 +13,13 @@ from .pagination import UserPagination
 from django.db.models import Q
 from university.models import University
 from college.models import College  # ✅ NEW IMPORT
+from .models import PasswordResetCode
+from django.utils import timezone
+from django.utils.html import strip_tags
+import uuid
+from django.core.mail import send_mail
+from django.conf import settings
+
 from .serializers import (
     UserListSerializer,
     UserCreateSerializer,
@@ -212,3 +219,108 @@ def delete_user(request, user_id):
         return Response({"message": "User deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+    
+    # For Password Rest
+    # ✅ 1. Request password reset (send code)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_password_reset(request):
+    """
+    🔐 Handle password reset request:
+    - Validate email
+    - Generate a reset code
+    - Store it in the database
+    - Send reset code via email
+    """
+    email = request.data.get('email')
+
+    # ✅ Validate email input
+    if not email:
+        return Response({'error': 'Email is required.'}, status=400)
+
+    # ✅ Check if user exists
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return Response({'error': 'No account found with this email.'}, status=404)
+
+    # ✅ Generate and store a unique reset code (short UUID)
+    reset_code = str(uuid.uuid4()).split('-')[0]
+    PasswordResetCode.objects.create(user=user, code=reset_code)
+
+    # ✅ Compose email content
+    subject = "🔐 Reset Your Password - Abroad Advise"
+    message = f"""
+    Hi {user.username},
+
+    We received a request to reset the password for your Abroad Advise account.
+
+    Please use the code below to proceed:
+
+    ┌────────────────────┐
+    │   RESET CODE: {reset_code}   │
+    └────────────────────┘
+
+    If you did not request a password reset, please ignore this message.
+
+    Best regards,  
+    Abroad Advise Team
+    """
+    plain_message = strip_tags(message)
+
+    # ✅ Send the email
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.EMAIL_HOST_USER,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        return Response({'error': f'Failed to send email. {str(e)}'}, status=500)
+
+    # ✅ Success response
+    return Response({'message': 'A reset code has been sent to your email.'}, status=200)
+
+
+
+# ✅ 2. Verify reset code
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_reset_code(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+
+    user = User.objects.filter(email=email).first()
+    if not user:
+        return Response({'error': 'User not found'}, status=404)
+
+    reset = PasswordResetCode.objects.filter(user=user, code=code, is_used=False).first()
+    if reset and not reset.is_expired():
+        return Response({'message': 'Valid code'})
+    return Response({'error': 'Invalid or expired code'}, status=400)
+
+
+# ✅ 3. Set new password
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def set_new_password(request):
+    email = request.data.get('email')
+    code = request.data.get('code')
+    new_password = request.data.get('new_password')
+
+    user = User.objects.filter(email=email).first()
+    reset = PasswordResetCode.objects.filter(user=user, code=code, is_used=False).first()
+
+    if not user or not reset or reset.is_expired():
+        return Response({'error': 'Invalid or expired reset request'}, status=400)
+
+    user.set_password(new_password)
+    user.save()
+
+    reset.is_used = True
+    reset.save()
+
+    return Response({'message': 'Password has been reset successfully'})
