@@ -40,7 +40,6 @@ logger = logging.getLogger(__name__)
 
 
 def send_inquiry_email(consultancy, inquiry):
-    """Run email notification in a background thread."""
     try:
         user = consultancy.user
         if user and user.email:
@@ -63,6 +62,8 @@ def send_inquiry_email(consultancy, inquiry):
                 parts.append(f"📝 Exam: {inquiry.exam.name}")
             if inquiry.course:
                 parts.append(f"📚 Course: {inquiry.course.name}")
+            if inquiry.event:
+                parts.append(f"📅 Event: {inquiry.event.name}")
 
             parts.append("")
             parts.append("Please log in to your dashboard to view full details.")
@@ -99,19 +100,34 @@ def submit_inquiry(request):
     entity_type = inquiry.entity_type
     entity_id = inquiry.entity_id
 
-    # Attach foreign entity
     if entity_type == "university":
         inquiry.university = University.objects.filter(id=entity_id).first()
+
     elif entity_type == "consultancy":
         inquiry.consultancy = Consultancy.objects.filter(id=entity_id).first()
+
     elif entity_type == "college":
         inquiry.college = College.objects.filter(id=entity_id).first()
+
     elif entity_type == "destination":
         inquiry.destination = Destination.objects.filter(id=entity_id).first()
+
     elif entity_type == "exam":
         inquiry.exam = Exam.objects.filter(id=entity_id).first()
+
     elif entity_type == "event":
-        inquiry.event = Event.objects.filter(id=entity_id).first()
+        event = Event.objects.filter(id=entity_id).first()
+        if event:
+            inquiry.event = event
+
+            # ✅ Assign event organizer as consultancy for dashboard view + send email
+            if event.organizer and event.organizer.verified and event.organizer.user and event.organizer.user.email:
+                inquiry.consultancy = event.organizer
+                threading.Thread(target=send_inquiry_email, args=(event.organizer, inquiry)).start()
+                logger.info(f"📧 Event inquiry assigned to and emailed to organizer: {event.organizer.name}")
+            else:
+                logger.warning("⚠️ Event organizer is missing or not verified")
+
     elif entity_type == "course":
         course = Course.objects.filter(id=entity_id).first()
         if course:
@@ -126,7 +142,7 @@ def submit_inquiry(request):
                 inquiry.university = course.university
                 logger.info(f"📌 Linked course inquiry to UNIVERSITY: {course.university.name}")
 
-    # Handle optional consultancy_id override (e.g., from modal)
+    # ✅ Optional: override with explicitly chosen consultancy (e.g. from modal)
     consultancy_id = request.data.get("consultancy_id")
     if consultancy_id:
         consultancy = Consultancy.objects.filter(id=consultancy_id).first()
@@ -136,7 +152,7 @@ def submit_inquiry(request):
     inquiry.save()
     logger.info(f"✅ Inquiry Submitted: {inquiry.name} - {inquiry.email} - {inquiry.entity_type}")
 
-    # ✅ Trigger async email if verified consultancy with email
+    # ✅ Trigger async email to consultancy (if present after save)
     consultancy = inquiry.consultancy
     if consultancy and consultancy.verified and consultancy.user and consultancy.user.email:
         threading.Thread(target=send_inquiry_email, args=(consultancy, inquiry)).start()
@@ -146,6 +162,7 @@ def submit_inquiry(request):
         logger.warning(f"⚠️ Consultancy has no user or email: {consultancy.name}")
 
     return Response({"message": "Inquiry submitted successfully"}, status=status.HTTP_201_CREATED)
+
 
 
 # ✅ Superadmin + Role-Based Inquiry List
