@@ -6,15 +6,79 @@ from .models import Inquiry
 from .serializers import InquirySerializer
 from university.models import University
 from consultancy.models import Consultancy
-from college.models import College  # ✅ NEW
+from college.models import College
 from destination.models import Destination
 from exam.models import Exam
 from event.models import Event
 from course.models import Course
-import logging
 from .pagination import InquiryPagination
 
+from django.core.mail import send_mail
+import logging
+
 logger = logging.getLogger(__name__)
+
+
+import threading
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Inquiry
+from .serializers import InquirySerializer
+from university.models import University
+from consultancy.models import Consultancy
+from college.models import College
+from destination.models import Destination
+from exam.models import Exam
+from event.models import Event
+from course.models import Course
+from django.core.mail import send_mail
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def send_inquiry_email(consultancy, inquiry):
+    """Run email notification in a background thread."""
+    try:
+        user = consultancy.user
+        if user and user.email:
+            parts = [
+                f"Hi {consultancy.name},",
+                "",
+                "You have received a new inquiry on Abroad Advise.",
+                "",
+                f"🧑 Name: {inquiry.name}",
+                f"📧 Email: {inquiry.email}",
+                f"📱 Phone: {inquiry.phone or 'Not provided'}",
+                f"📝 Message: {inquiry.message or 'No message provided'}",
+                "",
+            ]
+            if inquiry.destination:
+                parts.append(f"🌍 Destination: {inquiry.destination.title}")
+            if inquiry.university:
+                parts.append(f"🎓 University: {inquiry.university.name}")
+            if inquiry.exam:
+                parts.append(f"📝 Exam: {inquiry.exam.name}")
+            if inquiry.course:
+                parts.append(f"📚 Course: {inquiry.course.name}")
+
+            parts.append("")
+            parts.append("Please log in to your dashboard to view full details.")
+
+            full_message = "\n".join(parts)
+
+            send_mail(
+                subject="🎓 New Inquiry Received on Abroad Advise",
+                message=full_message,
+                from_email="mailabroadadvise@gmail.com",
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            logger.info(f"📧 Async email sent to: {consultancy.name} <{user.email}>")
+    except Exception as e:
+        logger.error(f"❌ Async email failed: {e}")
 
 
 @api_view(['POST'])
@@ -30,13 +94,12 @@ def submit_inquiry(request):
 
     serializer = InquirySerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-
-    # Create object manually to assign custom foreign keys before saving
     inquiry = Inquiry(**serializer.validated_data)
 
     entity_type = inquiry.entity_type
     entity_id = inquiry.entity_id
 
+    # Attach foreign entity
     if entity_type == "university":
         inquiry.university = University.objects.filter(id=entity_id).first()
     elif entity_type == "consultancy":
@@ -63,7 +126,7 @@ def submit_inquiry(request):
                 inquiry.university = course.university
                 logger.info(f"📌 Linked course inquiry to UNIVERSITY: {course.university.name}")
 
-    # Track consultancy if provided
+    # Handle optional consultancy_id override (e.g., from modal)
     consultancy_id = request.data.get("consultancy_id")
     if consultancy_id:
         consultancy = Consultancy.objects.filter(id=consultancy_id).first()
@@ -73,17 +136,23 @@ def submit_inquiry(request):
     inquiry.save()
     logger.info(f"✅ Inquiry Submitted: {inquiry.name} - {inquiry.email} - {inquiry.entity_type}")
 
+    # ✅ Trigger async email if verified consultancy with email
+    consultancy = inquiry.consultancy
+    if consultancy and consultancy.verified and consultancy.user and consultancy.user.email:
+        threading.Thread(target=send_inquiry_email, args=(consultancy, inquiry)).start()
+    elif consultancy and not consultancy.verified:
+        logger.info(f"⛔ Consultancy not verified: {consultancy.name}")
+    elif consultancy:
+        logger.warning(f"⚠️ Consultancy has no user or email: {consultancy.name}")
+
     return Response({"message": "Inquiry submitted successfully"}, status=status.HTTP_201_CREATED)
-
-
-
 
 
 # ✅ Superadmin + Role-Based Inquiry List
 class AdminInquiryListView(generics.ListAPIView):
     serializer_class = InquirySerializer
     pagination_class = InquiryPagination
-    permission_classes = [IsAuthenticated]  # ✅ Moved here
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
@@ -103,7 +172,6 @@ class AdminInquiryListView(generics.ListAPIView):
             return queryset.filter(college=user.college)
 
         return Inquiry.objects.none()
-
 
 
 # ✅ Retrieve a single inquiry

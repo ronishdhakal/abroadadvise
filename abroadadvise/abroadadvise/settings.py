@@ -1,21 +1,15 @@
 from pathlib import Path
 from datetime import timedelta
-
 import os
 
-# ✅ Base Directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ✅ Security Warning: Keep the secret key safe in production
 SECRET_KEY = 'django-insecure-r51rcl7)3*++$0napu*gx#fl-kn(pqb1yfh+_9*^xx94gqx$qt'
 
-# ✅ Debug Mode (Turn OFF in production)
-DEBUG = True  # Set to False in production
+DEBUG = True
 
-# ✅ Allowed Hosts
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "abroadadvise-backend.onrender.com"]
 
-# ✅ Installed Apps
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,7 +24,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'tinymce',
-    'rest_framework_simplejwt.token_blacklist',  # ✅ Add this
+    'rest_framework_simplejwt.token_blacklist',
 
     # Custom apps
     'authentication',
@@ -47,10 +41,7 @@ INSTALLED_APPS = [
     'college',
     'scholarship',
     'featured'
-
 ]
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=500),
@@ -61,24 +52,19 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-
-# ✅ Middleware
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware at the top
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',  # CSRF middleware remains
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
- 
 ]
 
-# ✅ Root URL Configuration
 ROOT_URLCONF = 'abroadadvise.urls'
 
-# ✅ Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -90,13 +76,11 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                
             ],
         },
     },
 ]
 
-# ✅ WSGI Application
 WSGI_APPLICATION = 'abroadadvise.wsgi.application'
 
 DATABASES = {
@@ -110,8 +94,6 @@ DATABASES = {
     }
 }
 
-
-# ✅ Password Validators
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -119,28 +101,24 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# ✅ Internationalization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# ✅ Static & Media Files
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ✅ Default Primary Key Field Type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ✅ Django REST Framework Settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # ✅ Allow unauthenticated users to submit inquiries
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
@@ -149,43 +127,42 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
     ],
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',  # ✅ Only return JSON responses
+        'rest_framework.renderers.JSONRenderer',
     ] if not DEBUG else [
         'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',  # ✅ Keep browsable API in dev mode only
+        'rest_framework.renderers.BrowsableAPIRenderer',
     ],
 }
 
-# ✅ Custom Authentication Backend (Enables Email Login)
 AUTHENTICATION_BACKENDS = [
-    'authentication.backends.EmailBackend',  # Custom email login
-    'django.contrib.auth.backends.ModelBackend',  # Default username login (fallback)
+    'authentication.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
-# ✅ Custom User Model
 AUTH_USER_MODEL = 'authentication.User'
 
-# ✅ Fix URL Issues
-APPEND_SLASH = False  # Fix issues with missing slashes in URLs
+APPEND_SLASH = False
 
-# ✅ Email Configuration (Update in production)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ✅ Email Configuration for Gmail SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'mailabroadadvise@gmail.com'
+EMAIL_HOST_PASSWORD = 'tmrq ygiv fici vviw'  # App password from Gmail
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-# ✅ CORS Configuration (Ensures API Works with Frontend)
-CORS_ALLOW_ALL_ORIGINS = True  # Disable allowing all origins (security best practice)
-CORS_ALLOW_CREDENTIALS = True  # ✅ Allow sending authentication credentials
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
-# ✅ CSRF Configuration for API (Ensure frontend can submit forms)
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-# ✅ Fix Template Issues
 if 'django_filters' in INSTALLED_APPS:
     TEMPLATES[0]['OPTIONS']['context_processors'].append('django.template.context_processors.request')
 
-# ✅ Ensure `django-filter` is Installed
 try:
     import django_filters
 except ImportError:
