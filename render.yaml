@@ -11,7 +11,7 @@ services:
       User.objects.filter(username='admin').exists() or \
       User.objects.create_superuser('admin', 'admin@example.com', 'admin123')" \
       | python abroadadvise/manage.py shell &&
-      gunicorn abroadadvise.wsgi:application
+      gunicorn abroadadvise.wsgi:application --chdir abroadadvise
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: abroadadvise.settings
