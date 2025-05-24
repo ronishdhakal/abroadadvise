@@ -10,7 +10,7 @@ class EventSerializer(serializers.ModelSerializer):
     Serializer for the Event model with related fields using SLUGS instead of IDs.
     """
     slug = serializers.ReadOnlyField()
-    featured_image = serializers.SerializerMethodField()
+    featured_image = serializers.ImageField(required=False, allow_null=True)
 
     # ✅ Allow Saving Related ManyToMany Fields (Using Slugs)
     related_universities = serializers.SlugRelatedField(
