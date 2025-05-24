@@ -1,13 +1,17 @@
 from rest_framework import serializers
 from .models import BlogPost, BlogCategory, BlogComment
+from django.utils.text import slugify
 
 
 class BlogCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogCategory
         fields = ['id', 'name', 'slug']
-        read_only_fields = ['slug']  # ✅ Slug is auto-generated from name
+        read_only_fields = ['slug']
 
+    def create(self, validated_data):
+        validated_data['slug'] = slugify(validated_data['name'])
+        return super().create(validated_data)
 
 class BlogPostSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(

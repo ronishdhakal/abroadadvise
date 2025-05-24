@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   images: {
-    // Allow external image optimization from local backend during development
+    // ✅ Allow external image optimization for both local dev and production
     remotePatterns: [
       {
         protocol: 'http',
@@ -17,14 +17,18 @@ const nextConfig = {
         port: '8000',
         pathname: '/media/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'abroadadvise.onrender.com',
+        pathname: '/media/**',
+      },
     ],
 
-    // For basic domain whitelisting (older Next.js versions or fallback)
-    domains: ['127.0.0.1', 'localhost'],
+    // ✅ Domain whitelist for older next/image support
+    domains: ['127.0.0.1', 'localhost', 'abroadadvise.onrender.com'],
   },
 
   eslint: {
-    // Skip ESLint checks during production build
     ignoreDuringBuilds: true,
   },
 };

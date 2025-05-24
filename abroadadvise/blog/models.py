@@ -20,7 +20,7 @@ def create_category_slug(sender, instance, **kwargs):
         instance.slug = slugify(instance.name)
 
 class BlogPost(models.Model):
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=2545, unique=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blog_posts', blank=True, null=True)
     category = models.ForeignKey(BlogCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="posts")

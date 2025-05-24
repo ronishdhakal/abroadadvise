@@ -26,7 +26,7 @@ class News(models.Model):
     """
     News Model - Stores news articles with priority, rich text, and category.
     """
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=2555, unique=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_articles', null=True, blank=True)  # ✅ Tracks who posted
     category = models.ForeignKey(NewsCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="news")

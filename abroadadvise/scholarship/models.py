@@ -12,9 +12,9 @@ class Scholarship(models.Model):
         ('diploma', "Diploma"),
     ]
 
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=25000, unique=True)
     slug = models.SlugField(unique=True, blank=True, null=True)
-    by = models.CharField(max_length=255, help_text="Name of the university or institution offering the scholarship")
+    by = models.CharField(max_length=25500, help_text="Name of the university or institution offering the scholarship")
     destination = models.ForeignKey(
     'destination.Destination',
     on_delete=models.CASCADE,
@@ -27,7 +27,7 @@ class Scholarship(models.Model):
     active_from = models.DateField(blank=True, null=True)
     active_to = models.DateField(blank=True, null=True)
     is_published = models.BooleanField(default=True)
-    study_level = models.CharField(max_length=20, choices=LEVEL_CHOICES, blank=True, null=True)
+    study_level = models.CharField(max_length=200, choices=LEVEL_CHOICES, blank=True, null=True)
 
     def __str__(self):
         return self.title
