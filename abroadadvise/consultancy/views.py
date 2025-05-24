@@ -113,7 +113,7 @@ def create_consultancy(request):
     consultancy_data = request.data.dict()
 
     consultancy_data["slug"] = slug
-
+    consultancy_data.pop("branches", None)  # ✅ Remove branches before passing to serializer
     serializer = ConsultancySerializer(data=consultancy_data)
     if serializer.is_valid():
         consultancy = serializer.save()
@@ -164,7 +164,8 @@ def update_consultancy(request, slug):
     test_preparation = json.loads(data.get("test_preparation", "[]"))
     partner_universities = json.loads(data.get("partner_universities", "[]"))
     districts = json.loads(data.get("districts", "[]"))
-
+    data = request.data.copy()
+    data.pop("branches", None)  # ✅ Remove branches to avoid error
     serializer = ConsultancySerializer(consultancy, data=data, partial=True)
 
     if serializer.is_valid():
