@@ -2,17 +2,6 @@ services:
   - type: web
     name: abroadadvise
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn abroadadvise.wsgi:application
-    plan: free
-    envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: abroadadvise.settings
-
-jobs:
-  - name: setup-db-and-superuser
-    type: manual
-    env: python
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: |
@@ -21,4 +10,8 @@ jobs:
       User = get_user_model(); \
       User.objects.filter(username='admin').exists() or \
       User.objects.create_superuser('admin', 'admin@example.com', 'admin123')" \
-      | python manage.py shell
+      | python manage.py shell &&
+      gunicorn abroadadvise.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: abroadadvise.settings
