@@ -1,13 +1,24 @@
 services:
   - type: web
-    name: abroadadvise-backend
+    name: abroadadvise
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn abroadadvise.wsgi
+    startCommand: gunicorn abroadadvise.wsgi:application
+    plan: free
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: abroadadvise.settings
-      - key: SECRET_KEY
-        generateValue: true
-      - key: DEBUG
-        value: True
+
+jobs:
+  - name: setup-db-and-superuser
+    type: manual
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: |
+      python manage.py migrate &&
+      echo "from django.contrib.auth import get_user_model; \
+      User = get_user_model(); \
+      User.objects.filter(username='admin').exists() or \
+      User.objects.create_superuser('admin', 'admin@example.com', 'admin123')" \
+      | python manage.py shell
