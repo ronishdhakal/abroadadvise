@@ -5,12 +5,12 @@ services:
     plan: free
     buildCommand: pip install -r abroadadvise/requirements.txt
     startCommand: |
-      python manage.py migrate &&
+      python abroadadvise/manage.py migrate &&
       echo "from django.contrib.auth import get_user_model; \
       User = get_user_model(); \
       User.objects.filter(username='admin').exists() or \
       User.objects.create_superuser('admin', 'admin@example.com', 'admin123')" \
-      | python manage.py shell &&
+      | python abroadadvise/manage.py shell &&
       gunicorn abroadadvise.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
