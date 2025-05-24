@@ -110,7 +110,8 @@ def create_consultancy(request):
         counter += 1
 
     # ✅ Create mutable dict for serializer
-    consultancy_data = data.copy()
+    consultancy_data = request.data.dict()
+
     consultancy_data["slug"] = slug
 
     serializer = ConsultancySerializer(data=consultancy_data)
